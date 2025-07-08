@@ -44,6 +44,7 @@ for (name in names(deduce_data)) {
   df <- deduce_data[[name]]
   
   df <- df %>%
+    filter(year >= 2010) %>% # ensuring only have from 2010 onwards in line with our methodology
     group_by(producer_country, commodity) %>%
     mutate(min_year = min(year),
            max_year = max(year)) %>%
@@ -109,7 +110,7 @@ companies_yearly_50ha %>%
 
 ## 5 - Filtered DeDuCE dataset for companies for fin flows analysis --------
 
-# Understand attribution extent for financial flows analysis (i.e., what % of ha of identified companies had financial flows)
+# New dataset so can understand attribution extent for financial flows analysis (i.e., what % of ha of identified companies had financial flows)
 deduce_data_selective <- list()
 for (name in names(deduce_data)) {
   df <- deduce_data[[name]]
@@ -165,8 +166,77 @@ deduce_data_selective <- deduce_data_selective %>%
   distinct(producer_country, commodity, year, exporter_group, .keep_all = TRUE) # remove duplicate entries (should only lose 5 or so from renaming)
 
 ### 5.2 Save down companies --------
+# This is a version with the years as text rather than vectors
 deduce_data_selective %>% 
   select(producer_country, commodity, year, exporter_group, everything()) %>%
   write_csv("./intermediate-results/exporter_groups_deduce_data.csv")
 
-## 6 - explore 
+## 6 - Do any companies phase in or out of the Amazon? ------
+# convert years from strings to vectors to be able to cross-check
+# phase-in - first observed year is after start of available range but then remains continuous
+# phase-out - last observed year is before the end of available range and does not reappear
+# intermittent - years are non-continuous
+# full coverage - appears in all years of the data, or nearly
+
+deduce_data_selective_temporal_patterns <- deduce_data_selective %>% 
+  mutate(
+    years_appeared = str_split(years_appeared, ",\\s*") %>% map(as.integer),
+    years_available = str_extract(years_available, "\\d{4}-\\d{4}") %>%
+      str_split("-") %>%
+      map(~ seq(as.integer(.x[1]), as.integer(.x[2])))
+  ) %>%
+  mutate(
+    year_appeared_first = map_int(years_appeared, min),
+    year_appeared_last = map_int(years_appeared, max),
+    year_available_first = map_int(years_available, min),
+    year_available_last = map_int(years_available, max),
+    is_continuous = map_lgl(years_appeared, ~ all(diff(sort(.x)) == 1)),
+    coverage_ratio = map2_dbl(years_appeared, years_available, ~ length(intersect(.x, .y)) / length(.y)),
+    largest_gap = map_int(years_appeared, ~ {
+      diffs <- diff(sort(.x))
+      if(length(diffs) == 0) 0 else max(diffs)
+    }),
+    deduce_temporal_pattern = case_when(
+      coverage_ratio == 1 ~ "Full coverage",
+      (year_appeared_first > year_available_first) & (year_appeared_last < year_available_last) & is_continuous ~ "Phased in, then out",
+      year_appeared_first > year_available_first & is_continuous ~ "Phased in",
+      year_appeared_last < year_available_last & is_continuous ~ "Phased out",
+      coverage_ratio > 0.9 & largest_gap <= 2 ~ "Near-continuous",
+      TRUE ~ "Intermittent"
+    )
+  ) 
+
+deduce_data_selective_temporal_patterns %>%
+  group_by(deduce_temporal_pattern) %>%
+  summarise(adjusted_deforestation_exposure = sum(adjusted_deforestation_exposure, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(prop = adjusted_deforestation_exposure / sum(adjusted_deforestation_exposure)) %>%
+  ggplot() +
+  geom_col(aes(x = adjusted_deforestation_exposure, 
+               y = reorder(deduce_temporal_pattern, adjusted_deforestation_exposure))) +
+  geom_text(aes(label = scales::percent(prop, accuracy = 0.1), 
+                x = adjusted_deforestation_exposure/2, 
+                y = deduce_temporal_pattern),
+            colour = "white",
+            size = 3) +
+  theme_minimal() +
+  labs(y = "")
+
+# get the numbers
+deduce_data_selective_temporal_patterns %>%
+  group_by(deduce_temporal_pattern) %>%
+  summarise(adjusted_deforestation_exposure = sum(adjusted_deforestation_exposure, na.rm = TRUE)) %>%
+  ungroup() %>%
+  mutate(prop = adjusted_deforestation_exposure / sum(adjusted_deforestation_exposure)) %>%
+  arrange(desc(adjusted_deforestation_exposure)) %>% View()
+
+# explore those that phased in and out
+deduce_data_selective_temporal_patterns %>%
+  filter(deduce_temporal_pattern %in% c("Phased in", "Phased out")) %>%
+  View()
+
+deduce_data_selective_temporal_patterns %>%
+  filter(deduce_temporal_pattern %in% c("Phased in", "Phased out", "Phased in, then out")) %>%
+  distinct(exporter_group, .keep_all = TRUE) %>%
+  select(producer_country, commodity, exporter_group, years_appeared, years_available, deduce_temporal_pattern) %>%
+  write_csv("./intermediate-results/exporter_groups_phased_in_out_both.csv")
