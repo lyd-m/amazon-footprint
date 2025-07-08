@@ -1,0 +1,397 @@
+,query,source,CommonName,OAPermID,ParentOrganisationName,ParentCompanyOAPermID,UltimateParentOrganisationName,UltimateParentCompanyOAPermID,query_clean,CommonName_clean,similarity,gaps,has_government_parent,manual_check_needed
+0,biopalma da amazonia sa reflorestamento industria e c,GFW,,,,,,,biopalma da amazonia sa reflorestamento industria e c, na ,14.035,True,False,TRUE
+1,companhia refinadora da amazonia,GFW,Companhia Refinadora Da Amazonia,5036352842,Agropalma Holdings Ltda,5090620337,Agropalma Holdings Ltda,5090620337,companhia refinadora da amazonia,companhia refinadora da amazonia,100.0,False,False,FALSE
+2,agropalma s a,GFW,Agropalma S/A,4297728835,Agropalma S/A,4297728835,Agropalma S/A,4297728835,agropalma s a,agropalma s a,100.0,False,False,FALSE
+3,clealco acucar e alcool,GFW,Clealco Acucar E Alcool Sa Em Recuperacao Judicial,4298141288,Clealco Acucar E Alcool Sa Em Recuperacao Judicial,4298141288,Clealco Acucar E Alcool Sa Em Recuperacao Judicial,4298141288,clealco acucar e alcool,clealco acucar e alcool sa em recuperacao judicial,63.014,False,False,TRUE
+4,cofco,GFW,COFCO Capital Holdings Co Ltd,4298151363,Cofco Corp,5000029409,"China, People's Republic of (Government)",5000036491,cofco,cofco capital holdings co ltd,29.412,False,True,TRUE
+5,cooperativa de produtores de cana de acucar acucar e a,GFW,,,,,,,cooperativa de produtores de cana de acucar acucar e a, na ,13.793,True,False,TRUE
+6,guarani,GFW,Tereos Acucar e Energia Brasil SA,4295860270,NewCo Tereos Internacional (BR) Ltda,5086726220,Tereos France Usca,5042931050,guarani,tereos acucar e energia brasil sa,25.0,False,False,TRUE
+7,louis dreyfus,GFW,Louis Dreyfus Co BV,4298451869,Louis Dreyfus Company Holdings BV,5000812101,Akira Holding Foundation,5040056695,louis dreyfus,louis dreyfus co bv,81.25,False,False,FALSE
+8,raizen energia sa,GFW,Raizen Energia SA,4298262202,Raizen SA,5000030442,Raizen SA,5000030442,raizen energia sa,raizen energia sa,100.0,False,False,FALSE
+9,s a usina coruripe acucar e alcool,GFW,Usina Coruripe Acucar e Alcool SA,4296733657,Coruripe Holding SA,5063730013,Coruripe Holding SA,5063730013,s a usina coruripe acucar e alcool,usina coruripe acucar e alcool sa,89.552,False,False,FALSE
+10,sao martinho s a,GFW,Sao Martinho SA,4295860269,Ljn Participacoes S/A,5035929690,Ljn Participacoes S/A,5035929690,sao martinho s a,sao martinho sa,96.774,False,False,FALSE
+11,sucden do brasil ltda,GFW,Sucden Do Brasil Ltda,4298355714,Sucres Et Denrees,4298363796,Sucres Et Denrees,4298363796,sucden do brasil ltda,sucden do brasil ltda,100.0,False,False,FALSE
+12,usina alto alegre s a   acucar e alcool,GFW,Usina Alto Alegre Sa Acucar E Alcool,4296733590,Usina Alto Alegre Sa Acucar E Alcool,4296733590,Usina Alto Alegre Sa Acucar E Alcool,4296733590,usina alto alegre s a   acucar e alcool,usina alto alegre sa acucar e alcool,96.0,False,False,FALSE
+13,usina de acucar santa terezinha ltda,GFW,Usina De Acucar Santa Terezinha Ltda,4298134522,Usina De Acucar Santa Terezinha Ltda,4298134522,Usina De Acucar Santa Terezinha Ltda,4298134522,usina de acucar santa terezinha ltda,usina de acucar santa terezinha ltda,100.0,False,False,FALSE
+14,acucar e alcool oswaldo ribeiro de,GFW,Acucar E Alcool Oswaldo Ribeiro De Mendonca Ltda,5087219973,,,,,acucar e alcool oswaldo ribeiro de,acucar e alcool oswaldo ribeiro de mendonca ltda,82.927,True,False,TRUE
+15,adecoagro,GFW,Adecoagro SA,5001431073,Adecoagro SA,5001431073,Adecoagro SA,5001431073,adecoagro,adecoagro sa,85.714,False,False,FALSE
+16,bp bioenergia,GFW,BP Bioenergy Sa,5071570190,BP PLC,4295894740,BP PLC,4295894740,bp bioenergia,bp bioenergy sa,85.714,False,False,FALSE
+17,canex exportacao ltda,GFW,Canex Exportacao Ltda,5046145661,Canex Exportacao Ltda,5046145661,Canex Exportacao Ltda,5046145661,canex exportacao ltda,canex exportacao ltda,100.0,False,False,FALSE
+18,cooperativa de produtores de cana de acucar acucar e alcool,GFW,Cooperativa De Produtores De Cana-De-Acucar Acucar E Alcool Do Estado De Sao Paulo,5000900154,Cooperativa De Produtores De Cana-De-Acucar Acucar E Alcool Do Estado De Sao Paulo,5000900154,Cooperativa De Produtores De Cana-De-Acucar Acucar E Alcool Do Estado De Sao Paulo,5000900154,cooperativa de produtores de cana de acucar acucar e alcool,cooperativa de produtores de cana de acucar acucar e alcool do estado de sao paulo,83.688,False,False,FALSE
+19,czarnikow brasil ltda,GFW,Czarnikow Brasil Ltda,5048906022,Czarnikow Brasil Ltda,5048906022,Czarnikow Brasil Ltda,5048906022,czarnikow brasil ltda,czarnikow brasil ltda,100.0,False,False,FALSE
+20,glencane bioenergia sa,GFW,,,,,,,glencane bioenergia sa, na ,30.769,True,False,TRUE
+21,nardini agroindustrial,GFW,Nardini Agroindustrial Ltda,4298141770,Nardini Agroindustrial Ltda,4298141770,Nardini Agroindustrial Ltda,4298141770,nardini agroindustrial,nardini agroindustrial ltda,89.796,False,False,FALSE
+22,sjc bioenergia,GFW,SJC BIOENERGIA LTDA,5037247209,USJ Acucar E Alcool Sa,4296701646,USJ Administracao E Participacoes Sa,4298439395,sjc bioenergia,sjc bioenergia ltda,84.848,False,False,FALSE
+23,usa   usina santo angelo,GFW,USA Usina Santo Angelo Ltda,5063848423,USA Usina Santo Angelo Ltda,5063848423,USA Usina Santo Angelo Ltda,5063848423,usa   usina santo angelo,usa usina santo angelo ltda,86.275,False,False,FALSE
+24,usina conquista do pontal,GFW,Atvos Bioenergia Conquista Do Pontal Sa,4297904865,Neo Invest Sa,5044066542,Kieppe Patrimonial Sa,4297984202,usina conquista do pontal,atvos bioenergia conquista do pontal sa,75.0,False,False,FALSE
+25,usina delta,GFW,,,,,,,usina delta, na ,40.0,True,False,TRUE
+26,usina santa isabel,GFW,Usina Santa Isabel S/A,4298063127,Usina Santa Isabel S/A,4298063127,Usina Santa Isabel S/A,4298063127,usina santa isabel,usina santa isabel s a,90.0,False,False,FALSE
+27,vae trading do brasil ltda,GFW,,,,,,,vae trading do brasil ltda, na ,26.667,True,False,TRUE
+28,bunge,GFW,Bunge Global SA,5086635324,Bunge Global SA,5086635324,Bunge Global SA,5086635324,bunge,bunge global sa,50.0,False,False,TRUE
+29,copertrading comercio exportacao e importacao,GFW,Copertrading Comercio Exportacao E Importacao Sa Em Recuperacao Judicial,4298091310,COOPERATIVA REGIONAL DOS PRODUTORES DE ACUCAR E ALCOOL DE ALAGOAS,5042957220,COOPERATIVA REGIONAL DOS PRODUTORES DE ACUCAR E ALCOOL DE ALAGOAS,4298091310,copertrading comercio exportacao e importacao,copertrading comercio exportacao e importacao sa em recuperacao judicial,76.923,False,False,FALSE
+30,da mata sa   acucar e alcool,GFW,Da Mata SA Acucar e Alcool,5068348155,Da Mata SA Acucar e Alcool,5068348155,Da Mata SA Acucar e Alcool,5068348155,da mata sa   acucar e alcool,da mata sa acucar e alcool,96.296,False,False,FALSE
+31,odebrecht agroindustrial participacoes sa,GFW,,,,,,,odebrecht agroindustrial participacoes sa, na ,17.778,True,False,TRUE
+32,tonon bioenergia,GFW,Tonon Bioenergia SA Falido,5000673314,Tonon Bioenergia SA Falido,5000673314,Tonon Bioenergia SA Falido,5000673314,tonon bioenergia,tonon bioenergia sa falido,76.19,False,False,FALSE
+33,usina acucareira guaira limitada,GFW,,,,,,,usina acucareira guaira limitada, na ,16.667,True,False,TRUE
+34,usina batatais s a acucar e alcool,GFW,Usina Batatais S/A Acucar e Alcool,4298488954,Campagnola Participacoes e Empreendimentos SA,5087206623,Campagnola Participacoes e Empreendimentos SA,5087206623,usina batatais s a acucar e alcool,usina batatais s a acucar e alcool,100.0,False,False,FALSE
+35,usina santa fe s a,GFW,Usina Santa Fe SA,4298063370,Usina Santa Fe SA,4298063370,Usina Santa Fe SA,4298063370,usina santa fe s a,usina santa fe sa,97.143,False,False,FALSE
+36,vale do tijuco acucar e alcool,GFW,Vale Do Tijuco Acucar E Alcool Sa,5040701053,Companhia Mineira De Acucar E Alcool Participacoes,4298420429,Companhia Mineira De Acucar E Alcool Participacoes,4298420429,vale do tijuco acucar e alcool,vale do tijuco acucar e alcool sa,95.238,False,False,FALSE
+37,america sud industria e comercio de carnes eireli,GFW,,,,,,,america sud industria e comercio de carnes eireli, na ,15.094,True,False,TRUE
+38,bertin sa,GFW,Atlantia Bertin Concessoes SA,5037632079,Atlantia Bertin Concessoes SA,5037632079,Atlantia Bertin Concessoes SA,5037632079,bertin sa,atlantia bertin concessoes sa,47.368,False,False,TRUE
+39,brf,GFW,BRF SA,4295859753,Marfrig Global Foods SA,4295859830,Mms Participacoes Ltda,5000029659,brf,brf sa,66.667,False,False,TRUE
+40,cooperativa dos produtores de carne e derivados de gurupi,GFW,Cooperativa Dos Produtores De Carne E Derivados De Gurupi,5077901357,Cooperativa Dos Produtores De Carne E Derivados De Gurupi,5077901357,Cooperativa Dos Produtores De Carne E Derivados De Gurupi,,cooperativa dos produtores de carne e derivados de gurupi,cooperativa dos produtores de carne e derivados de gurupi,100.0,True,False,TRUE
+41,distribuidora de carnes equatorial ltda,GFW,,,,,,,distribuidora de carnes equatorial ltda, na ,18.605,True,False,TRUE
+42,eleven brazil importacao e exportacao,GFW,,,,,,,eleven brazil importacao e exportacao, na ,14.634,True,False,TRUE
+43,frigol,GFW,Frigol SA,5074510547,Frigol Holding SA,5082946113,Frigol Holding SA,5082946113,frigol,frigol sa,80.0,False,False,FALSE
+44,frigorifico eldorado s a,GFW,,,,,,,frigorifico eldorado s a, na ,21.429,True,False,TRUE
+45,frigorifico mercosul s a,GFW,Frigorifico Mercosul SA,4296312579,Frigorifico Mercosul SA,4296312579,Frigorifico Mercosul SA,4296312579,frigorifico mercosul s a,frigorifico mercosul sa,97.872,False,False,FALSE
+46,frigorifico pantanal ltda   me,GFW,,,,,,,frigorifico pantanal ltda   me, na ,23.529,True,False,TRUE
+47,frigorifico rio maria,GFW,Frigorifico Rio Maria Ltda,5052162587,Frigorifico Rio Maria Ltda,5052162587,Frigorifico Rio Maria Ltda,5052162587,frigorifico rio maria,frigorifico rio maria ltda,89.362,False,False,FALSE
+48,frigorifico tangara,GFW,Frigorifico Tangara Ltda,5081845639,Frigorifico Tangara Ltda,5081845639,Frigorifico Tangara Ltda,5081845639,frigorifico tangara,frigorifico tangara ltda,88.372,False,False,FALSE
+49,guapore carne s a,GFW,,,,,,,guapore carne s a, na ,28.571,True,False,TRUE
+50,ifc international food company industria de alimentos,GFW,IFC International Food Industria De Alimentos Co Ltda,5074671989,,,,,ifc international food co industria de alimentos,ifc international food industria de alimentos co ltda,89.109,True,False,TRUE
+51,irmaos goncalves comercio e industria,GFW,Irmaos Goncalves Comercio E Industria Ltda,5039723388,Irmaos Goncalves Participacoes Sa,5082239397,Irmaos Goncalves Participacoes Sa,5082239397,irmaos goncalves comercio e industria,irmaos goncalves comercio e industria ltda,93.671,False,False,FALSE
+52,jbs,GFW,JBS SA,4295860302,JBS SA,4295860302,JBS SA,4295860302,jbs,jbs sa,66.667,False,False,TRUE
+53,kaiapos fabril e exportadora,GFW,,,,,,,kaiapos fabril e exportadora, na ,18.75,True,False,TRUE
+54,marfrig,GFW,Marfrig Global Foods SA,4295859830,Mms Participacoes Ltda,5000029659,Mms Participacoes Ltda,5000029659,marfrig,marfrig global foods sa,46.667,False,False,TRUE
+55,mataboi alimentos,GFW,Prima Foods SA,4298141694,Prima Foods SA,4298141694,Prima Foods SA,4298141694,mataboi alimentos,prima foods sa,32.258,False,False,TRUE
+56,meridional meatimportacao e exp de alimentos,GFW,,,,,,,meridional meatimportacao e exp de alimentos, na ,12.5,True,False,TRUE
+57,minerva,GFW,Minerva SA,4295859969,Minerva SA,4295859969,Minerva SA,4295859969,minerva,minerva sa,82.353,False,False,FALSE
+58,rxm importacao e exportacao,GFW,,,,,,,rxm importacao e exportacao, na ,19.355,True,False,TRUE
+59,sadia sa,GFW,Sadia SA,4295859977,Sadia SA,4295859977,Sadia SA,4295859977,sadia sa,sadia sa,100.0,False,False,FALSE
+60,tangara importadora e exportadora sa,GFW,,,,,,,tangara importadora e exportadora sa, na ,15.0,True,False,TRUE
+61,vale grande industria e comercio de alimentos,GFW,Vale Grande Industria E Comercio De Alimentos Sa Em Recuperacao Judicial,5046276441,Vale Grande Industria E Comercio De Alimentos Sa Em Recuperacao Judicial,5046276441,Vale Grande Industria E Comercio De Alimentos Sa Em Recuperacao Judicial,5046276441,vale grande industria e comercio de alimentos,vale grande industria e comercio de alimentos sa em recuperacao judicial,76.923,False,False,FALSE
+62,xinguara industria e comercio,GFW,Xinguara Industria E Comercio Sa Em Recuperacao Judicial,5057760902,Xinguara Industria E Comercio Sa Em Recuperacao Judicial,5057760902,Xinguara Industria E Comercio Sa Em Recuperacao Judicial,,xinguara industria e comercio,xinguara industria e comercio sa em recuperacao judicial,68.235,True,False,TRUE
+63,braslo produtos de carne,GFW,Braslo Produtos de Carne Ltda,4297812543,Frigorifico Mabella Ltda,5035731688,Frigorifico Mabella Ltda,5035731688,braslo produtos de carne,braslo produtos de carne ltda,90.566,False,False,FALSE
+64,masterboi,GFW,Masterboi Ltda,5044518532,Masterboi Ltda,5044518532,Masterboi Ltda,,masterboi,masterboi ltda,78.261,True,False,TRUE
+65,odebrecht servicos de exportacao sa,GFW,Oec Servicos De Exportacao S/A,5034841700,Oec Servicos De Exportacao S/A,5034841700,Oec Servicos De Exportacao S/A,5034841700,odebrecht servicos de exportacao sa,oec servicos de exportacao s a,89.231,False,False,FALSE
+66,radar industria e comercio de frigorificados,GFW,Radar Industria E Comercio De Frigorificados Ltda,5052156850,Radar Industria E Comercio De Frigorificados Ltda,5052156850,Radar Industria E Comercio De Frigorificados Ltda,,radar industria e comercio de frigorificados,radar industria e comercio de frigorificados ltda,94.624,True,False,TRUE
+67,agroexport trading e agronegocios,GFW,Agroexport Trading E Agronegocios S/A,5055443812,Agroexport Trading E Agronegocios S/A,5055443812,Agroexport Trading E Agronegocios S/A,5055443812,agroexport trading e agronegocios,agroexport trading e agronegocios s a,94.286,False,False,FALSE
+68,arantes alimentosem recuperacao judicial,GFW,,,,,,,arantes alimentosem recuperacao judicial, na ,18.182,True,False,TRUE
+69,boi branco comercial exportacao e importacao de bovinos eir,GFW,,,,,,,boi branco comercial exportacao e importacao de bovinos eir, na ,12.698,True,False,TRUE
+70,kit trading,GFW,Kit Industrial Trading Ltd,5079225255,Protective Industrial Products Inc,4296274621,Audax Group LP,,kit trading,kit industrial trading ltd,59.459,True,False,TRUE
+71,lidera comercio de alimentos ltda   me,GFW,,,,,,,lidera comercio de alimentos ltda   me, na ,19.048,True,False,TRUE
+72,mais trading ltda,GFW,,,,,,,mais trading ltda, na ,28.571,True,False,TRUE
+73,mercurio alimentos,GFW,Mercurio Alimentos Sa,5083061926,TROMBETAS PARTICIPACOES SA,5083106330,TROMBETAS PARTICIPACOES SA,5083106330,mercurio alimentos,mercurio alimentos sa,92.308,False,False,FALSE
+74,michi foods producao comercio distribuicao importacao e,GFW,,,,,,,michi foods producao comercio distribuicao importacao e, na ,10.169,True,False,TRUE
+75,plena alimentos,GFW,Plena Alimentos S/A,4296068942,Plena Alimentos S/A,4296068942,Plena Alimentos S/A,4296068942,plena alimentos,plena alimentos s a,88.235,False,False,FALSE
+76,sudambeef industria comercio importacao e exportacao,GFW,Sudambeef Industria Comercio Importacao E Exportacao Ltda,5055954522,Sudambeef Trading SA,5053507291,Sudambeef Trading SA,5055954522,sudambeef industria comercio importacao e exportacao,sudambeef industria comercio importacao e exportacao ltda,95.413,False,False,FALSE
+77,ag sta rita importacao e exportacao ltda   epp,GFW,,,,,,,ag sta rita importacao e exportacao ltda   epp, na ,12.0,True,False,TRUE
+78,agroglobal agronegocios exportacao e importacao representaco,GFW,,,,,,,agroglobal agronegocios exportacao e importacao representaco, na ,12.5,True,False,TRUE
+79,agropecuaria santa rita do marajo sociedade anonima,GFW,Agropecuaria Santa Rita do Marajo SA,5056405590,,,,,agropecuaria santa rita do marajo sociedade anonima,agropecuaria santa rita do marajo sa,82.759,True,False,TRUE
+80,alvo consultoria e agronegocios,GFW,,,,,,,alvo consultoria e agronegocios, na ,22.857,True,False,TRUE
+81,bubras participacoes e investimentos ltda,GFW,,,,,,,bubras participacoes e investimentos ltda, na ,13.333,True,False,TRUE
+82,givotrading comercio importacao e exportacao ltda,GFW,,,,,,,givotrading comercio importacao e exportacao ltda, na ,11.321,True,False,TRUE
+83,group agricola e exportacao ltda,GFW,,,,,,,group agricola e exportacao ltda, na ,16.667,True,False,TRUE
+84,jjz alimentos,GFW,JJZ Alimentos SA,5074087638,,,,,jjz alimentos,jjz alimentos sa,89.655,True,False,TRUE
+85,omega representacoes ltda,GFW,,,,,,,omega representacoes ltda, na ,27.586,True,False,TRUE
+86,pampacarne comercio importacao e exportacao,GFW,Pampacarne Comercio Importacao E Exportacao Ltda,5068347211,Pampacarne Comercio Importacao E Exportacao Ltda,5068347211,Pampacarne Comercio Importacao E Exportacao Ltda,5068347211,pampacarne comercio importacao e exportacao,pampacarne comercio importacao e exportacao ltda,94.505,False,False,FALSE
+87,s c t artigos para presentes ltda,GFW,,,,,,,s c t artigos para presentes ltda, na ,16.216,True,False,TRUE
+88,superfrigo industria e comercio,GFW,Superfrigo Industria E Comercio Sa,5040190588,Superfrigo Industria E Comercio Sa,5040190588,Superfrigo Industria E Comercio Sa,,superfrigo industria e comercio,superfrigo industria e comercio sa,95.385,True,False,TRUE
+89,tdx trading company comercio importacao e exportacao de prod,GFW,,,,,,,tdx trading co comercio importacao e exportacao de prod, na ,13.559,True,False,TRUE
+90,wellard do brasil agronegocios,GFW,Wellard do Brasil Agronegocios Ltda,5073961042,Wellard Ltd,5047746552,Wellard Ltd,5047746552,wellard do brasil agronegocios,wellard do brasil agronegocios ltda,92.308,False,False,FALSE
+91,agra agroindustrial de alimentos,GFW,Agra Agroindustrial De Alimentos Sa,5000623676,Alibem Alimentos S/A,4297591992,,,agra agroindustrial de alimentos,agra agroindustrial de alimentos sa,95.522,True,False,TRUE
+92,bravex comercial importadora e exportadora,GFW,,,,,,,bravex comercial importadora e exportadora, na ,13.043,True,False,TRUE
+93,confidence comercio e servicos ltda   me,GFW,,,,,,,confidence comercio e servicos ltda   me, na ,13.636,True,False,TRUE
+94,construtora norberto odebrecht,GFW,CNO SA em Recuperacao Judicial,4295860120,Oec SA,5080053574,Odebrecht Holdco Finance Ltd,5080019693,construtora norberto odebrecht,cno sa em recuperacao judicial,40.0,False,False,TRUE
+95,frigorifico redentor,GFW,Frigorifico Redentor Sa,5044525833,Agropecuaria M A L P Administracao E Participacoes Em Recuperacao Judicial Ltda,5046310255,Agropecuaria M A L P Administracao E Participacoes Em Recuperacao Judicial Ltda,,frigorifico redentor,frigorifico redentor sa,93.023,True,False,TRUE
+96,frigosol frigorifico sul bahia,GFW,,,,,,,frigosol frigorifico sul bahia, na ,11.765,True,False,TRUE
+97,mundo brasil comercio exportacao e importacao ltda,GFW,,,,,,,mundo brasil comercio exportacao e importacao ltda, na ,11.111,True,False,TRUE
+98,rodopa industria e comercio de alimentos ltda,GFW,Rodopa Industria E Comercio De Alimentos Ltda,5003471949,Rodopa Industria E Comercio De Alimentos Ltda,5003471949,Rodopa Industria E Comercio De Alimentos Ltda,5003471949,rodopa industria e comercio de alimentos ltda,rodopa industria e comercio de alimentos ltda,100.0,False,False,FALSE
+99,west meat importacao e exportacao ltda,GFW,,,,,,,west meat importacao e exportacao ltda, na ,14.286,True,False,TRUE
+100,cantu comercio de pneumaticos,GFW,,,,,,,cantu comercio de pneumaticos, na ,18.182,True,False,TRUE
+101,frigorifico jr,GFW,Frigorifico JR Ltda,5086416494,Frigorifico JR Ltda,5086416494,Frigorifico JR Ltda,5086416494,frigorifico jr,frigorifico jr ltda,84.848,False,False,FALSE
+102,frigotil frigorifico de timon,GFW,Frigotil Frigorifico De Timon Sa,5039724404,Frigotil Frigorifico De Timon Sa,5039724404,Frigotil Frigorifico De Timon Sa,5039724404,frigotil frigorifico de timon,frigotil frigorifico de timon sa,95.082,False,False,FALSE
+103,nortao industrial de alimentos,GFW,,,,,,,nortao industrial de alimentos, na ,23.529,True,False,TRUE
+104,pampafoods comercio importacao e exportacao ltda   me,GFW,,,,,,,pampafoods comercio importacao e exportacao ltda   me, na ,10.526,True,False,TRUE
+105,total group,GFW,Total Digital Entertainment Group Inc,4296418514,Total Digital Entertainment Group Inc,4296418514,Total Digital Entertainment Group Inc,4296418514,total group,total digital entertainment group inc,45.833,False,False,TRUE
+106,frigorifico big boi,GFW,Frigorifico Big Boi Ltda,5082017231,Frigorifico Big Boi Ltda,5082017231,Frigorifico Big Boi Ltda,5082017231,frigorifico big boi,frigorifico big boi ltda,88.372,False,False,FALSE
+107,frigorifico fortefrigo,GFW,Frigorifico Fortefrigo Ltda,5086414260,,,,,frigorifico fortefrigo,frigorifico fortefrigo ltda,89.796,True,False,TRUE
+108,intercontinental foods   comercio de alimentos ltda   epp,GFW,,,,,,,intercontinental foods   comercio de alimentos ltda   epp, na ,13.115,True,False,TRUE
+109,lamajo comercial,GFW,,,,,,,lamajo comercial, na ,20.0,True,False,TRUE
+110,mundos brasil importacao e exportacao ltda epp,GFW,,,,,,,mundos brasil importacao e exportacao ltda epp, na ,12.0,True,False,TRUE
+111,naturafrig alimentos,GFW,Naturafrig Alimentos Ltda,5083065355,Ascap Patrimonial Sa,5083106687,Ascap Patrimonial Sa,5083106687,naturafrig alimentos,naturafrig alimentos ltda,88.889,False,False,FALSE
+112,progress brazil comercio de alimentos,GFW,,,,,,,progress brazil comercio de alimentos, na ,14.634,True,False,TRUE
+113,boi branco international trading ltda,GFW,,,,,,,boi branco international trading ltda, na ,19.512,True,False,TRUE
+114,bull log trading importacao e exportacao ltda epp,GFW,,,,,,,bull log trading importacao e exportacao ltda epp, na ,15.094,True,False,TRUE
+115,conquista comercio e exportacao de alimentos ltda,GFW,,,,,,,conquista comercio e exportacao de alimentos ltda, na ,11.321,True,False,TRUE
+116,cp comercial ltda,GFW,,,,,,,cp comercial ltda, na ,28.571,True,False,TRUE
+117,distriboi industria comercio e transporte de carne bovina,GFW,Distriboi Industria Comercio E Transporte De Carne Bovina Ltda,5086862246,Distriboi Industria Comercio E Transporte De Carne Bovina Ltda,5086862246,Distriboi Industria Comercio E Transporte De Carne Bovina Ltda,5086862246,distriboi industria comercio e transporte de carne bovina,distriboi industria comercio e transporte de carne bovina ltda,95.798,False,False,FALSE
+118,frisacre frigorifico santo afonso do acre,GFW,Frisacre Frigorifico Santo Afonso Do Acre Ltda,5086413918,Frisacre Frigorifico Santo Afonso Do Acre Ltda,5086413918,Frisacre Frigorifico Santo Afonso Do Acre Ltda,,frisacre frigorifico santo afonso do acre,frisacre frigorifico santo afonso do acre ltda,94.253,True,False,TRUE
+119,industria e comercio de carnes e derivados boi brasil,GFW,Industria E Comercio De Carnes E Derivados Boi Brasil Em Recuperacao Judicial Ltda,5083057138,Industria E Comercio De Carnes E Derivados Boi Brasil Em Recuperacao Judicial Ltda,5083057138,Industria E Comercio De Carnes E Derivados Boi Brasil Em Recuperacao Judicial Ltda,5083057138,industria e comercio de carnes e derivados boi brasil,industria e comercio de carnes e derivados boi brasil em recuperacao judicial ltda,78.519,False,False,FALSE
+120,liarte metalquimica,GFW,Liarte Metalquimica Ltda,5000613813,Liarte Metalquimica Ltda,5000613813,Liarte Metalquimica Ltda,5000613813,liarte metalquimica,liarte metalquimica ltda,88.372,False,False,FALSE
+121,sertrading,GFW,Sertrading Sa,4298261232,Sertrading Sa,4298261232,Sertrading Sa,4298261232,sertrading,sertrading sa,86.957,False,False,FALSE
+122,tangara alimentos,GFW,,,,,,,tangara alimentos, na ,28.571,True,False,TRUE
+123,agroindustrial iguatemi,GFW,Agroindustrial Iguatemi Ltda,5086415379,Agroindustrial Iguatemi Ltda,5086415379,Agroindustrial Iguatemi Ltda,5086415379,agroindustrial iguatemi,agroindustrial iguatemi ltda,90.196,False,False,FALSE
+124,agromass brasil agropecuaria   importacao e exportacao ltda   epp,GFW,,,,,,,agromass brasil agropecuaria   importacao e exportacao ltda   epp, na ,8.696,True,False,TRUE
+125,alimentos estrela,GFW,Industria De Alimentos Estrela Sa,5082029921,Industria De Alimentos Estrela Sa,5082029921,Industria De Alimentos Estrela Sa,5082029921,alimentos estrela,industria de alimentos estrela sa,68.0,False,False,TRUE
+126,ativo alimentos exportadora  importadora ltda,GFW,Ativo Alimentos Exportadora E Importadora Ltda,5081845583,Ativo Alimentos Exportadora E Importadora Ltda,5081845583,Ativo Alimentos Exportadora E Importadora Ltda,5081845583,ativo alimentos exportadora  importadora ltda,ativo alimentos exportadora e importadora ltda,98.901,False,False,FALSE
+127,barra mansa comercio de carnes e derivados,GFW,Barra Mansa Comercio De Carnes E Derivados Ltda,5001251411,Barra Mansa Comercio De Carnes E Derivados Ltda,5001251411,Barra Mansa Comercio De Carnes E Derivados Ltda,5001251411,barra mansa comercio de carnes e derivados,barra mansa comercio de carnes e derivados ltda,94.382,False,False,FALSE
+128,bon mart frigorifico ltda,GFW,Bon-Mart Frigorifico Ltda,5077901351,Bon-Mart Frigorifico Ltda,5077901351,Bon-Mart Frigorifico Ltda,,bon mart frigorifico ltda,bon mart frigorifico ltda,100.0,True,False,TRUE
+129,comcarne comercial de carne ltda,GFW,Comcarne Comercial De Carne Ltda,5039729651,Lafac Participacoes Ltda,5079921323,Lafac Participacoes Ltda,5079921323,comcarne comercial de carne ltda,comcarne comercial de carne ltda,100.0,False,False,FALSE
+130,distribuidora de carnes vale do mogi imp  exp ltda,GFW,,,,,,,distribuidora de carnes vale do mogi imp  exp ltda, na ,14.815,True,False,TRUE
+131,frigoestrela sa,GFW,Frigoestrela Sa,5000901080,Frigoestrela Sa,5000901080,Frigoestrela Sa,5000901080,frigoestrela sa,frigoestrela sa,100.0,False,False,FALSE
+132,frigorifico better beef,GFW,Frigorifico Better Beef Ltda,5064618349,Frigorifico Better Beef Ltda,5064618349,Frigorifico Better Beef Ltda,5064618349,frigorifico better beef,frigorifico better beef ltda,90.196,False,False,FALSE
+133,frigorifico nosso,GFW,Frigorifico Nosso Ltda,5086413307,Frigorifico Nosso Ltda,5086413307,Frigorifico Nosso Ltda,5086413307,frigorifico nosso,frigorifico nosso ltda,87.179,False,False,FALSE
+134,frisa frigorifico rio doce,GFW,Frisa Frigorifico Rio Doce S/A,5034841198,Frisa Frigorifico Rio Doce S/A,5034841198,Frisa Frigorifico Rio Doce S/A,5034841198,frisa frigorifico rio doce,frisa frigorifico rio doce s a,92.857,False,False,FALSE
+135,golden grain comercial de importacao  exportacao de alimentos ltda,GFW,,,,,,,golden grain comercial de importacao  exportacao de alimentos ltda, na ,11.429,True,False,TRUE
+136,golden imex,GFW,GOLDEN SUN IMPORT - EXPORT COMPANY LIMITED,5083274150,,,,,golden imex,golden sun import   export co ltd,50.0,True,False,TRUE
+137,ja comercio de generos alimenticios e servicos,GFW,JA Comercio De Generos Alimenticios E Servicos Ltda,5086415639,JA Comercio De Generos Alimenticios E Servicos Ltda,5086415639,JA Comercio De Generos Alimenticios E Servicos Ltda,5086415639,ja comercio de generos alimenticios e servicos,ja comercio de generos alimenticios e servicos ltda,94.845,False,False,FALSE
+138,mondelli industria de alimentos,GFW,Mondelli Industria De Alimentos Sa,5077901355,Mondelli Industria De Alimentos Sa,5077901355,Mondelli Industria De Alimentos Sa,,mondelli industria de alimentos,mondelli industria de alimentos sa,95.385,True,False,TRUE
+139,new brand trading alimentos,GFW,,,,,,,new brand trading alimentos, na ,25.806,True,False,TRUE
+140,ramax importacao e exportacao de alimentos eireli,GFW,,,,,,,ramax importacao e exportacao de alimentos eireli, na ,11.321,True,False,TRUE
+141,rio grande comercio de carnes ltda,GFW,Rio Grande Comercio De Carnes Ltda,5082946184,Lafac Participacoes Ltda,5079921323,Lafac Participacoes Ltda,5079921323,rio grande comercio de carnes ltda,rio grande comercio de carnes ltda,100.0,False,False,FALSE
+142,sa food assessoria  consultoria ltda,GFW,,,,,,,sa food assessoria  consultoria ltda, na ,20.0,True,False,TRUE
+143,szr empresarial ind  exp de sub produtos bovinos ltda,GFW,,,,,,,szr empresarial ind  exp de sub produtos bovinos ltda, na ,10.526,True,False,TRUE
+144,zanchetta industria de alimentos ltda,GFW,Zanchetta Industria De Alimentos Ltda,5083056378,Zanchetta Alimentos Ltda,5000770099,Zanchetta Alimentos Ltda,,zanchetta industria de alimentos ltda,zanchetta industria de alimentos ltda,100.0,True,False,TRUE
+145,zibax global importacao  exportacao eireli,GFW,,,,,,,zibax global importacao  exportacao eireli, na ,13.043,True,False,TRUE
+146,abatedouro de bovinos sampaio ltda,GFW,Abatedouro De Bovinos Sampaio Ltda,5086412891,Fba Investimentos Ltda,5085567533,Fba Investimentos Ltda,5085567533,abatedouro de bovinos sampaio ltda,abatedouro de bovinos sampaio ltda,100.0,False,False,FALSE
+147,cajuru industria e comercio de alimentos,GFW,Cajuru Industria E Comercio De Alimentos Em Recuperacao Judicial Ltda,5045993835,Cajuru Industria E Comercio De Alimentos Em Recuperacao Judicial Ltda,5045993835,Cajuru Industria E Comercio De Alimentos Em Recuperacao Judicial Ltda,5045993835,cajuru industria e comercio de alimentos,cajuru industria e comercio de alimentos em recuperacao judicial ltda,73.394,False,False,FALSE
+148,dhl global forwarding brazil logistics ltda,GFW,DHL Global Forwarding Brazil Logistics Ltda,5083192292,Deutsche Post Beteiligungen Holding GmbH,5000924976,Deutsche Post AG,5000070941,dhl global forwarding brazil logistics ltda,dhl global forwarding brazil logistics ltda,100.0,False,False,FALSE
+149,frigorifico araputanga sa,GFW,Frigorifico Araputanga Sa Em Recuperacao Judicial,4297973987,Redentor Foods Industria Comercio Agroindustria E Participacoes Em Recuperacao Judici Ltda,5044518385,Redentor Foods Industria Comercio Agroindustria E Participacoes Em Recuperacao Judici Ltda,,frigorifico araputanga sa,frigorifico araputanga sa em recuperacao judicial,67.568,True,False,TRUE
+150,frigorifico rio machado industria  comercio de carnes ltda,GFW,,,,,,,frigorifico rio machado industria  comercio de carnes ltda, na ,12.903,True,False,TRUE
+151,new beef co frigorifico sa,GFW,,,,,,,new beef co frigorifico sa, na ,13.333,True,False,TRUE
+152,prima foods sa,GFW,Prima Foods SA,4298141694,Prima Foods SA,4298141694,Prima Foods SA,4298141694,prima foods sa,prima foods sa,100.0,False,False,FALSE
+153,unitrading logistica importacao e exportacao me,GFW,,,,,,,unitrading logistica importacao e exportacao me, na ,11.765,True,False,TRUE
+154,adm,GFW,Archer-Daniels-Midland Co,4295903463,Archer-Daniels-Midland Co,4295903463,Archer-Daniels-Midland Co,4295903463,adm,archer daniels midland co,21.429,False,False,TRUE
+155,amaggi,GFW,Amaggi Luxembourg International SARL,5079696265,Amaggi Exportacao e Importacao Ltda,4297308208,Andre Maggi Participacoes S/A,5070764113,amaggi,amaggi luxembourg international sarl,28.571,False,False,TRUE
+156,cargill,GFW,Cargill Inc,4296555324,Cargill Inc,4296555324,Cargill Inc,4296555324,cargill,cargill inc,77.778,False,False,FALSE
+157,chs,GFW,Chubb Ltd,5000709065,Chubb Ltd,5000709065,Chubb Ltd,5000709065,chs,chubb ltd,33.333,False,False,TRUE
+158,clovis lucion,GFW,,,,,,,clovis lucion, na ,23.529,True,False,TRUE
+159,conacentro cooperativa dos produtores do centro oeste,GFW,Conacentro Cooperativa Dos Produtores Do Centro Oeste,5039724902,Conacentro Cooperativa Dos Produtores Do Centro Oeste,5039724902,Conacentro Cooperativa Dos Produtores Do Centro Oeste,5039724902,conacentro cooperativa dos produtores do centro oeste,conacentro cooperativa dos produtores do centro oeste,100.0,False,False,FALSE
+160,fernando maziero pozzobon,GFW,,,,,,,fernando maziero pozzobon, na ,20.69,True,False,TRUE
+161,granule exportadora e importadora,GFW,Granule Exportadora E Importadora Ltda,4298258159,,,,,granule exportadora e importadora,granule exportadora e importadora ltda,92.958,True,False,TRUE
+162,adao biazao basso,GFW,,,,,,,adao biazao basso, na ,28.571,True,False,TRUE
+163,advasson pretto,GFW,,,,,,,advasson pretto, na ,21.053,True,False,TRUE
+164,c vale,GFW,C Vale Cooperativa Agroindustrial,4296944280,C Vale Cooperativa Agroindustrial,4296944280,C Vale Cooperativa Agroindustrial,4296944280,c vale,c vale cooperativa agroindustrial,30.769,False,False,TRUE
+165,eurydes ceni,GFW,,,,,,,eurydes ceni, na ,25.0,True,False,TRUE
+166,fiagril,GFW,Fiagril Ltda,4298488909,Dakang Fiagril Participacoes Sa,5067516897,Nantong Yingxin Investment Co Ltd,5000071043,fiagril,fiagril ltda,73.684,False,False,FALSE
+167,ilo pozzobon,GFW,,,,,,,ilo pozzobon, na ,25.0,True,False,TRUE
+168,joao biazon basso,GFW,,,,,,,joao biazon basso, na ,28.571,True,False,TRUE
+169,marcos paulo capitanio,GFW,,,,,,,marcos paulo capitanio, na ,23.077,True,False,TRUE
+170,nadir sucolotti,GFW,,,,,,,nadir sucolotti, na ,31.579,True,False,TRUE
+171,nei francio,GFW,Nei Francio & Outros,5039726394,,,,,nei francio,nei francio   outros,70.968,True,False,TRUE
+172,odenir ortolan,GFW,,,,,,,odenir ortolan, na ,22.222,True,False,TRUE
+173,pedro misturini,GFW,,,,,,,pedro misturini, na ,21.053,True,False,TRUE
+174,pedro riva,GFW,,,,,,,pedro riva, na ,28.571,True,False,TRUE
+175,peregrino scarabelot,GFW,,,,,,,peregrino scarabelot, na ,16.667,True,False,TRUE
+176,renato david prante,GFW,,,,,,,renato david prante, na ,26.087,True,False,TRUE
+177,rubens pergo,GFW,,,,,,,rubens pergo, na ,25.0,True,False,TRUE
+178,tarcisio pase,GFW,,,,,,,tarcisio pase, na ,23.529,True,False,TRUE
+179,agromon agricultura e pecuaria,GFW,Agromon Sa Agricultura E Pecuaria,5039726390,Mpe Participacoes Em Agronegocios Sa,5000900818,Mpe Sa Participacoes E Administracao,,agromon agricultura e pecuaria,agromon sa agricultura e pecuaria,95.238,True,False,TRUE
+180,fertimig fertilizantes,GFW,,,,,,,fertimig fertilizantes, na ,15.385,True,False,TRUE
+181,glencore,GFW,Glencore PLC,5034844193,Glencore PLC,5034844193,Glencore PLC,5034844193,glencore,glencore plc,80.0,False,False,FALSE
+182,nelco durigon,GFW,,,,,,,nelco durigon, na ,23.529,True,False,TRUE
+183,agrenco,GFW,Agrenco Ltd,4295859815,Agrenco Ltd,4295859815,Agrenco Ltd,4295859815,agrenco,agrenco ltd,77.778,False,False,FALSE
+184,darcy getulio ferrarin,GFW,,,,,,,darcy getulio ferrarin, na ,15.385,True,False,TRUE
+185,nelson luiz piccoli,GFW,,,,,,,nelson luiz piccoli, na ,17.391,True,False,TRUE
+186,regina celia vargas da silva basso,GFW,,,,,,,regina celia vargas da silva basso, na ,15.789,True,False,TRUE
+187,giancarlos bavaresco,GFW,,,,,,,giancarlos bavaresco, na ,25.0,True,False,TRUE
+188,terra santa agro,GFW,SLC Agricola Centro-Oeste SA,4295859964,SLC Agricola SA,4295859807,SLC Agricola SA,4295859807,terra santa agro,slc agricola centro oeste sa,31.818,False,False,TRUE
+189,fernando longhi,GFW,,,,,,,fernando longhi, na ,31.579,True,False,TRUE
+190,karla pedroso jacinto,GFW,,,,,,,karla pedroso jacinto, na ,16.0,True,False,TRUE
+191,mineracao buritirama,GFW,Buritirama Mineracao Sa Falido,4298259743,Bonsucex Holding Sa,4298064897,Bonsucex Holding Sa,4298064897,mineracao buritirama,buritirama mineracao sa falido,48.0,False,False,TRUE
+192,mitsui  co,GFW,Mitsui & Co Ltd,4295880574,Mitsui & Co Ltd,4295880574,Mitsui & Co Ltd,4295880574,mitsui  co,mitsui   co ltd,80.0,False,False,FALSE
+193,zeferino longhi,GFW,,,,,,,zeferino longhi, na ,21.053,True,False,TRUE
+194,agricola e pecuaria morro azul,GFW,,,,,,,agricola e pecuaria morro azul, na ,17.647,True,False,TRUE
+195,caramuru,GFW,Caramuru Alimentos S/A,4298255916,Caramuru Alimentos S/A,4298255916,Caramuru Alimentos S/A,4298255916,caramuru,caramuru alimentos s a,53.333,False,False,TRUE
+196,juparana comercial agricola,GFW,Juparana Comercial Agricola Ltda,5059074996,Carminati Participacoes Societarias Ltda,5083545928,Carminati Participacoes Societarias Ltda,,juparana comercial agricola,juparana comercial agricola ltda,91.525,True,False,TRUE
+197,sigma agropecuaria ltda,GFW,Sigma Agropecuaria Ltda,5083275838,Sigma Agropecuaria Ltda,5083275838,Sigma Agropecuaria Ltda,5083275838,sigma agropecuaria ltda,sigma agropecuaria ltda,100.0,False,False,FALSE
+198,sipal,GFW,Sipal SpA,5039617842,Fininc SpA,5042211908,Fininc SpA,5042211908,sipal,sipal spa,71.429,False,False,FALSE
+199,amcel   amapa florestal e celulose,GFW,AMCEL - Amapa Florestal e Celulose SA,5001242357,Nippon Paper Industries Co Ltd,4295877412,Nippon Paper Industries Co Ltd,4295877412,amcel   amapa florestal e celulose,amcel   amapa florestal e celulose sa,95.775,False,False,FALSE
+200,ckbv florestal,GFW,CKBV Florestal Ltda,5038911266,CKBV Florestal Ltda,5038911266,CKBV Florestal Ltda,5038911266,ckbv florestal,ckbv florestal ltda,84.848,False,False,FALSE
+201,nidera,GFW,Cofco International Argentina SA,5000693580,COFCO International Ltd,5050996354,"China, People's Republic of (Government)",5000036491,nidera,cofco international argentina sa,21.053,False,True,TRUE
+202,o telhar,GFW,O Telhar Agropecuaria Ltda,4298068808,O Telhar Agropecuaria Ltda,4298068808,O Telhar Agropecuaria Ltda,4298068808,o telhar,o telhar agropecuaria ltda,47.059,False,False,TRUE
+203,afg brasil,GFW,Afg Brasil Sa Em Recuperacao Judicial,5057549590,Afg Brasil Sa Em Recuperacao Judicial,5057549590,Afg Brasil Sa Em Recuperacao Judicial,,afg brasil,afg brasil sa em recuperacao judicial,42.553,True,False,TRUE
+204,bom jesus agropecuaria,GFW,Bom Jesus Agropecuaria Ltda,5034841723,Bom Jesus Agropecuaria Ltda,5034841723,Bom Jesus Agropecuaria Ltda,5034841723,bom jesus agropecuaria,bom jesus agropecuaria ltda,89.796,False,False,FALSE
+205,cgg,GFW,China Gold International Resources Corp Ltd,4295862894,China Gold International Resources Corp Ltd,4295862894,China Gold International Resources Corp Ltd,4295862894,cgg,china gold international resources corp ltd,8.696,False,False,TRUE
+206,engelhart,GFW,Engelhart CTP UK Ltd,5040049078,TrailStone Guernsey Ltd,5052143039,TrailStone (Cayman) LP,5052143275,engelhart,engelhart ctp uk ltd,62.069,False,False,TRUE
+207,lavoura comercial agricola,GFW,,,,,,,lavoura comercial agricola, na ,20.0,True,False,TRUE
+208,madeiranit madeiras,GFW,Leme Madeiras E Ferragens Ltda,5086417218,Leme Madeiras E Ferragens Ltda,5086417218,Leme Madeiras E Ferragens Ltda,5086417218,madeiranit madeiras,leme madeiras e ferragens ltda,48.98,False,False,TRUE
+209,mitsubishi,GFW,Mitsubishi UFJ Financial Group Inc,5000000933,Mitsubishi UFJ Financial Group Inc,5000000933,Mitsubishi UFJ Financial Group Inc,5000000933,mitsubishi,mitsubishi ufj financial group inc,45.455,False,False,TRUE
+210,sinagro produtos agropecuarios,GFW,,,,,,,sinagro produtos agropecuarios, na ,17.647,True,False,TRUE
+211,agrinvest brasil,GFW,,,,,,,agrinvest brasil, na ,20.0,True,False,TRUE
+212,cervejaria petropolis,GFW,Cervejaria Petropolis SA,5044007460,Cervejaria Petropolis SA,5044007460,Cervejaria Petropolis SA,5044007460,cervejaria petropolis,cervejaria petropolis sa,93.333,False,False,FALSE
+213,gusa nordeste,GFW,,,,,,,gusa nordeste, na ,23.529,True,False,TRUE
+214,selecta,GFW,Selecta Group BV,5036389418,Selecta Group AG,5081182033,KKR & Co Inc,5083144032,selecta,selecta group bv,60.87,False,False,TRUE
+215,shanghai pengxin group co ltd,GFW,Shanghai Pengxin Group Co Ltd,5000032445,Nantong Yingxin Investment Co Ltd,5000071043,Nantong Yingxin Investment Co Ltd,5000071043,shanghai pengxin group co ltd,shanghai pengxin group co ltd,100.0,False,False,FALSE
+216,sodrugestvo,GFW,Sodruzhestvo OOO,5001203671,Mezhdunarodnaia Kompaniia Sodruzhestvo Rus OOO,5083651068,Mezhdunarodnaia Kompaniia Sodruzhestvo Rus OOO,5083651068,sodrugestvo,sodruzhestvo ooo,74.074,False,False,FALSE
+217,bianchini,GFW,A Bianchini Ingeniero SA,4298202140,A Bianchini Ingeniero SA,4298202140,A Bianchini Ingeniero SA,4298202140,bianchini,a bianchini ingeniero sa,54.545,False,False,TRUE
+218,carlos alberto polato,GFW,Carlos Alberto Polato,5057844511,,,,,carlos alberto polato,carlos alberto polato,100.0,True,False,TRUE
+219,cj international brasil comercial agricola ltda,GFW,CJ International Brasil Comercial Agricola Ltda,5051769646,CJ International Brasil Comercial Agricola Ltda,5051769646,CJ International Brasil Comercial Agricola Ltda,5051769646,cj international brasil comercial agricola ltda,cj international brasil comercial agricola ltda,100.0,False,False,FALSE
+220,cutrale,GFW,Sucocitrico Cutrale Ltda,4297932218,Sucocitrico Cutrale Ltda,4297932218,Sucocitrico Cutrale Ltda,4297932218,cutrale,sucocitrico cutrale ltda,45.161,False,False,TRUE
+221,gavilon,GFW,Wilmar Trading (Australia) Pty Ltd,5000103595,Wilmar International Ltd,4295887677,Wilmar International Ltd,4295887677,gavilon,wilmar trading  australia  pty ltd,19.512,False,False,TRUE
+222,olam,GFW,Olam Group Ltd,5082465234,Temasek Capital (Private) Ltd,5000074882,"Singapore, Republic of (Government)",4296784399,olam,olam group ltd,44.444,False,True,TRUE
+223,fertitex agro   fertilizantes e produtos agropecuarios ltda,GFW,FERTITEX AGRO - FERTILIZANTES E PRODUTOS AGROPECUARIOS LTDA.,5083537929,Fertitex Trading LLC,5086869689,Fertitex Trading LLC,,fertitex agro   fertilizantes e produtos agropecuarios ltda,fertitex agro   fertilizantes e produtos agropecuarios ltda ,99.16,True,False,TRUE
+224,marubeni,GFW,Marubeni Corp,4295880543,Marubeni Corp,4295880543,Marubeni Corp,4295880543,marubeni,marubeni corp,76.19,False,False,FALSE
+225,novaagri infra estrutura de armazenagem e escoamento agricol,GFW,,,,,,,novaagri infra estrutura de armazenagem e escoamento agricol, na ,12.5,True,False,TRUE
+226,carol sodru sa,GFW,Carol Sodru Sa,5044258797,,,,,carol sodru sa,carol sodru sa,100.0,True,False,TRUE
+227,seara industria e comercio de produtos agro pecuarios ltda   em recuperacao judicial,GFW,,,,,,,seara industria e comercio de produtos agro pecuarios ltda   em recuperacao judicial, na ,9.091,True,False,TRUE
+228,sodrugestvo agronegocios sa,GFW,Aliagro Trading Sa,5082030232,Aliagro Trading Sa,5082030232,Aliagro Trading Sa,5082030232,sodrugestvo agronegocios sa,aliagro trading sa,40.0,False,False,TRUE
+229,viterra bv,GFW,Viterra Finance BV,5057305718,Renaisco BV,4296201240,Viterra Ltd,5057763729,viterra bv,viterra finance bv,71.429,False,False,FALSE
+230,agroinversiones brasil s a s grupo agb,GFW,,,,,,,agroinversiones brasil s a s grupo agb, na ,14.286,True,False,TRUE
+231,agrop azteca s a,GFW,,,,,,,agrop azteca s a, na ,30.0,True,False,TRUE
+232,agrop el bufalo s a,GFW,,,,,,,agrop el bufalo s a, na ,26.087,True,False,TRUE
+233,anfer andina s a s,GFW,,,,,,,anfer andina s a s, na ,36.364,True,False,TRUE
+234,ariza garcia samuel dario,GFW,,,,,,,ariza garcia samuel dario, na ,20.69,True,False,TRUE
+235,basto bautista yesid leonel exps bastos,GFW,,,,,,,basto bautista yesid leonel exps bastos, na ,13.953,True,False,TRUE
+236,brangus y angus s a s,GFW,,,,,,,brangus y angus s a s, na ,32.0,True,False,TRUE
+237,c i andina del oriente ltda,GFW,,,,,,,c i andina del oriente ltda, na ,25.806,True,False,TRUE
+238,c i andinex de colombia s a s,GFW,,,,,,,c i andinex de colombia s a s, na ,24.242,True,False,TRUE
+239,c i barbatuscas s a s,GFW,,,,,,,c i barbatuscas s a s, na ,24.0,True,False,TRUE
+240,c i colandina cial s a s,GFW,,,,,,,c i colandina cial s a s, na ,28.571,True,False,TRUE
+241,c i de prods colombianos c i procol s a s,GFW,,,,,,,c i de prods colombianos c i procol s a s, na ,17.778,True,False,TRUE
+242,c i derivados y subproductos de santander s a s,GFW,,,,,,,c i derivados y subproductos de santander s a s, na ,15.686,True,False,TRUE
+243,c i ferka export ltda,GFW,,,,,,,c i ferka export ltda, na ,24.0,True,False,TRUE
+244,c i fortaleza asociados s a s,GFW,,,,,,,c i fortaleza asociados s a s, na ,18.182,True,False,TRUE
+245,c i multicarnicos s a,GFW,,,,,,,c i multicarnicos s a, na ,24.0,True,False,TRUE
+246,c i soc agrop el rancho ltda,GFW,,,,,,,c i soc agrop el rancho ltda, na ,18.75,True,False,TRUE
+247,c i suramericana de invs ltda,GFW,,,,,,,c i suramericana de invs ltda, na ,24.242,True,False,TRUE
+248,camaguey s a agrop camaguey curt camaguey,GFW,,,,,,,camaguey s a agrop camaguey curt camaguey, na ,13.333,True,False,TRUE
+249,cialz solgan trading s a s,GFW,,,,,,,cialz solgan trading s a s, na ,26.667,True,False,TRUE
+250,cialzdora aaa prods s a s,GFW,,,,,,,cialzdora aaa prods s a s, na ,20.69,True,False,TRUE
+251,cialzdora intl agroinversiones h2r s a s,GFW,,,,,,,cialzdora intl agroinversiones h2r s a s, na ,18.182,True,False,TRUE
+252,cialzdora intl c i aldesan s a,GFW,,,,,,,cialzdora intl c i aldesan s a, na ,23.529,True,False,TRUE
+253,cialzdora intl c i guamal s a,GFW,,,,,,,cialzdora intl c i guamal s a, na ,24.242,True,False,TRUE
+254,cialzdora triple uno e u,GFW,,,,,,,cialzdora triple uno e u, na ,21.429,True,False,TRUE
+255,cialzdora y expdora baldony s a s,GFW,,,,,,,cialzdora y expdora baldony s a s, na ,21.622,True,False,TRUE
+256,cmn global trading group s a s creaciones mi nenita ltda,GFW,,,,,,,cmn global trading group s a s creaciones mi nenita ltda, na ,13.333,True,False,TRUE
+257,colgoods s a s,GFW,,,,,,,colgoods s a s, na ,33.333,True,False,TRUE
+258,cortes ruiz marco fidel,GFW,,,,,,,cortes ruiz marco fidel, na ,22.222,True,False,TRUE
+259,diaz rozo fabian gustavo expodiaz,GFW,,,,,,,diaz rozo fabian gustavo expodiaz, na ,21.622,True,False,TRUE
+260,distrib jagme s a s,GFW,,,,,,,distrib jagme s a s, na ,26.087,True,False,TRUE
+261,duarte ruiz edgar gerardo,GFW,,,,,,,duarte ruiz edgar gerardo, na ,20.69,True,False,TRUE
+262,duarte sanchez milton alfonso cialz de ganado,GFW,,,,,,,duarte sanchez milton alfonso cialz de ganado, na ,16.327,True,False,TRUE
+263,expoamericana de invs s a s,GFW,,,,,,,expoamericana de invs s a s, na ,25.806,True,False,TRUE
+264,expoganados intl s a s,GFW,,,,,,,expoganados intl s a s, na ,30.769,True,False,TRUE
+265,food traders worldwide s a s,GFW,Food Traders Worldwide S A S En Liquidacion Judicial,5063340183,,,,,food traders worldwide s a s,food traders worldwide s a s en liquidacion judicial,70.0,True,False,TRUE
+266,grandexport s a s,GFW,,,,,,,grandexport s a s, na ,28.571,True,False,TRUE
+267,grupo empresarial inexco s a s,GFW,,,,,,,grupo empresarial inexco s a s, na ,23.529,True,False,TRUE
+268,invs ariza quintero s en c,GFW,,,,,,,invs ariza quintero s en c, na ,20.0,True,False,TRUE
+269,invs hrs e hijos s a s,GFW,,,,,,,invs hrs e hijos s a s, na ,23.077,True,False,TRUE
+270,invs kukenan s a s,GFW,,,,,,,invs kukenan s a s, na ,36.364,True,False,TRUE
+271,jaime dario dubeibe blanco invs dubeibe blanco,GFW,,,,,,,jaime dario dubeibe blanco invs dubeibe blanco, na ,12.0,True,False,TRUE
+272,marketing de colombia s a marketcol s a,GFW,Marketing De Colombia Marketcol S A En Reorganizacion,5063336415,,,,5063336415,marketing de colombia s a marketcol s a,marketing de colombia marketcol s a en reorganizacion,76.087,True,False,TRUE
+273,minerva colombia s a s,GFW,Minerva Colombia S A S,5063339576,,,,,minerva colombia s a s,minerva colombia s a s,100.0,True,False,TRUE
+274,o l cialzdora s a s,GFW,,,,,,,o l cialzdora s a s, na ,26.087,True,False,TRUE
+275,oca trading s a s,GFW,,,,,,,oca trading s a s, na ,38.095,True,False,TRUE
+276,ovalles sogamoso jose heli y o cialz ovalles,GFW,,,,,,,ovalles sogamoso jose heli y o cialz ovalles, na ,12.5,True,False,TRUE
+277,rh exps s a s,GFW,,,,,,,rh exps s a s, na ,35.294,True,False,TRUE
+278,rodriguez gomez jeefferson atir,GFW,,,,,,,rodriguez gomez jeefferson atir, na ,17.143,True,False,TRUE
+279,rodriguez monsalve manuel eleazar,GFW,,,,,,,rodriguez monsalve manuel eleazar, na ,21.622,True,False,TRUE
+280,rojas serrano hector exps e imps,GFW,,,,,,,rojas serrano hector exps e imps, na ,16.667,True,False,TRUE
+281,s c i manuecabrales y cia s a s,GFW,,,,,,,s c i manuecabrales y cia s a s, na ,22.857,True,False,TRUE
+282,sisa ltda,GFW,Sisa Industria De Pecas Automotivas Ltda,5044518740,,,,,sisa ltda,sisa industria de pecas automotivas ltda,36.735,True,False,TRUE
+283,soc de comerc intl colvemp ltda,GFW,,,,,,,soc de comerc intl colvemp ltda, na ,17.143,True,False,TRUE
+284,vram holding s a s,GFW,,,,,,,vram holding s a s, na ,36.364,True,False,TRUE
+285,c i imcopec ltda,GFW,,,,,,,c i imcopec ltda, na ,20.0,True,False,TRUE
+286,c i west point co s a,GFW,,,,,,,c i west point co s a, na ,24.0,True,False,TRUE
+287,cialzdora mundioriente s a s,GFW,,,,,,,cialzdora mundioriente s a s, na ,25.0,True,False,TRUE
+288,frigorifico del sinu frigosinu s a,GFW,Frigorifico Del Sinu Frigosinu S A,5063333856,,,,,frigorifico del sinu frigosinu s a,frigorifico del sinu frigosinu s a,100.0,True,False,TRUE
+289,frigorifico vijagual s a,GFW,Frigorifico Vijagual S A,5063333859,Frigorifico Vijagual S A,5063333859,Frigorifico Vijagual S A,,frigorifico vijagual s a,frigorifico vijagual s a,100.0,True,False,TRUE
+290,invs pasto verde s a s,GFW,,,,,,,invs pasto verde s a s, na ,23.077,True,False,TRUE
+291,jsc trading corp s a s,GFW,,,,,,,jsc trading corp s a s, na ,30.769,True,False,TRUE
+292,mitonali s a s,GFW,,,,,,,mitonali s a s, na ,33.333,True,False,TRUE
+293,soc de comercializacion intl grupo tiuna ltda,GFW,,,,,,,soc de comercializacion intl grupo tiuna ltda, na ,16.327,True,False,TRUE
+294,vectra intl colombia s a s,GFW,,,,,,,vectra intl colombia s a s, na ,26.667,True,False,TRUE
+295,agroindustrias asaf s a s,GFW,,,,,,,agroindustrias asaf s a s, na ,20.69,True,False,TRUE
+296,angleton group s a s,GFW,Angleton Group S A S,5083053782,,,,,angleton group s a s,angleton group s a s,100.0,True,False,TRUE
+297,procesadora de carnes de santander s a,GFW,Procesadora De Carnes De Santander S A,5063337626,Procesadora De Carnes De Santander S A,5063337626,Procesadora De Carnes De Santander S A,5063337626,procesadora de carnes de santander s a,procesadora de carnes de santander s a,100.0,False,False,FALSE
+298,red carnica s a s,GFW,Red Carnica S A S,5045250400,Red Carnica S A S,4295859969,Red Carnica S A S,4295859969,red carnica s a s,red carnica s a s,100.0,False,False,FALSE
+299,alims carnicos s a s,GFW,,,,,,,alims carnicos s a s, na ,33.333,True,False,TRUE
+300,american trade s a s,GFW,American Trade Services Inc,5001136827,,,,,american trade s a s,american trade services inc,72.34,True,False,TRUE
+301,oregon foods sac,GFW,Oregon Foods SAC,5063349770,,,,,oregon foods sac,oregon foods sac,100.0,True,False,TRUE
+302,cialzdora derivados carnicos s a s,GFW,,,,,,,cialzdora derivados carnicos s a s, na ,21.053,True,False,TRUE
+303,c i cg export e u,GFW,,,,,,,c i cg export e u, na ,19.048,True,False,TRUE
+304,curtidos de colombia group s a s,GFW,Curtidos De Colombia Group S A S,5086408771,,,,,curtidos de colombia group s a s,curtidos de colombia group s a s,100.0,True,False,TRUE
+305,colcocoa s a s,GFW,,,,,,,colcocoa s a s, na ,33.333,True,False,TRUE
+306,compania colombiana agroindustrial sas,GFW,,,,,,,compania colombiana agroindustrial sas, na ,19.048,True,False,TRUE
+307,compania nacional de chocolates sas,GFW,,,,,,,compania nacional de chocolates sas, na ,20.513,True,False,TRUE
+308,fed nal de cacaoteros,GFW,,,,,,,fed nal de cacaoteros, na ,32.0,True,False,TRUE
+309,mariana cocoa export ltd,GFW,,,,,,,mariana cocoa export ltd, na ,21.429,True,False,TRUE
+310,sucesores de jose jesus restrepo y cia s a,GFW,Sucesores De Jose Jesus Restrepo Y Compania S A,4297171622,Sucesores De Jose Jesus Restrepo Y Compania S A,4297171622,Sucesores De Jose Jesus Restrepo Y Compania S A,4297171622,sucesores de jose jesus restrepo y cia s a,sucesores de jose jesus restrepo y compania s a,94.382,False,False,FALSE
+311,surcacao s a s,GFW,,,,,,,surcacao s a s, na ,33.333,True,False,TRUE
+312,cafexport s a r l suc col,GFW,,,,,,,cafexport s a r l suc col, na ,20.69,True,False,TRUE
+313,cia col de cacao s a s,GFW,,,,,,,cia col de cacao s a s, na ,23.077,True,False,TRUE
+314,m y m trading s a s,GFW,,,,,,,m y m trading s a s, na ,34.783,True,False,TRUE
+315,cacao pacifico s a,GFW,,,,,,,cacao pacifico s a, na ,27.273,True,False,TRUE
+316,d origenn s a s,GFW,D Origenn S A S,5086408976,,,,,d origenn s a s,d origenn s a s,100.0,True,False,TRUE
+317,federacion nacional de cafeteros de colombia,GFW,Federacion Nacional De Cafeteros De Colombia,5000694298,Federacion Nacional De Cafeteros De Colombia,5000694298,Federacion Nacional De Cafeteros De Colombia,5000694298,federacion nacional de cafeteros de colombia,federacion nacional de cafeteros de colombia,100.0,False,False,FALSE
+318,sociedad exportadora cafe de cooperativas de caficultores sa,GFW,,,,,,,sociedad exportadora cafe de cooperativas de caficultores sa, na ,9.375,True,False,TRUE
+319,racafe  cia s c a,GFW,Racafe & Cia S C A,5063332487,Racafe & Cia S C A,5063332487,Racafe & Cia S C A,5063332487,racafe  cia s c a,racafe   cia s c a,97.143,False,False,FALSE
+320,agricola guangala s a agriguangala,GFW,,,,,,,agricola guangala s a agriguangala, na ,21.053,True,False,TRUE
+321,agroindustrias arriba del ecuador agroarriba s a,GFW,,,,,,,agroindustrias arriba del ecuador agroarriba s a, na ,11.538,True,False,TRUE
+322,aromatic cocoa export s a aromaexco,GFW,,,,,,,aromatic cocoa export s a aromaexco, na ,15.385,True,False,TRUE
+323,chocolates finos nals cofina s a,GFW,,,,,,,chocolates finos nals cofina s a, na ,22.222,True,False,TRUE
+324,cia agrocomercial panchana y zambrano s a,GFW,,,,,,,cia agrocomercial panchana y zambrano s a, na ,17.778,True,False,TRUE
+325,ecuador cocoa y coffee ecuacoffee s a,GFW,,,,,,,ecuador cocoa y coffee ecuacoffee s a, na ,14.634,True,False,TRUE
+326,expdora manabi exportmanabi s a,GFW,,,,,,,expdora manabi exportmanabi s a, na ,22.857,True,False,TRUE
+327,expdora mlopez cia ltd,GFW,,,,,,,expdora mlopez cia ltd, na ,23.077,True,False,TRUE
+328,grancacao export s a,GFW,,,,,,,grancacao export s a, na ,25.0,True,False,TRUE
+329,grandsouth s a,GFW,Grandsouth S A,5082539987,,,,,grandsouth s a,grandsouth s a,100.0,True,False,TRUE
+330,inmobiliaria guangala s a,GFW,,,,,,,inmobiliaria guangala s a, na ,27.586,True,False,TRUE
+331,la nueva casa del cacao s a casacao,GFW,,,,,,,la nueva casa del cacao s a casacao, na ,20.513,True,False,TRUE
+332,manacao s a,GFW,,,,,,,manacao s a, na ,40.0,True,False,TRUE
+333,nestle,GFW,Nestle SA,4295890634,Nestle SA,4295890634,Nestle SA,4295890634,nestle,nestle sa,80.0,False,False,FALSE
+334,outspan ecuador sa,GFW,Outspan Ecuador SA,5039710081,Olam International Ltd,4295888157,"Singapore, Republic of (Government)",4296784399,outspan ecuador sa,outspan ecuador sa,100.0,False,True,TRUE
+335,soc civil gerverd,GFW,,,,,,,soc civil gerverd, na ,19.048,True,False,TRUE
+336,ecuador kakao processing proecuakao s a,GFW,,,,,,,ecuador kakao processing proecuakao s a, na ,18.605,True,False,TRUE
+337,aromas y sabores del ecuador aromacacao,GFW,Aromas Y Sabores Del Ecuador Aromacacao Cia Ltda,5083056017,,,,,aromas y sabores del ecuador aromacacao,aromas y sabores del ecuador aromacacao cia ltda,89.655,True,False,TRUE
+338,amazonas trading peru s a c,GFW,,,,,,,amazonas trading peru s a c, na ,25.806,True,False,TRUE
+339,armajaro peru s a c,GFW,,,,,,,armajaro peru s a c, na ,26.087,True,False,TRUE
+340,compaia nacional de chocolates de peru,GFW,,,,,,,compaia nacional de chocolates de peru, na ,19.048,True,False,TRUE
+341,cooperativa agraria cacaotera acopagro,GFW,Cooperativa Agraria Cacaotera Acopagro,5063346098,,,,,cooperativa agraria cacaotera acopagro,cooperativa agraria cacaotera acopagro,100.0,True,False,TRUE
+342,cooperativa agraria industrial naranjill,GFW,,,,,,,cooperativa agraria industrial naranjill, na ,18.182,True,False,TRUE
+343,exportadora romex,GFW,Exportadora Romex SA,5044066077,Exportadora Romex SA,5044066077,Exportadora Romex SA,5044066077,exportadora romex,exportadora romex sa,91.892,False,False,FALSE
+344,machu picchu coffee trading sac,GFW,,,,,,,machu picchu coffee trading sac, na ,17.143,True,False,TRUE
+345,sumaqao sociedad anonima cerrada,GFW,Sumaqao Sociedad Anonima Cerrada,5083077372,,,,,sumaqao sociedad anonima cerrada,sumaqao sociedad anonima cerrada,100.0,True,False,TRUE
+346,cafetalera amazonica sac,GFW,Cafetalera Amazonica Sac,5082029572,,,,,cafetalera amazonica sac,cafetalera amazonica sac,100.0,True,False,TRUE
+347,aquarius trading peru s a c,GFW,,,,,,,aquarius trading peru s a c, na ,25.806,True,False,TRUE
+348,asociacion cacaotera de tocache asotoc,GFW,,,,,,,asociacion cacaotera de tocache asotoc, na ,14.286,True,False,TRUE
+349,asociacion de productores cacao alto hu,GFW,,,,,,,asociacion de productores cacao alto hu, na ,13.953,True,False,TRUE
+350,casa luker del peru s a c,GFW,,,,,,,casa luker del peru s a c, na ,20.69,True,False,TRUE
+351,coop agrar cafetalera oro verde ltda,GFW,,,,,,,coop agrar cafetalera oro verde ltda, na ,15.0,True,False,TRUE
+352,tropical forest peru s a c,GFW,,,,,,,tropical forest peru s a c, na ,20.0,True,False,TRUE
+353,asociacion de productores agroindustrial,GFW,,,,,,,asociacion de productores agroindustrial, na ,13.636,True,False,TRUE
+354,asociacion de productores cacao vrae,GFW,,,,,,,asociacion de productores cacao vrae, na ,15.0,True,False,TRUE
+355,blue pacific oils sa,GFW,,,,,,,blue pacific oils sa, na ,25.0,True,False,TRUE
+356,coop agraria cafetalera el quinacho l 78,GFW,,,,,,,coop agraria cafetalera el quinacho l 78, na ,18.182,True,False,TRUE
+357,cooperativa agraria de cacao aromatico c,GFW,,,,,,,cooperativa agraria de cacao aromatico c, na ,13.636,True,False,TRUE
+358,cooperativa agroindustrial tocache ltda,GFW,,,,,,,cooperativa agroindustrial tocache ltda, na ,18.605,True,False,TRUE
+359,cooperativa de servicios multiples noran,GFW,,,,,,,cooperativa de servicios multiples noran, na ,13.636,True,False,TRUE
+360,ecoandino sac,GFW,Ecoandino SAC,5086480685,,,,,ecoandino sac,ecoandino sac,100.0,True,False,TRUE
+361,compania nacional de chocolates de peru,GFW,Compaiia Nacional De Chocolates De Peru SA,5000849437,Grupo Nutresa SA,4295865710,Grupo Nutresa SA,4295865710,compania nacional de chocolates de peru,compaiia nacional de chocolates de peru sa,93.827,False,False,FALSE
+362,asociacion cacaotera de las regiones uca,GFW,,,,,,,asociacion cacaotera de las regiones uca, na ,13.636,True,False,TRUE
+363,asociacion de productores yunka del hual,GFW,,,,,,,asociacion de productores yunka del hual, na ,18.182,True,False,TRUE
+364,organic aroma cocoa peru s a c aroma,GFW,,,,,,,organic aroma cocoa peru s a c aroma, na ,15.0,True,False,TRUE
+365,villa andina sociedad anonima cerrada,GFW,,,,,,,villa andina sociedad anonima cerrada, na ,19.512,True,False,TRUE
+366,agro san gerardo e i r l,GFW,,,,,,,agro san gerardo e i r l, na ,28.571,True,False,TRUE
+367,alto el sol peru sociedad anonima cerrad,GFW,,,,,,,alto el sol peru sociedad anonima cerrad, na ,18.182,True,False,TRUE
+368,de guste group s a c,GFW,,,,,,,de guste group s a c, na ,25.0,True,False,TRUE
+369,cuencas del huallaga asociacion de produ,GFW,,,,,,,cuencas del huallaga asociacion de produ, na ,13.636,True,False,TRUE
+370,qori mayo e i r l,GFW,,,,,,,qori mayo e i r l, na ,28.571,True,False,TRUE
+371,central fronteriza norte cafetaleros,GFW,,,,,,,central fronteriza norte cafetaleros, na ,20.0,True,False,TRUE
+372,ciainternacional del cafe sac,GFW,,,,,,,ciainternacional del cafe sac, na ,18.182,True,False,TRUE
+373,comercio  cia sa,GFW,Comercio & Cia SA,5001199394,Comercio & Cia SA,5001199394,Comercio & Cia SA,5001199394,comercio  cia sa,comercio   cia sa,96.97,False,False,FALSE
+374,outspan peru sac,GFW,,,,,,,outspan peru sac, na ,20.0,True,False,TRUE
+375,perales huancaruna sac,GFW,Perales Huancaruna SAC,5037135764,Perales Huancaruna SAC,5037135764,Perales Huancaruna SAC,5037135764,perales huancaruna sac,perales huancaruna sac,100.0,False,False,FALSE
+376,procesadora del sur sa,GFW,Embotelladora Y Procesadora Del Sur Emprosur Sa,5083318296,,,,,procesadora del sur sa,embotelladora y procesadora del sur emprosur sa,63.768,True,False,TRUE
+377,hvcexportaciones sac,GFW,,,,,,,hvcexportaciones sac, na ,16.667,True,False,TRUE
+378,pronatur eirl,GFW,,,,,,,pronatur eirl, na ,35.294,True,False,TRUE
+379,comercio  cia sa,GFW,Comercio & Cia SA,5001199394,Comercio & Cia SA,5001199394,Comercio & Cia SA,5001199394,comercio  cia sa,comercio   cia sa,96.97,False,False,FALSE
+380,cooperativa de servicios multiples solc,GFW,,,,,,,cooperativa de servicios multiples solc, na ,9.302,True,False,TRUE
+381,export import candres sac,GFW,,,,,,,export import candres sac, na ,20.69,True,False,TRUE
+382,coffee green s r l,GFW,,,,,,,coffee green s r l, na ,27.273,True,False,TRUE
+383,expoimp beviperu eirl,GFW,,,,,,,expoimp beviperu eirl, na ,16.0,True,False,TRUE
+384,export import aylen e i r l,GFW,,,,,,,export import aylen e i r l, na ,19.355,True,False,TRUE
+385,multinegocios rr e i r l,GFW,,,,,,,multinegocios rr e i r l, na ,14.286,True,False,TRUE
+386,comercio amazonia s a,GFW,Digitron Da Amazonia Industria E Comercio Ltda,5000900231,Digitron Da Amazonia Industria E Comercio Ltda,5000900231,Digitron Da Amazonia Industria E Comercio Ltda,5000900231,comercio amazonia s a,digitron da amazonia industria e comercio ltda,44.776,False,False,TRUE
+387,cooperativa agraria cafetalera alto mayo,GFW,Cooperativa Agraria Cafetalera Alto Mayo,5082030059,,,,,cooperativa agraria cafetalera alto mayo,cooperativa agraria cafetalera alto mayo,100.0,True,False,TRUE
+388,cooperativa de servicios multiples solc,GFW,,,,,,,cooperativa de servicios multiples solc, na ,9.302,True,False,TRUE
+389,negrisa sac,GFW,,,,,,,negrisa sac, na ,40.0,True,False,TRUE
+390,rainforest trading sac,GFW,Rainforest Trading Norte SAC,5083079969,,,,,rainforest trading sac,rainforest trading norte sac,88.0,True,False,TRUE
+391,asociacion de productores agropecuarios,GFW,Asociacion De Productores Agropecuarios Montegrande,5083091367,,,,,asociacion de productores agropecuarios,asociacion de productores agropecuarios montegrande,86.667,True,False,TRUE
+392,cafe monteverde eirl,GFW,,,,,,,cafe monteverde eirl, na ,25.0,True,False,TRUE
+393,m  v rivas e i r l,GFW,,,,,,,m  v rivas e i r l, na ,27.273,True,False,TRUE
+394,negocios marber s r l,GFW,,,,,,,negocios marber s r l, na ,24.0,True,False,TRUE
+395,valley coffee trading s a c,GFW,,,,,,,valley coffee trading s a c, na ,25.806,True,False,TRUE

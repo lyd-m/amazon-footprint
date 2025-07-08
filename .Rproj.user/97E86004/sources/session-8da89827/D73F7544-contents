@@ -1,0 +1,1682 @@
+rm(list = ls())
+
+
+## packages  ------------------------------
+library(tidyverse)
+library(readxl)
+library(ggalt)
+library(gridExtra)
+library(janitor)
+library(RColorBrewer)
+library(stringr)
+library(lubridate)
+library(kableExtra)
+library(networkD3)
+library(stringr)
+library(scales)
+library(ggrepel)
+library(DescTools)
+library(ggalluvial)
+library(rlang)
+library(treemapify)
+library(colorspace)
+library(fuzzyjoin)
+library(patchwork)
+library(viridis)
+
+## parameters  ------------------------------
+
+etp_risk_regions <- c("Canada", "Russia", "Indonesia")
+
+# colour scheme for visualisations
+palette_name <- "Set2"
+num_colors <- 8 
+palette_colors <- brewer.pal(num_colors, palette_name)
+color_scheme_for_x_variables <- function(x) {
+  palette_colors[c(1:x)]  # Change the index to pick a different color
+}
+
+color_ramp <- colorRampPalette(palette_colors)
+
+fill_boreal_canada <- "#8DA0CB"
+fill_boreal_russia <- "#FC8D62"
+fill_mangroves_indonesia <- "#66C2A5"
+
+eu_countries <- c("Austria", "Belgium", "Bulgaria", "Croatia", "Cyprus", "Czech Republic", "Denmark", "Estonia", "Finland", "France", "Germany", "Greece", "Hungary", "Ireland; Republic of", "Italy", "Latvia", "Lithuania", "Luxembourg", "Malta", "Netherlands", "Poland", "Portugal", "Romania", "Slovakia", "Slovenia", "Spain", "Sweden")
+
+to_file_save_format <- function(str) {
+  file_save_format_string <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", str, perl = TRUE)
+  file_save_format_string <- gsub(" ", "-", tolower(file_save_format_string))
+  return(file_save_format_string)
+}
+
+filters_list <- list(filter_boreal_all = quo(etp == "Boreal forests"),
+                     filter_boreal_canada = quo(etp == "Boreal forests" & etp_risk_region == "Canada"),
+                     filter_boreal_russia = quo(etp == "Boreal forests" & etp_risk_region == "Russia"),
+                     filter_mangroves_indonesia = quo(etp == "Mangroves" & etp_risk_region == "Indonesia"),
+                     filter_mangroves_indonesia_palm_oil = quo(etp == "Mangroves" & etp_risk_sector == "Palm oil"),
+                     filter_mangroves_indonesia_shrimp = quo(etp == "Mangroves" & etp_risk_sector == "Shrimp"))
+
+## import data ------------------------
+
+### reference data ------------------------
+
+fi_ups_all <- read_excel("./intermediate-results/ultimate_parents_database.xlsx") %>%
+  clean_names() #%>%
+  #mutate(across(cols = c(oa_perm_id, ultimate_parent_company_oa_perm_id), .fns = as.character))
+
+fi_info_by_permid <- read_csv("./intermediate-results/financial_institutions_info_by_permid.csv",
+                              na = c("<NA>", NA, "NaN", "nan",""),
+                              col_types = cols(
+                                ...1 = col_double(),
+                                permid = col_double(),
+                                organization_perm_id = col_double(),
+                                company_common_name = col_character(),
+                                business_description = col_character(),
+                                `legal_entity_id_(lei)` = col_character(),
+                                isin = col_character(),
+                                ticker_symbol = col_character(),
+                                company_legal_type = col_character(),
+                                country_of_incorporation = col_character(),
+                                country_of_headquarters = col_character(),
+                                region_of_headquarters = col_character(),
+                                organization_ultimate_parent = col_character(),
+                                ultimate_parent_id = col_double(),
+                                organization_is_public_flag = col_logical(),
+                                percent_of_shares_held_by_strategic_entities = col_double(),
+                                `free_float_(percent)` = col_double(),
+                                trbc_activity_name = col_character(),
+                                `gics_sub-industry_name` = col_character(),
+                                naics_national_industry_name = col_character(),
+                                trbc_activity_all = col_character(),
+                                naics_national_industry_name_all = col_character(),
+                                government_ultimate_parent = col_logical()
+                              )) %>%
+  clean_names() %>%
+  select(-x1) # drop index col from python
+
+regions_unsd <- read_csv("./input-data/regions_map.csv") %>% 
+  clean_names() %>%
+  select(country, region_unsd)
+
+### company data ------------------------
+
+companies <- read_excel("./input-data/companies.xlsx",
+                      sheet = "companies",
+                      skip = 1) %>%
+  clean_names()
+
+### financial flows ------------------------
+
+flows <- read_csv("./intermediate-results/flows_clean_manager_level.csv")
+
+flows_grouping_metrics <- c("organisation_name", 
+                            "country_of_headquarters",
+                            "region_of_headquarters_unsd",
+                            "organization_is_public_flag",
+                            "government_ultimate_parent",
+                            "naics_national_industry_name",
+                            "gics_sub_industry_name",
+                            "trbc_activity_name")
+
+parsing_sensitivity_variables <- c(
+  "tranche_amount_per_manager_usd_m_equal_split",
+  "tranche_amount_per_manager_usd_m_book_ratio",
+  "tranche_amount_per_manager_usd_m_final",
+  "tranche_amount_per_manager_usd_m_equal_split_in_dec_2024_usd",
+  "tranche_amount_per_manager_usd_m_book_ratio_in_dec_2024_usd",
+  "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd",
+  "tranche_amount_per_manager_usd_m_equal_split_in_2024_av_usd",
+  "tranche_amount_per_manager_usd_m_book_ratio_in_2024_av_usd",
+  "tranche_amount_per_manager_usd_m_final_in_2024_av_usd"
+)
+
+## eda --------------
+
+### companies - percentage represented by etp_risk_companies --------------
+
+indicator_totals <- companies %>%
+  distinct(company_name, .keep_all = TRUE) %>%
+  group_by(etp_risk_region, etp_risk_sector) %>%
+  summarise(total_indicator_value = sum(indicator_value),
+            no_companies = n())
+
+write_csv(indicator_totals, "./analytical-results/companies_indicator_totals.csv")
+
+### companies - data availability --------------
+
+company_data_availability <- read_csv("./analytical-results/flows_data_availability.csv")
+
+company_data_availability <- company_data_availability %>%
+  left_join(companies %>% select(company_name, etp, etp_risk_region, etp_risk_sector, indicator, indicator_value, rank_within_group),
+            by = c("etp_risk_company" = "company_name")) %>%
+  distinct(etp_risk_company, .keep_all=TRUE) %>%
+  mutate(any_deals = case_when(
+    bond_deals == TRUE ~ TRUE,
+    loan_deals == TRUE ~ TRUE,
+    equity_deals == TRUE ~ TRUE,
+    TRUE ~ FALSE
+  ))
+
+company_data_availability_long <- company_data_availability %>%
+  pivot_longer(cols = c(bond_deals, equity_deals, loan_deals, any_deals),
+               names_to = "asset_class",
+               values_to = "data_availability") %>% 
+  group_by(etp_risk_region, etp_risk_sector, asset_class, data_availability) %>%
+  summarise(
+    no_companies = n(),
+    total_indicator_value = sum(indicator_value, na.rm = TRUE)) %>% 
+  ungroup()
+
+write_csv(company_data_availability_long, "./analytical-results/flows_data_availability_by_asset_class_w_indicators.csv")
+
+company_data_availability %>%
+  mutate(any_deals = if_any(c(bond_deals, equity_deals, loan_deals), ~ .x == TRUE)) %>%
+  group_by(etp_risk_region, etp_risk_sector, any_deals) %>%
+  summarise(
+    no_companies = n(),
+    total_indicator_value = sum(indicator_value, na.rm = TRUE) 
+  ) %>% 
+  View()
+
+
+company_data_availability %>%
+  mutate(any_deals = if_any(c(bond_deals, equity_deals, loan_deals), ~ .x == TRUE)) %>%
+  group_by(etp_risk_region, etp_risk_sector) %>%
+  summarise(
+    no_companies = n(),
+    total_indicator_value = sum(indicator_value, na.rm = TRUE) 
+  ) %>% 
+  View()
+
+### companies - data availability figure ------------
+non_etp_risk_companies <- tibble(
+  etp_risk_company = rep("Other companies",4),
+  etp = c("Boreal forests", "Boreal forests", "Mangroves", "Mangroves"),
+  etp_risk_region = c("Canada","Russia","Indonesia","Indonesia"),
+  etp_risk_sector = c("Forestry", "Forestry", "Palm oil", "Shrimp"),
+  indicator_value = c(1-0.5807158, 1-0.2391786, 1-0.7647531, 1-0.8312535),
+  any_deals = rep(FALSE, 4)
+)
+
+#### sankey ----------
+
+companies_sankey_data <- company_data_availability %>%
+  bind_rows(non_etp_risk_companies) %>%
+  filter(!is.na(etp_risk_company)) %>%
+  mutate(is_etp_risk_company = if_else(etp_risk_company == "Other companies",
+                                       FALSE,
+                                       TRUE)) %>%
+  select(etp, etp_risk_region, etp_risk_sector, is_etp_risk_company, etp_risk_company, any_deals, indicator_value)
+  
+create_double_sankey <- function(data,
+                                 filter_condition,
+                                 min_y,
+                                 y_max,
+                                 y_breaks,
+                                 col_1,
+                                 col_2,
+                                 col_3,
+                                 analytical_variable) {
+  
+  df <- data
+  
+  df <- df %>%
+    filter(!!filter_condition) %>%
+    group_by(!!sym(col_1), !!sym(col_2), !!sym(col_3)) %>%
+    summarise(value = sum(!!sym(analytical_variable), na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(label_col_1 = str_trunc(!!sym(col_1), width = 18, side = "right", ellipsis = "..."),
+           label_col_2 = str_trunc(!!sym(col_2), width = 18, side = "right", ellipsis = "..."),
+           label_col_3 = str_trunc(!!sym(col_3), width = 18, side = "right", ellipsis = "..."))
+  
+  plot <- df %>%
+    ggplot(aes(y = value, 
+               axis1 = label_col_1,
+               axis2 = label_col_2, 
+               axis3 = label_col_3)) +
+    geom_alluvium(aes(fill = label_col_1),
+                  decreasing = FALSE,
+                  alpha = 0.8) + 
+    geom_stratum(width = 1/3, 
+                 aes(), 
+                 color = "black", 
+                 size = 0.5,
+                 reverse = TRUE,
+                 decreasing = FALSE) +
+    stat_stratum(geom = "text", 
+                 aes(label = after_stat(stratum)), 
+                 decreasing = FALSE,
+                 color = "black",
+                 min.y = min_y,
+                 size = 3) + 
+    scale_x_discrete(limits = c(str_to_title(col_1), str_to_title(col_2), str_to_title(col_3)),
+                     expand = c(0.2,0)) +
+    theme(legend.position = "none") +
+    #scale_fill_manual(values = c(sankey_colorfill),
+                      #na.value = "lightgrey") +
+    theme_minimal() +
+    theme(legend.position = "none",
+          axis.line.y = element_line(color = "black", linewidth = 0.5),
+          axis.ticks.y = element_line(color = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text.x = element_text(size = 12, color = "black"),
+          axis.text.y = element_text(size = 10, color = "black")) +
+    scale_y_continuous(labels = comma,
+                       breaks = seq(0,y_max,y_breaks), 
+                       expand = c(0,0.01)) +
+    labs(y = str_to_title(analytical_variable)) 
+  print(plot)
+}
+
+create_double_sankey(companies_sankey_data,
+                     filter_condition = filters_list[["filter_mangroves_indonesia_palm_oil"]],
+                     min_y = 0.005,
+                     y_max = 1,
+                     y_breaks = 0.1,
+                     col_1 = "is_etp_risk_company",
+                     col_2 = "etp_risk_company",
+                     col_3 = "any_deals",
+                     analytical_variable = "indicator_value")
+
+#### treemap ----------
+
+create_treemap <- function(data, 
+                           filter_condition, 
+                           caption, 
+                           text_size, 
+                           caption_title_text_size) {
+  
+  plot_data <- data %>%
+    filter(!!filter_condition) %>%
+    distinct(etp_risk_company, .keep_all = TRUE) %>%
+    ungroup() %>%
+    mutate(pct = percent(indicator_value, accuracy = 0.1)) %>%
+    mutate(data_availability = if_else(is_etp_risk_company == TRUE,
+                                       if_else(any_deals == TRUE,
+                                               "ETP risk company - financial data",
+                                               "ETP risk company - no financial data"),
+                                       "Other company"))
+  
+  ggplot(plot_data, 
+         aes(area = indicator_value, 
+             fill = data_availability, 
+             label = stringr::str_wrap(paste0(etp_risk_company, 
+                                              " (", percent(indicator_value, accuracy = 0.1), 
+                                              ")"),
+                                       width = 17),
+             subgroup = data_availability)) + # change wrapping width here
+    geom_treemap() +
+    geom_treemap_subgroup_border(colour = "white", size = 5) +
+    #geom_treemap_subgroup_text(place = "centre", grow = TRUE,
+                               #alpha = 0.25, colour = "black",
+                               #fontface = "italic") +
+    geom_treemap_text(colour = "white", size = text_size) +
+    theme_void() +
+    labs(title = paste0(caption)) +
+    theme(legend.position = "left",
+          plot.caption = element_text(size = caption_title_text_size),
+          plot.title = element_text(size = caption_title_text_size),
+          plot.margin = margin(10, 10, 10, 10)) +
+    scale_fill_manual(values = c("ETP risk company - financial data" = "darkblue",
+                                  "ETP risk company - no financial data" = palette_colors[3],
+                                  "Other company" = "lightgrey")) +
+    guides(fill = guide_legend(title = "Data availability"))  # change colours here
+}
+
+##### with non-ETP risk companies -------------
+p1 <- create_treemap(companies_sankey_data,
+                     filter_condition = filters_list[["filter_boreal_canada"]],
+                     caption = "Boreal forest - Canada",
+                     text_size = 10,
+                     caption_title_text_size = 10)
+
+p2 <- create_treemap(companies_sankey_data,
+                     filter_condition = filters_list[["filter_boreal_russia"]],
+                     caption = "Boreal forest - Russia",
+                     text_size = 10,
+                     caption_title_text_size = 10)
+
+p3 <- create_treemap(companies_sankey_data,
+                     filter_condition = filters_list[["filter_mangroves_indonesia_palm_oil"]],
+                     caption = "Mangroves - Indonesia palm oil",
+                     text_size = 10,
+                     caption_title_text_size = 10)
+
+p4 <- create_treemap(companies_sankey_data,
+                     filter_condition = filters_list[["filter_mangroves_indonesia_shrimp"]],
+                     caption = "Mangroves - Indonesia shrimp",
+                     text_size = 10,
+                     caption_title_text_size = 10)
+
+p1 + p2 + p3 + p4 + patchwork::plot_layout(ncol = 2,
+                                           guides = "collect") 
+
+ggsave("./figures/companies_treemap.pdf",
+       width = 12,
+       height = 6.7)
+
+##### etp risk companies only ----------------
+
+p1 <- create_treemap(companies_sankey_data %>% filter(is_etp_risk_company == TRUE),
+                     filter_condition = filters_list[["filter_boreal_canada"]],
+                     caption = "Boreal forest - Canada",
+                     text_size = 10,
+                     caption_title_text_size = 10)
+
+p2 <- create_treemap(companies_sankey_data %>% filter(is_etp_risk_company == TRUE),
+                     filter_condition = filters_list[["filter_boreal_russia"]],
+                     caption = "Boreal forest - Russia",
+                     text_size = 10,
+                     caption_title_text_size = 10)
+
+p3 <- create_treemap(companies_sankey_data %>% filter(is_etp_risk_company == TRUE),
+                     filter_condition = filters_list[["filter_mangroves_indonesia_palm_oil"]],
+                     caption = "Mangroves - Indonesia palm oil",
+                     text_size = 10,
+                     caption_title_text_size = 10)
+
+p4 <- create_treemap(companies_sankey_data %>% filter(is_etp_risk_company == TRUE),
+                     filter_condition = filters_list[["filter_mangroves_indonesia_shrimp"]],
+                     caption = "Mangroves - Indonesia shrimp",
+                     text_size = 10,
+                     caption_title_text_size = 10)
+
+p1 + p2 + p3 + p4 + patchwork::plot_layout(ncol = 2,
+                                           guides = "collect") 
+
+ggsave("./figures/companies_treemap_etp_risk_only.pdf",
+       width = 12,
+       height = 6.7)
+
+
+### fin flows - overall --------------
+for (analytical_variable in parsing_sensitivity_variables) {
+  flows %>% 
+    group_by(etp, etp_risk_region) %>%
+    summarise(amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE),
+              number_of_deals = n_distinct(tranche_id)) %>%
+    write_csv(paste0("./analytical-results/",
+                     str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                     "/",
+                     "flows_overall_",
+                     str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                     ".csv"))
+}
+
+# calculate totals for each jurisdiction
+total_canada <- sum((flows %>% filter(etp_risk_region == "Canada"))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)
+total_russia <- sum((flows %>% filter(etp_risk_region == "Russia"))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)
+total_indonesia <- sum((flows %>% filter(etp_risk_region == "Indonesia"))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)
+
+totals <- list("Canada" = total_canada,
+               "Russia" = total_russia,
+               "Indonesia" = total_indonesia)
+
+### fin flows - asset class --------------
+for (analytical_variable in parsing_sensitivity_variables) {
+  flows %>%
+    group_by(etp, etp_risk_region, financial_flow_type, asset_class) %>%
+    summarise(amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE),
+              number_of_deals = n_distinct(tranche_id)) %>%
+    ungroup() %>%
+    group_by(etp, etp_risk_region) %>%
+    mutate(pct_for_region = scales::percent(amount_usd_m/sum(amount_usd_m), accuracy = 0.1)) %>%
+    write_csv(paste0("./analytical-results/",
+                     str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                     "/",
+                     "flows_by_asset_class_",
+                     str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                     ".csv"))
+}
+
+### fin flows - use_of_proceeds ---------------
+
+sustainable_finance_label_types <- c("Sustainability", 
+                                     "Green Bond Purposes", 
+                                     "Transition Bond Purposes", 
+                                     "Environmental Protection Proj.")
+
+acquisition_finance_types <- c("Real Estate/Property Acquisition", 
+                               "Acquisition Finance", 
+                               "Acquisition Of Securities", 
+                               "Leveraged Buyout", 
+                               "Future Acquisitions",
+                               "Secondary",
+                               "Sponsored Buyout", 
+                               "Spinoff", 
+                               "Infrastructure LBO",
+                               "Working Capital|Acquisition Finance",
+                               "Project Finance|Acquisition Finance")
+
+gcp_finance_types <- c("General Corporate Purpose",
+                       "Working Capital",
+                       "General Corporate Purpose|Acquisition Finance",
+                       "General Corporate Purpose|Acquisition Finance|Other",
+                       "General Corporate Purpose|Capital Expenditures",
+                       "General Corporate Purpose|Working Capital",
+                       "General Corporate Purpose|Working Capital|Capital Expenditures")
+
+capex_types <- c("Capital Expenditures", 
+                 "General Corporate Purpose|Capital Expenditures", 
+                 "Working Capital|Capital Expenditures",
+                 "Ship Financing", 
+                 "Continuing Care Retirement Community")
+  
+refinancing_finance_types <- c("Refinancing", 
+                               "Refinance Commercial Paper", 
+                               "Refinance/Retiring Bank Debt",
+                               "Refinance/Retiring Acquisition Debt", 
+                               "Bridging Loan",
+                               "Payment On Borrowings",
+                               "Reduce Indebtedness",
+                               "Refinance Commercial Paper",
+                               "Refinance/Retiring Fixed Income Debt",
+                               "Dividend Recapitalization", 
+                               "Redeem Class Of Shares")
+
+trade_finance_types <- c("Finance Linked-Trade", 
+                         "Export/Import Financing")
+
+for (analytical_variable in parsing_sensitivity_variables) {
+  
+  flows %>%
+    mutate(use_of_proceeds_consol = case_when(
+      use_of_proceeds %in% sustainable_finance_label_types ~ "Sustainable Finance Label", 
+      use_of_proceeds %in% trade_finance_types ~ "Trade Finance",
+      use_of_proceeds %in% acquisition_finance_types ~ "Mergers & Acquisitions",
+      use_of_proceeds %in% refinancing_finance_types ~ "Refinancing or Liability Management",
+      use_of_proceeds %in% gcp_finance_types ~ "General Corporate Purpose",
+      use_of_proceeds %in% capex_types ~ "Capital Expenditure",
+      TRUE ~ use_of_proceeds)) %>%
+    mutate(use_of_proceeds_consol = if_else(is.na(use_of_proceeds_consol),
+                                            "Not Disclosed",
+                                            use_of_proceeds_consol)) %>%
+    group_by(etp_risk_region, use_of_proceeds_consol) %>%
+    summarise(number_of_deals = n_distinct(tranche_id),
+              amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE)) %>%
+    ungroup() %>%
+    group_by(etp_risk_region) %>%
+    mutate(prop = percent(amount_usd_m / sum(amount_usd_m), accuracy = 0.1)) %>%
+    arrange(desc(amount_usd_m)) %>%
+    write_csv(paste0("./analytical-results/",
+                   str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                   "/",
+                   "flows_by_uop_",
+                   str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                   ".csv"))
+}
+
+#### green finance -------------------
+for (analytical_variable in parsing_sensitivity_variables) {
+  
+  flows %>%
+    group_by(etp_risk_region, flag_sust_finance) %>%
+    summarise(number_of_deals = n_distinct(tranche_id),
+              amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE)) %>%
+    ungroup() %>%
+    group_by(etp_risk_region) %>%
+    mutate(prop = percent(amount_usd_m / sum(amount_usd_m), accuracy = 0.1)) %>%
+    arrange(desc(amount_usd_m)) %>%
+    write_csv(paste0("./analytical-results/",
+                     str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                     "/",
+                     "flows_by_sust_fin_flag_",
+                     str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                     ".csv"))
+}
+
+### fin flows - sector --------------
+for (analytical_variable in parsing_sensitivity_variables) {
+  flows %>%
+    group_by(etp, etp_risk_region, etp_risk_sector) %>%
+    summarise(amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE),
+              number_of_deals = n_distinct(tranche_id)) %>%
+    ungroup() %>%
+    group_by(etp_risk_region) %>%
+    mutate(pct_for_sector = scales::percent(amount_usd_m/sum(amount_usd_m), accuracy = 0.1)) %>%
+    write_csv(paste0("./analytical-results/",
+                   str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                   "/",
+                   "flows_by_etp_risk_sector_",
+                   str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                   ".csv"))
+}
+
+### fin flows - breakdown by grouping characteristics --------------
+
+#running analysis for all variables to check sensitivity of findings
+
+for (analytical_variable in parsing_sensitivity_variables) {
+  
+  for (filter_name in names(filters_list)) {
+    
+    for (metric in flows_grouping_metrics) {
+      
+      filter_ <- filters_list[[filter_name]]
+      
+      flows %>%
+        filter(!!filter_) %>%
+        group_by(!!sym(paste0("manager_true_ultimate_parent_", metric))) %>%
+        summarise(amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE),
+                  number_of_deals = n()) %>%
+        arrange(desc(amount_usd_m)) %>%
+        mutate(percentage_share = amount_usd_m / sum(amount_usd_m, na.rm = TRUE),
+               percentage_cumulative = cumsum(percentage_share),
+               rank = dense_rank(desc(amount_usd_m))) %>%
+        write_csv(paste0("./analytical-results/", 
+                         str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                         "/",
+                         str_replace(filter_name,"filter_",""),
+                         "_by_", 
+                         metric,
+                         str_replace(analytical_variable, "tranche_amount_per_manager_usd_m", ""), 
+                         ".csv"))
+    }
+  }
+}
+
+
+### detailed findings per company (appendix) ---------------------------
+# function to count the proportion held by the top_n of a grouping variable (e.g., geography)
+#### concentration measures ---------------
+##### n concentration ratio ---------------
+prop_top_n <- function(data, group_var, summary_var, n = 5) {
+  data %>%
+    group_by(etp_risk_company, !!sym(group_var)) %>%
+    summarise(total_amount = sum(!!sym(summary_var), na.rm = TRUE)) %>%
+    mutate(prop_amount = total_amount / sum(total_amount)) %>%
+    group_by(etp_risk_company) %>%
+    arrange(desc(total_amount)) %>%
+    slice_head(n = n) %>%
+    summarise(total_prop = sum(prop_amount)) %>%
+    ungroup()
+}
+
+# exploring concentration of top five per company
+for (analytical_variable in parsing_sensitivity_variables) { 
+  for (metric in flows_grouping_metrics) {
+    prop_top_n(flows, 
+               group_var = paste0("manager_true_ultimate_parent_", metric), 
+               summary_var = analytical_variable,
+               n=5) %>% 
+      left_join(companies %>% select(etp_risk_region, company_name),
+                by = c("etp_risk_company" = "company_name")) %>%
+      distinct(etp_risk_company, .keep_all = TRUE) %>%
+      group_by(etp_risk_region) %>% 
+      mutate(mean = mean(total_prop),
+             min = min(total_prop),
+             max = max(total_prop),
+             range = max-min) %>% 
+      write_csv(paste0("./analytical-results/", 
+                       str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                       "/concentration_ratios_top_five_",
+                       "_", 
+                       metric,
+                       "_",
+                       str_replace(analytical_variable, "tranche_amount_per_manager_usd_m", ""), 
+                       ".csv"))
+  }
+}
+
+# exploring concentration of top three per company
+for (analytical_variable in parsing_sensitivity_variables) { 
+  for (metric in flows_grouping_metrics) {
+    prop_top_n(flows, 
+               group_var = paste0("manager_true_ultimate_parent_", metric), 
+               summary_var = analytical_variable,
+               n=3) %>% 
+      left_join(companies %>% select(etp_risk_region, company_name),
+                by = c("etp_risk_company" = "company_name")) %>%
+      distinct(etp_risk_company, .keep_all = TRUE) %>%
+      group_by(etp_risk_region) %>% 
+      mutate(mean = mean(total_prop),
+             min = min(total_prop),
+             max = max(total_prop),
+             range = max-min) %>% 
+      write_csv(paste0("./analytical-results/", 
+                       str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                       "/concentration_ratios_top_three_", 
+                       metric,
+                       "_",
+                       str_replace(analytical_variable, "tranche_amount_per_manager_usd_m", ""), 
+                       ".csv"))
+  }
+}
+
+##### concentration indices ---------------
+
+for (analytical_variable in parsing_sensitivity_variables) { 
+  for (metric in flows_grouping_metrics) {
+    flows %>%
+      group_by(etp_risk_company, !!sym(paste0("manager_true_ultimate_parent_", metric))) %>%
+      summarise(amount = sum(!!sym(analytical_variable), na.rm = TRUE), .groups = "drop") %>%
+      group_by(etp_risk_company) %>%
+      mutate(share = amount / sum(amount, na.rm = TRUE),
+             count_distinct = n_distinct(!!sym(paste0("manager_true_ultimate_parent_", metric))),
+             gini_coefficient = Gini(amount),
+             gini_coefficient = if_else(is.na(gini_coefficient),
+                                        1,
+                                        gini_coefficient),
+             hhi_index = sum(share^2, na.rm = TRUE)) %>%
+      select(-share) %>%
+      distinct(etp_risk_company, .keep_all = TRUE) %>%
+      select(-!!sym(paste0("manager_true_ultimate_parent_", metric)), -amount) %>%
+      write_csv(paste0("./analytical-results/", 
+                       str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                       "/firm_level_concentration_indices_", 
+                       metric,
+                       "_",
+                       str_replace(analytical_variable, "tranche_amount_per_manager_usd_m", ""), 
+                       ".csv"))
+  }
+}
+##### concentration indices - scatter plot (by geography, by FI) ---------------
+# decided these were a bit incomprehensible for making the point (geography more concentrated than institution)
+concentration_data <- read_excel("/Users/ucliipp/Library/CloudStorage/OneDrive-SharedLibraries-UniversityCollegeLondon/CEP-IIPP P4NE grant 2019-2021 - Documents/General/WWF tipping points/Main research/2025 Empirical paper/risk_and_influence_exploration.xlsx",
+                                 sheet = "financial influence")
+
+p1 <- ggplot(concentration_data, aes(x = country_gini,
+                                     y = country_hhi,
+                                     size = country_count,
+                                     color = etp_risk_region)) +
+  # high gini area >= 0.4
+  annotate("rect", xmin = 0.4, xmax = 1.1, ymin = -0.05, ymax = 1.1,
+           alpha = 0.2, fill = "grey70", colour = NA) +
+  # high HHI area >= 0.25
+  annotate("rect", xmin = -0.05, xmax = 1.1, ymin = 0.25, ymax = 1.1,
+           alpha = 0.2, fill = "grey70", colour = NA) +
+  geom_point() +
+  scale_x_continuous(limits = c(-0.05,1.1),
+                     breaks = seq(0,1,0.2),
+                     expand = c(0,0))+
+  scale_y_continuous(limits = c(-0.05,1.1),
+                     breaks = seq(0,1,0.2),
+                     expand = c(0,0)) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "bottom",
+        plot.title = element_text(size = 10)) +
+  labs(x = "Gini coefficient (distribution)",
+       y = "HHI (concentration)",
+       title = "By geography") 
+
+p2 <- ggplot(concentration_data, aes(x = fi_gini,
+                                     y = fi_hhi,
+                                     size = fi_count,
+                                     color = etp_risk_region)) +
+  annotate("rect", xmin = 0.4, xmax = 1.1, ymin = -0.05, ymax = 1.1,
+           alpha = 0.2, fill = "grey70", colour = NA) +
+  # high HHI area >= 0.25
+  annotate("rect", xmin = -0.05, xmax = 1.1, ymin = 0.25, ymax = 1.1,
+           alpha = 0.2, fill = "grey70", colour = NA) +
+  geom_point() +
+  scale_x_continuous(limits = c(-0.05,1.1),
+                     breaks = seq(0,1,0.2),
+                     expand = c(0,0))+
+  scale_y_continuous(limits = c(-0.05,1.1),
+                     breaks = seq(0,1,0.2),
+                     expand = c(0,0)) +
+  theme_bw() +
+  theme(panel.grid.minor = element_blank(),
+        legend.position = "bottom",
+        plot.title = element_text(size = 10)) +
+  labs(x = "Gini coefficient (distribution)",
+       y = "HHI (concentration)",
+       title = "By financial institution") 
+
+p1 + p2 + plot_layout(guides = "collect", axes = "collect")
+
+ggsave("./figures/concentration_distribution_plots.pdf")
+
+##### summary table of all concentration measures ---------------
+
+gini_hhi_geography <- flows %>%
+  group_by(etp_risk_company, manager_true_ultimate_parent_country_of_headquarters) %>%
+  summarise(amount = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE), .groups = "drop") %>%
+  group_by(etp_risk_company) %>%
+  mutate(share = amount / sum(amount, na.rm = TRUE),
+         count_distinct = n_distinct(manager_true_ultimate_parent_country_of_headquarters),
+         gini = Gini(amount),
+         gini = if_else(is.na(gini),
+                                    1,
+                        gini),
+         hhi = sum(share^2, na.rm = TRUE)) %>%
+  select(-share, -manager_true_ultimate_parent_country_of_headquarters, -amount) %>%
+  distinct(etp_risk_company, .keep_all = TRUE) %>%
+  mutate(unit_of_analysis = "Geography")
+
+cr3_geography <- prop_top_n(flows, 
+                            group_var = "manager_true_ultimate_parent_country_of_headquarters", 
+                            summary_var = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd",
+                            n=3) %>%
+  rename(cr3 = total_prop)
+
+cr5_geography <- prop_top_n(flows, 
+                            group_var = "manager_true_ultimate_parent_country_of_headquarters", 
+                            summary_var = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd",
+                            n=5) %>%
+  rename(cr5 = total_prop)
+
+gini_hhi_fi <- flows %>%
+  group_by(etp_risk_company, manager_true_ultimate_parent_organisation_name) %>%
+  summarise(amount = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE), .groups = "drop") %>%
+  group_by(etp_risk_company) %>%
+  mutate(share = amount / sum(amount, na.rm = TRUE),
+         count_distinct = n_distinct(manager_true_ultimate_parent_organisation_name),
+         gini = Gini(amount),
+         gini = if_else(is.na(gini),
+                        1,
+                        gini),
+         hhi = sum(share^2, na.rm = TRUE)) %>%
+  select(-share, -manager_true_ultimate_parent_organisation_name, -amount) %>%
+  distinct(etp_risk_company, .keep_all = TRUE) %>%
+  mutate(unit_of_analysis = "Financial institutions")
+
+cr3_fi <- prop_top_n(flows, 
+                            group_var = "manager_true_ultimate_parent_organisation_name", 
+                            summary_var = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd",
+                            n=3) %>%
+  rename(cr3 = total_prop)
+
+cr5_fi <- prop_top_n(flows, 
+                            group_var = "manager_true_ultimate_parent_organisation_name", 
+                            summary_var = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd",
+                            n=5) %>%
+  rename(cr5 = total_prop)
+
+summary_concentration_distribution <- bind_rows(
+  gini_hhi_geography %>% 
+    left_join(cr3_geography, by = c("etp_risk_company")) %>%
+    left_join(cr5_geography, by = c("etp_risk_company")),
+  gini_hhi_fi %>%
+    left_join(cr3_fi, by = "etp_risk_company") %>%
+    left_join(cr5_geography, by = "etp_risk_company")
+) %>%
+  left_join(companies %>% select(etp_risk_region, company_name) %>% distinct(etp_risk_region, company_name),
+            by = c("etp_risk_company" = "company_name")) %>%
+  select(etp_risk_region, etp_risk_company, unit_of_analysis, everything()) %>%
+  arrange(etp_risk_company)
+
+write_csv(summary_concentration_distribution,
+          "./analytical-results/final_in_dec_2024_usd/summary_table_concentration_measures.csv")
+
+##### dumbell plots instead of scatters ------------------
+# gini - without regions labelled
+summary_concentration_distribution %>% # handling long names
+  mutate(etp_risk_company = case_when(
+    grepl("Eacom", etp_risk_company) ~ "Eacom Timber Corporation",
+    grepl("Norbord", etp_risk_company) ~ "Norbord",
+    grepl("Resolute", etp_risk_company) ~ "Resolute FP Canada Inc",
+    TRUE ~ etp_risk_company
+  )) %>%
+  group_by(etp_risk_company) %>%
+  mutate(max_gini = max(gini, na.rm = TRUE)) %>%
+  ungroup() %>%
+  ggplot(aes(x = gini, y = reorder(etp_risk_company, max_gini))) +
+  # high gini area >= 0.4
+  annotate("rect", xmin = 0.4, xmax = 1.01, ymin = 0, ymax = 31.5,
+           alpha = 0.2, fill = "grey50", colour = NA) +
+  geom_line(aes(colour = etp_risk_region)) +
+  geom_point(aes(colour = unit_of_analysis), size = 3, stroke = 0.4) +
+  scale_colour_manual(values = c(
+    "Geography" = fill_mangroves_indonesia,   
+    "Financial institutions" = fill_boreal_russia  
+  )) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.text = element_text(colour = "black"),
+        legend.position = "top",
+        axis.line = element_line(colour = "darkgrey"),
+        axis.ticks.y = element_line(colour = "black"),
+        axis.title.x = element_text(size = 10),
+        plot.caption.position = "panel") +
+  scale_x_continuous(breaks = seq(0,1,0.2),
+                     limits = c(0, 1.01)) +
+  labs(y = "",
+       x = "Gini coefficient (measure of inequality)",
+       colour = "",
+       caption = ">0.4 indicates highly unequal distribution")
+
+ggsave("./figures/final_in_dec_2024_usd/dumbell_gini.pdf")
+
+#hhi
+summary_concentration_distribution %>% # handling long names
+  mutate(etp_risk_company = case_when(
+    grepl("Eacom", etp_risk_company) ~ "Eacom Timber Corporation",
+    grepl("Norbord", etp_risk_company) ~ "Norbord",
+    grepl("Resolute", etp_risk_company) ~ "Resolute FP Canada Inc",
+    TRUE ~ etp_risk_company
+  )) %>%
+  group_by(etp_risk_company) %>%
+  mutate(max_hhi = max(hhi, na.rm = TRUE)) %>%
+  ungroup() %>%
+  ggplot(aes(x = hhi, y = reorder(etp_risk_company, max_hhi))) +
+  # high HHI area >= 0.25
+  annotate("rect", xmin = 0.25, xmax = 1, ymin = 0, ymax = 31.5,
+           alpha = 0.2, fill = "grey50", colour = NA) +
+  geom_line(aes(colour = etp_risk_region)) +
+  geom_point(aes(colour = unit_of_analysis), size = 3, stroke = 0.4) +
+  scale_colour_manual(values = c(
+    "Geography" = fill_mangroves_indonesia,   
+    "Financial institutions" = fill_boreal_russia  
+  )) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.text = element_text(colour = "black"),
+        legend.position = "bottom",
+        axis.line = element_line(colour = "darkgrey"),
+        axis.ticks.y = element_line(colour = "black"),
+        axis.title.x = element_text(size = 10),
+        plot.subtitle = element_text(size = 8, hjust = 1)) +
+  scale_x_continuous(breaks = seq(0,1,0.2),
+                     limits = c(0, 1.01)) +
+  labs(y = "",
+       x = "HHI (measure of concentration)",
+       colour = "Unit of\nanalysis",
+       subtitle = ">0.25 indicates highly concentrated")
+
+ggsave("./figures/final_in_dec_2024_usd/dumbell_hhi.pdf")
+
+# gini - with regions labelled
+summary_concentration_distribution %>% # handling long names
+  mutate(etp_risk_company = case_when(
+    grepl("Eacom", etp_risk_company) ~ "Eacom Timber Corporation",
+    grepl("Norbord", etp_risk_company) ~ "Norbord",
+    grepl("Resolute", etp_risk_company) ~ "Resolute FP Canada Inc",
+    TRUE ~ etp_risk_company
+  )) %>%
+  group_by(etp_risk_company) %>%
+  mutate(max_gini = max(gini, na.rm = TRUE)) %>%
+  ungroup() %>%
+  ggplot(aes(x = gini, y = reorder(etp_risk_company, max_gini))) +
+  # high gini area >= 0.4
+  annotate("rect", xmin = 0.4, xmax = 1, ymin = 0, ymax = 31.5,
+           alpha = 0.2, fill = "grey70", colour = NA) +
+  geom_line(aes(colour = etp_risk_region)) +
+  geom_point(aes(shape = unit_of_analysis, 
+                 fill = etp_risk_region,
+                 colour = etp_risk_region), size = 3, stroke = 0.4) +
+  scale_shape_manual(values = c(
+    "Geography" = 21,   
+    "Financial institutions" = 17  
+  )) +
+  scale_colour_manual(values = c(
+    "Canada" = fill_boreal_canada,
+    "Russia" = fill_boreal_russia,
+    "Indonesia" = fill_mangroves_indonesia
+  )) +
+  scale_fill_manual(values = c(
+    "Canada" = fill_boreal_canada,
+    "Russia" = fill_boreal_russia,
+    "Indonesia" = fill_mangroves_indonesia
+  )) +
+  theme_minimal() +
+  theme(panel.grid.major = element_blank(),
+        axis.text = element_text(colour = "black"),
+        legend.position = "right",
+        axis.line = element_line(colour = "darkgrey"),
+        axis.ticks.y = element_line(colour = "black"),
+        axis.title.x = element_text(size = 10)) +
+  scale_x_continuous(breaks = seq(0,1,0.2)) +
+  labs(y = "",
+       x = "Gini coefficient (measure of inequality)",
+       colour = "")
+
+
+#### overall summary table  ---------------
+# function to summarise top_n values (name, %) for a certain grouping var (e.g., country)
+summarise_top_n <- function(data, focus_group, grouping_var, summary_var, n = 5) {
+  if (focus_group == "etp_risk_company") {
+    data %>%
+      group_by(etp_risk_company, !!grouping_var) %>%
+      summarise(total_amount = sum(!!summary_var, na.rm = TRUE)) %>%
+      mutate(prop_amount = total_amount / sum(total_amount)) %>%
+      group_by(etp_risk_company) %>%
+      arrange(desc(total_amount)) %>%
+      slice_head(n = n) %>%
+      summarise(summary = paste0(!!grouping_var, " (", round(prop_amount * 100, 1), "%)", collapse = ", ")) %>%
+      ungroup()
+  } else
+    data %>%
+      group_by(manager_true_ultimate_parent_organisation_name, !!grouping_var) %>%
+      summarise(total_amount = sum(!!summary_var, na.rm = TRUE)) %>%
+      mutate(prop_amount = total_amount / sum(total_amount)) %>%
+      group_by(manager_true_ultimate_parent_organisation_name) %>%
+      arrange(desc(total_amount)) %>%
+      slice_head(n = n) %>%
+      summarise(summary = paste0(!!grouping_var, " (", round(prop_amount * 100, 1), "%)", collapse = ", ")) %>%
+      ungroup()
+}
+
+
+for (analytical_variable in parsing_sensitivity_variables) {
+  
+  total_per_company <- flows %>%
+    group_by(etp_risk_company) %>%
+    summarise(
+      total_amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE),
+      total_amount_usd_m = comma(total_amount_usd_m, accuracy = 1),
+      number_of_deals = n()
+    ) %>%
+    ungroup()
+  
+  df_summary <- tibble()
+  
+  for (metric in flows_grouping_metrics) {
+    summary_rows <- summarise_top_n(
+      data = flows,
+      focus_group = "etp_risk_company",
+      grouping_var = sym(paste0("manager_true_ultimate_parent_", metric)),
+      summary_var = sym(analytical_variable),
+      n = 5
+    ) %>%
+      left_join(total_per_company, by = "etp_risk_company") %>%
+      mutate(grouping_metric = metric)
+    
+    df_summary <- bind_rows(df_summary, summary_rows)
+  }
+  
+  asset_class_summary <- summarise_top_n(
+    data = flows,
+    focus_group = "etp_risk_company",
+    grouping_var = sym("asset_class"),
+    summary_var = sym(analytical_variable),
+    n = 5
+  ) %>%
+    left_join(total_per_company, by = "etp_risk_company") %>%
+    mutate(grouping_metric = "asset_class")
+  
+  df_summary <- bind_rows(df_summary, asset_class_summary)
+  
+  df_summary_wide <- df_summary %>% pivot_wider(
+    names_from = grouping_metric,
+    values_from = summary
+  )
+  
+  df_summary_wide <- df_summary_wide %>%
+    left_join(companies %>% select(company_name, etp, etp_risk_region),
+              by = c("etp_risk_company" = "company_name")) %>%
+    select(etp, etp_risk_region, etp_risk_company, everything()) %>%
+    arrange(etp, etp_risk_region, etp_risk_company) %>%
+    distinct(etp_risk_company, .keep_all = TRUE)
+   
+  write_csv(df_summary_wide, paste0("./analytical-results/summary-tables/",
+                                    str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                                    "/",
+                                    "etp_risk_company_detailed_breakdown_",
+                                    str_replace(analytical_variable, "tranche_amount_per_manager_usd_m", ""),
+                                    ".csv"))
+}
+
+
+### detailed findings per financial institution (non-public) --------------------
+
+for (analytical_variable in parsing_sensitivity_variables) {
+  
+  total_per_company <- flows %>%
+    group_by(manager_true_ultimate_parent_organisation_name) %>%
+    summarise(
+      total_amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE),
+      number_of_deals = n()
+    ) %>%
+    ungroup()
+  
+  df_summary <- tibble()
+  
+  for (metric in c("asset_class", "etp_risk_company", "etp_risk_region", "etp")) {
+    summary_rows <- summarise_top_n(
+      data = flows,
+      focus_group = "manager_true_organisation_ultimate_parent_name",
+      grouping_var = sym(paste0(metric)),
+      summary_var = sym(analytical_variable),
+      n = 5
+    ) %>%
+      left_join(total_per_company, by = "manager_true_ultimate_parent_organisation_name") %>%
+      mutate(grouping_metric = metric)
+    
+    df_summary <- bind_rows(df_summary, summary_rows)
+  }
+  
+  df_summary_wide <- df_summary %>% 
+    pivot_wider(
+      names_from = grouping_metric,
+      values_from = summary
+    ) %>%
+    arrange(desc(total_amount_usd_m)) %>%
+    mutate(total_amount_usd_m = comma(total_amount_usd_m, accuracy = 1))
+  
+  write_csv(df_summary_wide, paste0("./intermediate-results/confidential-summary-tables/",
+                                    str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                                    "/",
+                                    "financial_institutions_detailed_breakdown",
+                                    str_replace(analytical_variable, "tranche_amount_per_manager_usd_m", ""),
+                                    ".csv"))
+}
+
+## Discrete findings for Dec 2024 data only (generalise later) ---------------
+### fin flows - syndicated proportion ---------
+flows %>%
+  group_by(tranche_id) %>%
+  mutate(number_of_managers = n_distinct(manager_name)) %>%
+  ungroup %>%
+  mutate(syndicated = if_else(number_of_managers > 1,
+                              TRUE,
+                              FALSE)) %>%
+  group_by(asset_class, syndicated) %>%
+  summarise(total = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)) %>%
+  ungroup() %>%
+  group_by(asset_class) %>%
+  mutate(pct = total/sum(total)) %>% 
+  write_csv("./analytical-results/final_in_dec_2024_usd/syndicated_props.csv")
+
+### fin flows - non-domestic proportion ---------
+
+for (country_ in c("Canada", "Russia", "Indonesia")) {
+  print(country_)
+  df <- flows %>%
+    filter(etp_risk_region == country_) %>%
+    mutate(domestic_fi = if_else(manager_true_ultimate_parent_country_of_headquarters == country_,
+                                 TRUE,
+                                 FALSE)) %>%
+    group_by(domestic_fi) %>%
+    summarise(amount_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)) %>%
+    ungroup() %>%
+    mutate(prop = amount_usd_m/sum(amount_usd_m))
+  
+  print(df)
+  
+  write_csv(df, paste0("./analytical-results/final_in_dec_2024_usd/domestic_split_", str_to_lower(country_)))
+  
+}
+
+### fin flows - GSIB proportion ---------
+
+### fin flows - developed vs developing (World Bank classification) ---------
+
+## initial figures -------------
+
+### asset classes over time ---------------
+for (analytical_variable in parsing_sensitivity_variables) {
+  for (region_ in etp_risk_regions) {
+  
+    df <- flows %>%
+      filter(etp_risk_region == region_) %>%
+      group_by(year, asset_class) %>%
+      summarise(amount_usd_m = sum(!!sym(analytical_variable)),
+                number_of_deals = n_distinct(tranche_id)) %>%
+      ungroup()
+    
+    df %>%
+      ggplot() +
+      geom_col(aes(x = year, y = amount_usd_m, fill = asset_class)) +
+      scale_fill_manual(values = color_scheme_for_x_variables(3)) +
+      scale_y_continuous(expand = expansion(mult = c(0,0)),
+                         labels = comma) +
+      scale_x_continuous(expand = expansion(mult = c(0.03,0)),
+                         breaks = seq(2014,2024,1)) +
+      theme_minimal() +
+      theme(panel.grid.major.x = element_blank(),
+            panel.grid.minor.x = element_blank(),
+            axis.text.x = element_text(size = 10, colour = "black"),
+            axis.text.y = element_text(size = 10, colour = "black"),
+            axis.title.y = element_text(size = 12, colour = "black"),
+            axis.title.x = element_blank(),
+            legend.position = "bottom") +
+      labs(y = "Financial flows (US $m)",
+           fill = "",
+           subtitle = paste0(region_)) 
+      #annotate("text", 
+               #label = paste0("Total: US$", comma(totals[[region_]], scale = 0.1), "m"), 
+               #y = max(df$amount_usd_m), x = 2014.5)
+    
+    ggsave(paste0("./figures/",
+                  str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                  "/",
+                  "flows_by_year_",
+                  to_file_save_format(region_),
+                  str_replace(analytical_variable, "tranche_amount_per_manager_usd_m", ""),
+                  ".pdf"),
+           width = 7,
+           height = 3)
+  
+  }
+}
+### country column plots ---------------
+
+create_country_col_plot <- function(data, 
+                                    region_,
+                                    y_label_position_change, # 60000/60000 for Amazon/Indonesia
+                                    y_label_hjust, # 12000/1000 for Amazon/Indonesia
+                                    y_breaks, 
+                                    y_max) {
+  df <- data
+  
+  plot_data <- df %>%
+    filter(etp_risk_region == region_) %>%
+    mutate(manager_true_ultimate_parent_country_of_headquarters = if_else(is.na(manager_true_ultimate_parent_country_of_headquarters),
+                                                                          "Unknown",
+                                                                          manager_true_ultimate_parent_country_of_headquarters)) %>%
+    group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
+    summarise(amount_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)) %>%
+    ungroup() %>%
+    arrange(desc(amount_usd_m)) %>%
+    mutate(rank = dense_rank(desc(amount_usd_m)),
+           pct = amount_usd_m/sum(amount_usd_m))
+  
+  write_csv(plot_data, paste0("./figures/country_col_chart_data_", region_, ".csv"))
+  
+  plot_data <- plot_data %>%
+    filter(rank <= 20) %>%
+    ungroup() %>%
+    left_join(regions_unsd, by = c("manager_true_ultimate_parent_country_of_headquarters" = "country")) %>%
+    mutate(region_unsd = if_else(is.na(region_unsd),
+                                 "Unknown",
+                                 region_unsd)) # correct for NA regions
+  
+  plot <- ggplot(plot_data, aes(x = reorder(manager_true_ultimate_parent_country_of_headquarters, desc(rank)), y = amount_usd_m, fill = region_unsd)) +
+    geom_col() +
+    geom_text(aes(label = paste0(percent(pct, accuracy = 0.1)),
+                  y = if_else(amount_usd_m > y_label_position_change, 
+                              (amount_usd_m - y_label_hjust), 
+                              (amount_usd_m + y_label_hjust))),
+              size = 3) +
+    theme_minimal() +
+    scale_fill_manual(
+      values = c(
+        "Asia" = "#FC8D62",
+        "Europe" = "#8DA0CB",
+        "Latin America and the Caribbean" = "#E78AC3",
+        "Northern America" = "#A6D854",
+        "Oceania" = "#FFD92F",
+        "Unknown" = "#E5C494"
+      )
+    ) + 
+    scale_y_continuous(labels = comma,
+                       expand = expansion(mult = c(0,0.04)),
+                       limits = c(0, y_max),
+                       breaks = seq(0,y_max,y_breaks)) +
+    scale_x_discrete(expand = expansion(mult = c(0))) +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid = element_line(colour = "grey70"),
+          axis.text.x = element_text(size = 12, colour = "black"),
+          axis.text.y = element_text(size = 10, colour = "black"),
+          axis.title.y = element_text(size = 12, colour = "black"),
+          axis.title.x = element_text(size = 12, colour = "black"),
+          legend.position = c(0.75,0.3)) +
+    labs(x = NULL,
+         y = "Financial flows 2014-2024 (US$m)",
+         #caption = "All asset classes. Deals between 1 January 2014 and 31 December 2023",
+         fill = "Region",
+         title = paste0()) +
+    coord_flip()
+  
+  print(plot)
+}
+
+create_country_col_plot(flows,
+                        region_ = "Canada",
+                        y_label_position_change = 15000,
+                        y_label_hjust = 2000,
+                        y_breaks = 10000,
+                        y_max = 40000)
+
+ggsave("./figures/flows_by_country_canada.pdf",
+       width = 7,
+       height = 6)
+
+create_country_col_plot(flows,
+                        region_ = "Russia",
+                        y_label_position_change = 5000,
+                        y_label_hjust = 500,
+                        y_breaks = 5000,
+                        y_max = 12500)
+
+ggsave("./figures/flows_by_country_russia.pdf",
+       width = 7,
+       height = 6)
+
+create_country_col_plot(flows,
+                        region_ = "Indonesia",
+                        y_label_position_change = 1500,
+                        y_label_hjust = 200,
+                        y_breaks = 1000,
+                        y_max = 5000)
+
+ggsave("./figures/flows_by_country_indonesia.pdf",
+       width = 7,
+       height = 6)
+
+### eu proportion --------------
+flows %>%
+  group_by(etp_risk_region, manager_true_ultimate_parent_country_of_headquarters) %>%
+  summarise(amount = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE), .groups = "drop") %>%
+  mutate(is_eu_country = if_else(manager_true_ultimate_parent_country_of_headquarters %in% eu_countries,
+                                 TRUE,
+                                 FALSE)) %>% 
+  group_by(etp_risk_region,is_eu_country) %>%
+  summarise(amount = sum(amount, na.rm = TRUE), .groups = "drop") %>%
+  group_by(etp_risk_region) %>%
+  mutate(pct = amount/sum(amount)) %>%
+  write_csv("./analytical-results/flows_eu_proportions.csv")
+  
+
+
+### country maps --------------
+
+
+
+### financial institutions league table --------------
+
+create_manager_league_table_w_fill <- function(data, # includes government-owned entities marked with a *
+                                               fill_option,
+                                               region_,
+                                               n_shown,
+                                               y_label_position_change, # shift labels from inside cols to outside cols
+                                               y_label_hjust, # position of labels
+                                               y_max,
+                                               y_breaks,
+                                               analytical_variable
+) {
+  plot_data <- data %>%
+    filter(etp_risk_region == region_) %>%
+    group_by(manager_true_ultimate_parent_organisation_name) %>%
+    summarise(amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE)) %>%
+    ungroup() %>%
+    arrange(desc(amount_usd_m)) %>%
+    mutate(rank = dense_rank(desc(amount_usd_m)),
+           prop = amount_usd_m / sum(amount_usd_m)) %>%
+    filter(rank <= n_shown) %>%
+    # join on additional info
+    left_join((data %>% 
+                 distinct(manager_true_ultimate_parent_organisation_name,.keep_all = TRUE) %>%
+                 select(manager_true_ultimate_parent_organisation_name, !!sym(fill_option), manager_true_ultimate_parent_government_ultimate_parent)), 
+              by = c("manager_true_ultimate_parent_organisation_name")) %>%
+    # tag government ultimate parent 
+    # handling "Not Applicable" as managers (self-arranged)
+    mutate(manager_true_ultimate_parent_government_ultimate_parent = if_else(is.na(manager_true_ultimate_parent_government_ultimate_parent),
+                                                                             FALSE,
+                                                                             manager_true_ultimate_parent_government_ultimate_parent),
+           manager_true_ultimate_parent_organisation_name = if_else(manager_true_ultimate_parent_government_ultimate_parent == TRUE,
+                                                                    paste0(manager_true_ultimate_parent_organisation_name,"*"),
+                                                                    manager_true_ultimate_parent_organisation_name),
+           # n.a. handling
+           manager_true_ultimate_parent_organisation_name = if_else(is.na(manager_true_ultimate_parent_organisation_name),
+                                                                    "Unknown",
+                                                                    manager_true_ultimate_parent_organisation_name))
+  
+  write_csv(plot_data, paste0("./figures/",
+                              str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                              "/flows_by_manager_",
+                              to_file_save_format(region_),
+                              "_",
+                              str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                              ".csv"))
+  
+  plot <- plot_data %>%
+    ggplot(aes(x = reorder(manager_true_ultimate_parent_organisation_name, desc(rank)), 
+               y = amount_usd_m, 
+               label = percent(prop, accuracy = 0.1),
+               fill = !!sym(fill_option))) +
+    geom_col() +
+    geom_text(aes(label = percent(prop, accuracy = 0.1),
+                  y = if_else(amount_usd_m > y_label_position_change, 
+                              (amount_usd_m - y_label_hjust), 
+                              (amount_usd_m + y_label_hjust))),
+              size = 3) +
+    theme_minimal() +
+    scale_fill_manual(
+      values = c(
+        "Asia" = "#FC8D62",
+        "Europe" = "#8DA0CB",
+        "Latin America and the Caribbean" = "#E78AC3",
+        "Northern America" = "#A6D854",
+        "Oceania" = "#FFD92F",
+        "Unknown" = "#E5C494"
+      )
+    ) +
+    scale_y_continuous(labels = comma,
+                       expand = expansion(mult = c(0.01,0.05)),
+                       breaks = seq(0,y_max,y_breaks)) +
+    scale_x_discrete(expand = expansion(mult = c(0))) +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          axis.text.x = element_text(size = 10, color = "black"),
+          axis.text.y = element_text(size = 10, color = "black"),
+          axis.title.y = element_text(size = 8, color = "black"),
+          axis.title.x = element_text(size = 10, color = "black"),
+          legend.position = c(0.7,0.15),
+          axis.line.x = element_line(color = "grey"),
+          plot.title = element_text(hjust = 0.9, size = 10, color = "black")) +
+    labs(x = NULL,
+         y = "Financial flows (adjusted US$m)",
+         fill = "Region") +
+    coord_flip()
+  
+  print(plot)
+}
+
+for (analytical_variable in parsing_sensitivity_variables) {
+create_manager_league_table_w_fill(data = flows,
+                                   region_ = "Canada",
+                                   fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
+                                   n_shown = 30,
+                                   y_label_position_change = 5000,
+                                   y_label_hjust = 1500,
+                                   y_max = 25000,
+                                   y_breaks = 5000,
+                                   analytical_variable = analytical_variable)
+  ggsave(paste0("./figures/", 
+                str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                "/flows_by_manager_canada_",
+                str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                ".pdf"),
+         width = 4.7,
+         height = 8)
+}
+
+for (analytical_variable in parsing_sensitivity_variables) {
+  create_manager_league_table_w_fill(data = flows,
+                                     region_ = "Russia",
+                                     fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
+                                     n_shown = 30,
+                                     y_label_position_change = 1250,
+                                     y_label_hjust = 250,
+                                     y_max = 5000,
+                                     y_breaks = 1000,
+                                     analytical_variable = analytical_variable)
+  ggsave(paste0("./figures/", 
+                str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                "/flows_by_manager_russia_",
+                str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                ".pdf"),
+         width = 4.7,
+         height = 8)
+}
+
+for (analytical_variable in parsing_sensitivity_variables) {
+  create_manager_league_table_w_fill(data = flows,
+                                     region_ = "Indonesia",
+                                     fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
+                                     n_shown = 30,
+                                     y_label_position_change = 1250,
+                                     y_label_hjust = 200,
+                                     y_max = 5000,
+                                     y_breaks = 500,
+                                     analytical_variable = analytical_variable)
+  ggsave(paste0("./figures/", 
+                str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                "/flows_by_manager_indonesia_",
+                str_replace(analytical_variable, "tranche_amount_per_manager_usd_m_", ""),
+                ".pdf"),
+         width = 4.7,
+         height = 8)
+}
+
+### central figure (sankey) ------------------------
+
+# double sankey test
+create_double_sankey(flows,
+                     filter_condition = filters_list[["filter_boreal_canada"]],
+                     min_y = 1000,
+                     y_max = 100000,
+                     y_breaks = 10000,
+                     col_1 = "asset_class",
+                     col_2 = "etp_risk_company",
+                     col_3 = "manager_true_ultimate_parent_country_of_headquarters",
+                     analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd")
+
+create_single_sankey <- function(data,
+                                 filter_condition,
+                                 min_y,
+                                 y_max,
+                                 y_breaks,
+                                 col_1,
+                                 col_1_label,
+                                 col_2,
+                                 col_2_label,
+                                 analytical_variable,
+                                 plot_title,
+                                 y_label){
+  df <- data
+  
+  df <- df %>%
+    filter(!!filter_condition) %>%
+    group_by(!!sym(col_1), !!sym(col_2)) %>%
+    summarise(value = sum(!!sym(analytical_variable), na.rm = TRUE)) %>%
+    ungroup() %>% # na handling
+    mutate(!!col_1 := if_else(is.na(!!sym(col_1)),"Unknown",!!sym(col_1)),
+           pct = value/sum(value)) %>%
+    # adjust name widths to fit in Sankey columns
+    #mutate(label_col_1 = str_trunc(!!sym(col_1), width = 18, side = "right", ellipsis = "..."),
+           #label_col_2 = str_trunc(!!sym(col_2), width = 18, side = "right", ellipsis = "...")) 
+    group_by(!!sym(col_1)) %>%
+    mutate(group_pct = sum(pct)) %>% # grouping together small country contributions
+    ungroup() %>%
+    mutate(!!col_1 := if_else(group_pct < 0.01,
+                              "Other",
+                              !!sym(col_1))) %>%
+    group_by(!!sym(col_1), !!sym(col_2)) %>%
+    summarise(value = sum(value, na.rm = TRUE)) %>%
+    ungroup()
+  
+  plot <- df %>%
+    ggplot(aes(y = value, 
+               axis1 = !!sym(col_1),
+               axis2 = !!sym(col_2),
+               fill = !!sym(col_1))) +
+    geom_alluvium(aes(),
+                  decreasing = FALSE,
+                  alpha = 0.5) + 
+    geom_stratum(width = 1/3, 
+                 aes(),
+                 color = "black", 
+                 size = 0.5,
+                 reverse = TRUE,
+                 decreasing = FALSE) +
+    stat_stratum(geom = "text", 
+                 aes(label = after_stat(stratum)), 
+                 decreasing = FALSE,
+                 color = "black",
+                 min.y = min_y,
+                 size = 3) + 
+    scale_x_discrete(limits = c(str_to_title(col_1), str_to_title(col_2)),
+                     expand = c(0.2,0)) +
+    theme(legend.position = "none") +
+    #scale_fill_viridis_d(option = "plasma", begin = 0.1, end = 0.9) +
+    scale_fill_manual(values = sankey_colours) +
+    theme_minimal() +
+    theme(legend.position = "none",
+          axis.line.y = element_line(color = "black", linewidth = 0.5),
+          axis.ticks.y = element_line(color = "black"),
+          panel.grid.major = element_blank(),
+          panel.grid.minor = element_blank(),
+          axis.text.x = element_text(size = 10, color = "black"),
+          axis.text.y = element_text(size = 10, color = "black"),
+          title = element_text(size = 10)) +
+    scale_x_discrete(limits = c(col_1_label, col_2_label),
+                     expand = c(0.2,0)) +
+    scale_y_continuous(labels = comma,
+                       breaks = seq(0,y_max,y_breaks), 
+                       expand = c(0,0.01)) +
+    labs(y = y_label,
+         title = plot_title) 
+  return(plot)
+}
+
+# create scaled colour scheme by region
+sankey_colours <- c(
+  # Asia (pastel oranges)
+  "Japan" = "#FC8D62",
+  "Singapore" = "#FDB282",
+  "Malaysia" = "#FDBE91",
+  "China" = "#FDC9A1",
+  "Indonesia" = "#FDD4B1",
+  "Kazakhstan" = "#FDE0C1",
+  "Korea; Republic (S. Korea)" = "#FDEBD1",
+  "Oman" = "#FDF2DC",
+  "Taiwan" = "#FCE3C3",
+  "United Arab Emirates" = "#FCD8B5",
+  "India" = "#FCCBAC",
+  "Israel" = "#FDBCA0",
+  "Hong Kong" = "#FDAF92",
+  "Philippines" = "#FDA483",
+  "Thailand" = "#FD9974",
+  
+  # Europe (pastel blues)
+  "Germany" = "#8DA0CB",
+  "Spain" = "#A2B3D6",
+  "France" = "#B6C4E0",
+  "United Kingdom" = "#C9D5EB",
+  "Norway" = "#DCE6F5",
+  "Netherlands" = "#B2C0D7",
+  "Russia" = "#A5B2CD",
+  "Switzerland" = "#96A5C4",
+  "Italy" = "#8798BA",
+  "Austria" = "#788AB1",
+  "Finland" = "#6A7DA7",
+  "Cyprus" = "#5B709E",
+  "Luxembourg" = "#4C6294",
+  "Sweden" = "#3D558A",
+  "Denmark" = "#2F4881",
+  "Portugal" = "#203B77",
+  "Belgium" = "#102E6D",
+  "European Union" = "#8DA0CB",
+  
+  # Latin America and the Caribbean (pastel pinks)
+  "Brazil" = "#E78AC3",
+  "Jamaica" = "#EDA0CE",
+  "Barbados" = "#F3B6DA",
+  
+  # Northern America (pastel greens)
+  "United States of America" = "#A6D854",
+  "Canada" = "#B9E27A",
+  
+  # Oceania (pastel yellow)
+  "Australia" = "#FFD92F",
+  
+  # Unknown and other
+  "NA" = "#E5C494",
+  "Unknown" = "#D9D9D9",
+  
+  # Other
+  "Other" = "#A6A6A6"
+)
+
+# all regions the same
+sankey_colours <- c(
+  # Asia
+  "Japan" = "#FC8D62",
+  "Singapore" = "#FC8D62",
+  "Malaysia" = "#FC8D62",
+  "China" = "#FC8D62",
+  "Indonesia" = "#FC8D62",
+  "Kazakhstan" = "#FC8D62",
+  "Korea; Republic (S. Korea)" = "#FC8D62",
+  "Oman" = "#FC8D62",
+  "Taiwan" = "#FC8D62",
+  "United Arab Emirates" = "#FC8D62",
+  "India" = "#FC8D62",
+  "Israel" = "#FC8D62",
+  "Hong Kong" = "#FC8D62",
+  "Philippines" = "#FC8D62",
+  "Thailand" = "#FC8D62",
+  
+  # Europe
+  "Germany" = "#8DA0CB",
+  "Spain" = "#8DA0CB",
+  "France" = "#8DA0CB",
+  "United Kingdom" = "#8DA0CB",
+  "Norway" = "#8DA0CB",
+  "Netherlands" = "#8DA0CB",
+  "Russia" = "#8DA0CB",
+  "Switzerland" = "#8DA0CB",
+  "Italy" = "#8DA0CB",
+  "Austria" = "#8DA0CB",
+  "Finland" = "#8DA0CB",
+  "Cyprus" = "#8DA0CB",
+  "Luxembourg" = "#8DA0CB",
+  "Sweden" = "#8DA0CB",
+  "Denmark" = "#8DA0CB",
+  "Portugal" = "#8DA0CB",
+  "Belgium" = "#8DA0CB",
+  "European Union" = "#8DA0CB",
+  
+  # Latin America and the Caribbean
+  "Brazil" = "#E78AC3",
+  "Jamaica" = "#E78AC3",
+  "Barbados" = "#E78AC3",
+  
+  # Northern America
+  "United States of America" = "#A6D854",
+  "Canada" = "#A6D854",
+  
+  # Oceania
+  "Australia" = "#FFD92F",
+  
+  # Unknown and Other
+  "NA" = "#D9D9D9",
+  "Unknown" = "#D9D9D9",
+  "Other" = "#A6A6A6"
+)
+
+  
+
+
+p1 <- create_single_sankey(flows %>%# edit EU countries
+                             mutate(manager_true_ultimate_parent_country_of_headquarters = if_else(manager_true_ultimate_parent_country_of_headquarters %in% eu_countries,
+                                                                                                   "European Union",
+                                                                                                   manager_true_ultimate_parent_country_of_headquarters)),
+                           filter_condition = filters_list[["filter_boreal_canada"]],
+                           min_y = 700,
+                           y_max = 100000,
+                           y_breaks = 10000,
+                           col_2 = "etp_risk_company",
+                           col_1 = "manager_true_ultimate_parent_country_of_headquarters",
+                           col_1_label = "HQ (financial institution)",
+                           col_2_label = "Company",
+                           analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd",
+                           plot_title = "a) Boreal forests - Canada",
+                           y_label = "Financial flows (inflation-adjusted US$)")
+
+p2 <- create_single_sankey(flows %>%# edit EU countries
+                             mutate(manager_true_ultimate_parent_country_of_headquarters = if_else(manager_true_ultimate_parent_country_of_headquarters %in% eu_countries,
+                                                                                                   "European Union",
+                                                                                                   manager_true_ultimate_parent_country_of_headquarters)),
+                     filter_condition = filters_list[["filter_boreal_russia"]],
+                     min_y = 50,
+                     y_max = 100000,
+                     y_breaks = 5000,
+                     col_2 = "etp_risk_company",
+                     col_1 = "manager_true_ultimate_parent_country_of_headquarters",
+                     col_1_label = "HQ (financial institution)",
+                     col_2_label = "Company",
+                     analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd",
+                     plot_title = "b) Boreal forests - Russia",
+                     y_label = "Financial flows (inflation-adjusted US$)")
+
+p3 <- create_single_sankey(flows %>%# edit EU countries
+                             mutate(manager_true_ultimate_parent_country_of_headquarters = if_else(manager_true_ultimate_parent_country_of_headquarters %in% eu_countries,
+                                                                                                   "European Union",
+                                                                                                   manager_true_ultimate_parent_country_of_headquarters)),
+                           filter_condition = filters_list[["filter_mangroves_indonesia"]],
+                           min_y = 50,
+                           y_max = 100000,
+                           y_breaks = 1000,
+                           col_2 = "etp_risk_company",
+                           col_1 = "manager_true_ultimate_parent_country_of_headquarters",
+                           col_1_label = "HQ (financial institution)",
+                           col_2_label = "Company",
+                           analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd",
+                           plot_title = "c) Mangroves - Indonesia",
+                           y_label = "Financial flows (inflation-adjusted US$)")
+
+(p1) + (p2) + (p3) + plot_layout(axes = "collect")
+
+ggsave("./figures/country_company_alluvials_draft_3.pdf")
+
+
