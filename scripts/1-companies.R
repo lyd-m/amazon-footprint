@@ -240,3 +240,11 @@ deduce_data_selective_temporal_patterns %>%
   distinct(exporter_group, .keep_all = TRUE) %>%
   select(producer_country, commodity, exporter_group, years_appeared, years_available, deduce_temporal_pattern) %>%
   write_csv("./intermediate-results/exporter_groups_phased_in_out_both.csv")
+
+## 7 - Set up master company database for saving data
+
+write_csv(deduce_data_selective %>%
+            left_join(deduce_data_selective_temporal_patterns %>% distinct(producer_country, commodity, exporter_group, deduce_temporal_pattern),
+                      by = c("producer_country", "commodity", "exporter_group")) %>% # join on temporal pattern to simpler data
+            arrange(exporter_group), # arrange by companies
+          "./analytical-results/companies.csv")
