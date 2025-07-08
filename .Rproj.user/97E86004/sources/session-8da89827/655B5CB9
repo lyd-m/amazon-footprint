@@ -3,7 +3,7 @@
     "path": "~/Library/CloudStorage/OneDrive-UniversityCollegeLondon/Documents/programming/main-projects/amazon-footprint/scripts/1-companies.R",
     "project_path": "scripts/1-companies.R",
     "type": "r_source",
-    "hash": "688221053",
+    "hash": "613271557",
     "contents": "",
     "dirty": false,
     "created": 1751967186090.0,
@@ -12,16 +12,16 @@
     "properties": {
         "source_window_id": "",
         "Source": "Source",
-        "cursorPosition": "150,11",
-        "scrollLine": "139",
+        "cursorPosition": "171,0",
+        "scrollLine": "154",
         "softWrapLines": "true"
     },
     "folds": "",
-    "lastKnownWriteTime": 1751982479,
+    "lastKnownWriteTime": 1751984492,
     "encoding": "UTF-8",
     "collab_server": "",
     "source_window": "",
-    "last_content_update": 1751982479919,
+    "last_content_update": 1751984492640,
     "read_only": false,
     "read_only_alternatives": []
 }

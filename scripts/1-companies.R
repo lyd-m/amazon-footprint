@@ -135,12 +135,7 @@ deduce_data_selective <- plyr::ldply(deduce_data_selective, data.frame, .id="DeD
 # adjusting to have the total per exporter group, per commodity, per year
 deduce_data_selective <- deduce_data_selective %>%
   group_by(producer_country, commodity, year, exporter_group) %>%
-  summarise(adjusted_deforestation_exposure = sum(adjusted_deforestation_exposure, na.rm = TRUE), .groups = "drop") %>%
-  group_by(producer_country, commodity, exporter_group) %>%
-  mutate(years_appeared = str_c(sort(unique(year)), collapse = ", ")) %>%
-  ungroup() %>%
-  left_join(country_commodity_years, by = c("producer_country", "commodity")) %>%
-  rename(years_available = year_range)  # this allows you to look at whether the deforestation has been phased out. 
+  summarise(adjusted_deforestation_exposure = sum(adjusted_deforestation_exposure, na.rm = TRUE), .groups = "drop") 
 
 # checking whether there are any duplicates in names
 deduce_data_selective %>%
@@ -150,6 +145,28 @@ deduce_data_selective %>%
   select(exporter_group, exporter_group_similarity) %>%
   write_csv("./intermediate-results/exporter_groups_duplicates_check.csv")
 
+# duplicates checked manually and reimported with final names
+
+exporter_groups_duplicates_checks <- readxl::read_excel("./intermediate-results/exporter_groups_duplicates_check.xlsx")
+
+deduce_data_selective <- deduce_data_selective %>%
+  left_join(exporter_groups_duplicates_checks %>% select(exporter_group, final_name),
+            by = c("exporter_group")) %>%
+  select(-exporter_group) %>%
+  rename(exporter_group = final_name) %>%
+  group_by(producer_country, commodity, year, exporter_group) %>% # recalculate yearly amounts for new groups
+  mutate(adjusted_deforestation_exposure = sum(adjusted_deforestation_exposure, na.rm = TRUE)) %>%
+  ungroup() %>% # add a record of which years the exporter appeared in the amazon data
+  group_by(producer_country, commodity, exporter_group) %>%
+  mutate(years_appeared = str_c(sort(unique(year)), collapse = ", ")) %>%
+  ungroup() %>% # adding on data availability years
+  left_join(country_commodity_years, by = c("producer_country", "commodity")) %>%
+  rename(years_available = year_range) %>%  # this allows you to look at whether the deforestation has been phased out
+  distinct(producer_country, commodity, year, exporter_group, .keep_all = TRUE) # remove duplicate entries (should only lose 5 or so from renaming)
+
 ### 5.2 Save down companies --------
 deduce_data_selective %>% 
-  write_csv("./intermediate-results/deduce_data_selective.csv")
+  select(producer_country, commodity, year, exporter_group, everything()) %>%
+  write_csv("./intermediate-results/exporter_groups_deduce_data.csv")
+
+## 6 - explore 
