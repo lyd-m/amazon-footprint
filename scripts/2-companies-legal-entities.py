@@ -1,6 +1,9 @@
-## PROJECT: FINANCIAL FLOWS TO ECOSYSTEM TIPPING POINTS ##
-# AIM: PULLING COMPANY DATA FROM REFINTIV DATA PLATFORM
-# github.com/lyd-m/wwf-tipping-points
+# AMAZON FOOTPRINT IN FOOD AND FINANCIAL SYSTEMS --------
+# Financial flows analysis: Stage 2 - Legal entity identification -------
+# github.com/lyd-m/amazon-footprint
+# This project contains the financial analysis for the paper, Singh et al. (2025)
+# This script takes a company list identified previously and maps it to legal entities in the LSEG database.
+# There is some manual work that is completed after this script via an Excel file.
 
 ### PREREQUSITES -------------------------
 # SET UP AND LOGIN TO EIKON DATA API AND REFINITIV DATA PLATFORM ##
@@ -36,7 +39,25 @@ import glob
 path = "/Users/ucliipp/Library/CloudStorage/OneDrive-UniversityCollegeLondon/Documents/programming/main-projects/amazon-footprint"
 os.chdir(path)
 
-### BEGIN DESKTOP API SESSION ----------------------
+### import company data and arrange for searching ----------
+companies = pd.read_csv(
+    "./analytical-results/companies.csv",
+)
+
+companies["exporter_group_clean"] = (
+    companies["exporter_group"]
+    .str.lower()  # Convert to lowercase
+    .str.replace("-", " ", regex=False)  # Replace hyphen with space
+    .str.replace("/", " ", regex=False)  # Replace slash with space
+    .str.replace(r"[^\w\s&]", "", regex=True)  # Remove all other punctuation except &
+    .str.replace("  ", " ", regex=False)  # Remove double spacing
+    .str.replace("   ", " ", regex=False)  # Remove triple spacing
+)
+
+to_search = companies["exporter_group_clean"].unique().tolist()
+len(to_search)  # 512 unique companies
+
+### begin desktop API session ----------------------
 # set Refinitiv Data Platform API login key as "app_key_rd" in local env via terminal
 # this is necessary due to licence restrictions
 # Desktop Refinitiv App needs to be open to do this
@@ -55,22 +76,7 @@ def rd_session_test():
 
 rd_session_test().notna().any().any()  # Should return a non-empty dataframe, will read "True" if passed
 
-# SEARCHING COMPANY NAMES
-all_companies = pd.read_csv(
-    "./intermediate-results/distinct_companies_100ha.csv",
-)
-
-all_companies["exporter_group_clean"] = (
-    all_companies["exporter_group"]
-    .str.lower()  # Convert to lowercase
-    .str.replace("-", " ", regex=False)  # Replace hyphen with space
-    .str.replace("/", " ", regex=False)  # Replace slash with space
-    .str.replace(r"[^\w\s]", "", regex=True)  # Remove all other punctuation
-)
-
-to_search = all_companies["exporter_group_clean"].tolist()
-
-
+### search company names ----------------------
 company_data = pd.DataFrame()
 
 retry_count = 1
@@ -89,14 +95,14 @@ for company in to_search:
             )
             if match.empty:
                 match = pd.DataFrame(
-                    {"query": [company], "source": ["GFW"]}
+                    {"query": [company], "source": ["DeDuCE"]}
                 )  # Creating a row with the query and source
             else:
                 match["query"] = (
                     company  # Adding the original query to the match dataframe
                 )
                 match["source"] = (
-                    "DEDUCE"  # Adding the source column with value 'DEDUCE'
+                    "DeDuCE"  # Adding the source column with value 'DEDUCE'
                 )
 
             if not company_data.empty:
@@ -203,4 +209,52 @@ company_data["manual_check_needed"] = (
     | (company_data["has_government_parent"] == True)
 ).map({True: "TRUE", False: "FALSE"})
 
-company_data.to_csv("./intermediate-results/companies_100ha_rdp_results.csv")
+# rename all initial columns with _initial
+
+company_data.rename(
+    columns={
+        "CommonName": "CommonName_initial",
+        "OAPermID": "OAPermID_initial",
+        "ParentOrganisationName": "ParentOrganisationName_initial",
+        "ParentCompanyOAPermID": "ParentCompanyOAPermID_initial",
+        "UltimateParentOrganisationName": "UltimateParentOrganisationName_initial",
+        "UltimateParentCompanyOAPermID": "UltimateParentCompanyOAPermID_initial",
+    }
+)
+
+# export to csv for manual checking
+company_data.to_csv("./intermediate-results/exporter_groups_legal_entities_initial.csv")
+
+# manual check completed in Excel (with Refinitiv searching to fill gaps)
+
+company_data_final = pd.read_excel(
+    "./intermediate-results/exporter_groups_legal_entities_final.xlsx"
+).drop(["id"])
+
+company_data_final["legal_entity_hierarchy_year"] = 2025
+
+# join onto original dataframe and resave
+
+companies = companies.merge(
+    company_data_final.loc[
+        :,
+        [
+            "query",
+            "legal_entity_mapped",
+            "legal_entity_hierarchy_year",
+            "CommonName",
+            "OAPermID",
+            "ParentOrganisationName",
+            "ParentCompanyOAPermID",
+            "UltimateParentOrganisationName",
+            "UltimateParentCompanyOAPermID",
+        ],
+    ],
+    left_on="exporter_group_clean",
+    right_on="query",
+    how="left",
+)
+
+companies = companies.drop(columns=["query", "exporter_group_clean"])
+
+companies.to_csv("./analytical-results/companies.csv")
