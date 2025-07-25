@@ -14,7 +14,7 @@
 # select this environment as your python interpreter
 
 ### DEPENDENCIES --------------------------
-# python=3.11 needed for Refinitiv to work
+# python=3.11 needed for Refinitiv to work - use eikon environment for this script
 
 ### DIRECTORIES --------------------------
 # refinivit/lseg files
@@ -229,7 +229,7 @@ company_data.to_csv("./intermediate-results/exporter_groups_legal_entities_initi
 
 company_data_final = pd.read_excel(
     "./intermediate-results/exporter_groups_legal_entities_final.xlsx"
-).drop(["id"])
+)
 
 company_data_final["legal_entity_hierarchy_year"] = 2025
 
@@ -257,4 +257,57 @@ companies = companies.merge(
 
 companies = companies.drop(columns=["query", "exporter_group_clean"])
 
-companies.to_csv("./analytical-results/companies.csv")
+# ensuring have an entry for each year
+years = list(range(2008, 2025))
+unique_companies_commodities = companies[
+    [
+        "producer_country",
+        "commodity",
+        "exporter_group",
+        "years_appeared",
+        "years_available",
+        "deduce_temporal_pattern",
+        "legal_entity_mapped",
+    ]
+].drop_duplicates()
+# expand grid to get all combinations of years and unique companies
+unique_companies_commodities["key"] = 1
+years_df = pd.DataFrame({"year": years})
+years_df["key"] = 1
+all_years_companies_combo = pd.merge(
+    unique_companies_commodities, years_df, on="key"
+).drop("key", axis=1)
+
+# keep only those combinations not present in the main data
+missing_companies_years = (
+    all_years_companies_combo.merge(
+        right=companies.loc[
+            :, ["producer_country", "commodity", "exporter_group", "year"]
+        ].drop_duplicates(),
+        on=["producer_country", "commodity", "exporter_group", "year"],
+        how="left",
+        indicator=True,
+    )
+    .query('_merge == "left_only"')
+    .drop("_merge", axis=1)
+)
+
+companies_complete_years = pd.concat(
+    [companies, missing_companies_years], ignore_index=True
+)
+# export to csv, then adjust manually in Excel to map changes in hierarchy
+# (e.g., if a company is acquired, the legal entity hierarchy may change)
+
+# save to csv to manually change hierarchy
+companies_complete_years.to_csv(
+    "./intermediate-results/companies_temporal_hierarchy_final.csv", index=False
+)
+
+# repull back in and update the main companies dataframe
+companies_complete_years_final = pd.read_excel(
+    "./intermediate-results/companies_temporal_hierarchy_final.xlsx"
+)
+
+companies_complete_years_final.to_csv(
+    "./analytical-results/companies_all_years.csv", index=False
+)
