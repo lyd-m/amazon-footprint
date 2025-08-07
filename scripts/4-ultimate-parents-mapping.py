@@ -295,8 +295,3 @@ ultimate_parents_database = ultimate_parents_database.drop_duplicates()
 ultimate_parents_database.to_excel(
     "./intermediate-results/ultimate_parents_database.xlsx", index=False
 )
-
-## send data needing manual checking to a separate file, which will then be copied over to the ultimate parents database
-ups_df[ups_df["manual_check_needed"] == "TRUE"].to_csv(
-    f"./intermediate-results/ups-manual-checking/to-check/{today}-ups-manual-check.csv"
-)
