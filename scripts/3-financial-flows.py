@@ -187,101 +187,7 @@ deals_status_dict = {
     "Equity deals": 'IN(TR.NITransactionStatus,"LIVE"))',
 }
 
-### BY PERMID CODE ------------------------
-# This might run faster than year by year, then we can exclude years later.
-start_exec = time.time()
-for asset_class in asset_classes_flows:
-    # create empty dataframe to store data for the deals for this asset class
-    df = pd.DataFrame()
-
-    permids_companies = df_companies_permids_small["permid"].tolist()
-
-    # debugging: check there are permids being searched
-    print(f"PermIDs found: {len(permids_companies)}")
-    print(f"Processing {asset_class} with {len(permids_companies)} permIDs")
-
-    date_start = 2008 + "0101"
-    date_end = 2024 + "1231"
-    dates_dict_flows = {
-        "Loan deals": f"),BETWEEN(TR.LNTrancheClosingDate,{date_start},{date_end}),",
-        "Bond deals": f"),BETWEEN(TR.NIIssueDate,{date_start},{date_end}),",
-        "Equity deals": f"),BETWEEN(TR.NIIssueDate,{date_start},{date_end}),",
-    }
-
-    # construct refinitiv search for this asset class
-    for permid in permids_companies:
-        retry_count = 1  # reset retry count for each permid
-        retry = True
-
-        while retry:
-            try:  # set up RDP query for this asset class, permid, and year
-                query = (
-                    universes_dict_flows[asset_class]
-                    + participants_dict_flows[asset_class]
-                    + permid
-                    + dates_dict_flows[asset_class]
-                    + deals_status_dict[asset_class]
-                )
-
-                # debugging: check query makes sense
-                if retry_count == 1:
-                    print(f"Sample query for {asset_class} ({yr}): {query}")
-
-                # pull data
-                current_df = rd.get_data(
-                    universe=[query], fields=flds_dict_flows[asset_class]
-                )
-
-                # Check if the dataframe is empty
-                if current_df.empty:
-                    print(
-                        f"No data found for {asset_class} ({yr}) with permid {permid}. Continuing without joining on..."
-                    )
-                else:
-                    # Reset index and remove any duplicates to prevent errors
-                    current_df = current_df.drop_duplicates()
-
-                    # Tag results with the queried company permID, asset class for tractability
-                    current_df["queried_company_permid"] = permid
-                    current_df["asset_class"] = asset_class
-
-                    # Add results to existing df
-                    df = pd.concat(
-                        [df, current_df.reset_index(drop=True)],
-                        ignore_index=True,
-                        axis=0,
-                    )
-
-                # exit loop unless an error occurred, otherwise try again
-                retry = False
-
-            except Exception as e:
-                print(f"An error occurred with {permid} ({yr}): {e}")
-
-                if retry_count <= retry_max:
-                    print("Retrying...")
-                    retry_count += 1
-                    time.sleep(0.01)  # Wait for 0.01 seconds before retrying
-                else:
-                    print(f"Retry limit reached, skipping {permid} ({yr})")
-                    retry = False  # exit retry loop
-                    break
-
-        # create global variable including all results for this asset class
-
-    df_asset_class_name = "df_" + to_snake_case(asset_class)
-    create_variable(df_asset_class_name, df)
-    print(f"Completed processing for asset class: {asset_class}")
-
-end_exec = time.time()
-print(f"This code tool {end_exec - start_exec} to run")
-
-# check files have generated
-print(df_loan_deals)
-print(df_bond_deals)
-print(df_equity_deals)
-
-### BY YEAR CODE ------------------------
+### BY PERMID BY YEAR CODE ------------------------
 # pull flows data for all three asset classes
 start_exec = time.time()
 for asset_class in asset_classes_flows:
@@ -381,6 +287,112 @@ print(f"This code tool {end_exec - start_exec} to run")
 print(df_loan_deals)
 print(df_bond_deals)
 print(df_equity_deals)
+
+# save files
+today = datetime.date.today()
+df_loan_deals.to_csv(f"./intermediate-results/{today}-loan-deals.csv")
+df_bond_deals.to_csv(f"./intermediate-results/{today}-bond-deals.csv")
+df_equity_deals.to_csv(f"./intermediate-results/{today}-equity-deals.csv")
+
+
+### BY PERMID CODE ------------------------
+# This might run faster than year by year, then we can exclude years later.
+start_exec = time.time()
+for asset_class in asset_classes_flows:
+    # create empty dataframe to store data for the deals for this asset class
+    df = pd.DataFrame()
+
+    permids_companies = (
+        df_companies_permids_small["permid"].unique().tolist()
+    )  # just search each permid once
+
+    # debugging: check there are permids being searched
+    print(f"PermIDs found: {len(permids_companies)}")
+    print(f"Processing {asset_class} with {len(permids_companies)} permIDs")
+
+    # do all years at once
+    date_start = "2008" + "0101"
+    date_end = "2024" + "1231"
+    dates_dict_flows = {
+        "Loan deals": f"),BETWEEN(TR.LNTrancheClosingDate,{date_start},{date_end}),",
+        "Bond deals": f"),BETWEEN(TR.NIIssueDate,{date_start},{date_end}),",
+        "Equity deals": f"),BETWEEN(TR.NIIssueDate,{date_start},{date_end}),",
+    }
+
+    # construct refinitiv search for this asset class
+    for permid in permids_companies:
+        retry_count = 1  # reset retry count for each permid
+        retry = True
+
+        while retry:
+            try:  # set up RDP query for this asset class, permid, and year
+                query = (
+                    universes_dict_flows[asset_class]
+                    + participants_dict_flows[asset_class]
+                    + permid
+                    + dates_dict_flows[asset_class]
+                    + deals_status_dict[asset_class]
+                )
+
+                # debugging: check query makes sense
+                if retry_count == 1:
+                    print(f"Sample query for {asset_class}: {query}")
+
+                # pull data
+                current_df = rd.get_data(
+                    universe=[query], fields=flds_dict_flows[asset_class]
+                )
+
+                # Check if the dataframe is empty
+                if current_df.empty:
+                    print(
+                        f"No data found for {asset_class} with permid {permid}. Continuing without joining on..."
+                    )
+                else:
+                    # Reset index and remove any duplicates to prevent errors
+                    current_df = current_df.drop_duplicates()
+
+                    # Tag results with the queried company permID, asset class for tractability
+                    current_df["queried_company_permid"] = permid
+                    current_df["asset_class"] = asset_class
+
+                    # Add results to existing df
+                    df = pd.concat(
+                        [df, current_df.reset_index(drop=True)],
+                        ignore_index=True,
+                        axis=0,
+                    )
+
+                # exit loop unless an error occurred, otherwise try again
+                retry = False
+
+            except Exception as e:
+                print(f"An error occurred with {permid}: {e}")
+
+                if retry_count <= retry_max:
+                    print("Retrying...")
+                    retry_count += 1
+                    time.sleep(0.01)  # Wait for 0.01 seconds before retrying
+                else:
+                    print(f"Retry limit reached, skipping {permid} for {asset_class}")
+                    retry = False  # exit retry loop
+                    break
+
+        # create global variable including all results for this asset class
+
+    df_asset_class_name = "df_" + to_snake_case(asset_class)
+    create_variable(df_asset_class_name, df)
+    print(f"Completed processing for asset class: {asset_class}")
+
+end_exec = time.time()
+print(
+    f"This code tool {end_exec - start_exec} to run"
+)  # about 48 minutes for 3 asset classes and 376 permids
+
+# check files have generated
+len(df_loan_deals)
+len(df_bond_deals)
+len(df_equity_deals)
 
 # save files
 today = datetime.date.today()
