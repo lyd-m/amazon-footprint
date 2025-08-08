@@ -76,12 +76,16 @@ rd_session_test().notna().any().any()  # Should return a non-empty dataframe, wi
 ## import fields needed ##
 flds = pd.read_excel("./input-data/lseg_columns_needed.xlsx")
 
+## import existing info by permid available on file ##
+existing_fi_info_by_permid = pd.read_csv("./intermediate-results/financial_institutions_info_by_permid.csv")
+
 ## import permids ##
-# financial institutions
+# 1. financial institutions
 ultimate_parents_ref_data = pd.read_excel(
     "./intermediate-results/ultimate_parents_database.xlsx"
 )
 
+# create list of fi permids for searching
 permids_finance_df = pd.concat(
     [
         ultimate_parents_ref_data["OAPermID"].rename({"OAPermID": "permid"}),
@@ -94,11 +98,12 @@ permids_finance_df = pd.concat(
 
 permids_finance_list = permids_finance_df.astype("Int64").astype(str).to_list()
 
-# companies
+# 2. companies
 companies_ref_data = pd.read_csv(
     "./analytical-results/companies_all_years.csv"
 )  
 
+# create list of company permids for searching
 permids_companies_df = pd.concat(
     [
         companies_ref_data["OAPermID"].rename("permid"),
@@ -117,7 +122,7 @@ permids_companies_list = permids_companies_df['permid'].\
 
 ## search with rd.get_data ##
 
-# financial institutions
+# 1. financial institutions
 
 flds_finance_info = flds.loc[
     flds["Asset class"].str.contains("Fundamentals - Finance", na=False),
@@ -191,8 +196,7 @@ info_by_permid_finance.to_csv(
     f"./intermediate-results/financial_institutions_info_by_permid.csv"
 )
 
-
-# companies
+# 2. companies
 
 flds_companies_info = flds.loc[
     flds["Asset class"].str.contains("Fundamentals - Companies", na=False),
