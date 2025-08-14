@@ -1,20 +1,29 @@
 country,region_wb_classification,region_owid,region_unsd
 Andorra,Europe and Central Asia,Europe,Europe
+Angola,Sub-Saharan Africa,Africa,Africa
 Argentina,Latin America and Caribbean,South America,Latin America and the Caribbean
 Australia,East Asia and Pacific,Oceania,Oceania
 Austria,Europe and Central Asia,Europe,Europe
+Azerbaijan,Europe and Central Asia,Asia,Asia
+Bahamas,Latin America and Caribbean,North America,Latin America and the Caribbean
 Bahrain,Middle East and North Africa,Asia,Asia
 Bangladesh,South Asia,Asia,Asia
 Barbados,Latin America and Caribbean,North America,Latin America and the Caribbean
 Belgium,Europe and Central Asia,Europe,Europe
 Bermuda,North America,North America,Northern America
 Brazil,Latin America and Caribbean,South America,Latin America and the Caribbean
+British Virgin Islands,Latin America and Caribbean,North America,Latin America and the Caribbean
+Bulgaria,Europe and Central Asia,Europe,Europe
+Cameroon,Sub-Saharan Africa,Africa,Africa
 Canada,North America,North America,Northern America
 Cayman Islands,Latin America and Caribbean,North America,Latin America and the Caribbean
 Chad,Sub-Saharan Africa,Africa,Africa
 Chile,Latin America and Caribbean,South America,Latin America and the Caribbean
 China,East Asia and Pacific,Asia,Asia
+China (Mainland),East Asia and Pacific,Asia,Asia
 Colombia,Latin America and Caribbean,South America,Latin America and the Caribbean
+Congo,Sub-Saharan Africa,Africa,Africa
+Curacao,Latin America and Caribbean,North America,Latin America and the Caribbean
 Cyprus,Europe and Central Asia,Europe,Europe
 Czech Republic,Europe and Central Asia,Europe,Europe
 Denmark,Europe and Central Asia,Europe,Europe
@@ -29,8 +38,10 @@ Greece,Europe and Central Asia,Europe,Europe
 Guernsey,Europe and Central Asia,Europe,Europe
 Hong Kong,East Asia and Pacific,Asia,Asia
 Hungary,Europe and Central Asia,Europe,Europe
+Iceland,Europe and Central Asia,Europe,Europe
 India,South Asia,Asia,Asia
 Indonesia,East Asia and Pacific,Asia,Asia
+Ireland,Europe and Central Asia,Europe,Europe
 Ireland; Republic of,Europe and Central Asia,Europe,Europe
 Israel,Middle East and North Africa,Asia,Asia
 Italy,Europe and Central Asia,Europe,Europe
@@ -43,17 +54,22 @@ Kazakhstan,Europe and Central Asia,Asia,Asia
 Korea; Republic (S. Korea),East Asia and Pacific,Asia,Asia
 Kuwait,Middle East and North Africa,Asia,Asia
 Liberia,Sub-Saharan Africa,Africa,Africa
+Libya,Middle East and North Africa,Africa,Africa
 Liechtenstein,Europe and Central Asia,Europe,Europe
 Luxembourg,Europe and Central Asia,Europe,Europe
 Macau,East Asia and Pacific,Asia,Asia
 Malaysia,East Asia and Pacific,Asia,Asia
+Mauritius,Sub-Saharan Africa,Africa,Africa
 Mexico,Latin America and Caribbean,North America,Latin America and the Caribbean
 Monaco,Europe and Central Asia,Europe,Europe
+Morocco,Middle East and North Africa,Africa,Africa
 NA,Unknown,Unknown,Unknown
 Netherlands,Europe and Central Asia,Europe,Europe
+New Zealand,East Asia and Pacific,Oceania,Oceania
 Nigeria,Sub-Saharan Africa,Africa,Africa
 Norway,Europe and Central Asia,Europe,Europe
 Oman,Middle East and North Africa,Asia,Asia
+Pakistan,South Asia,Asia,Asia
 Panama,Latin America and Caribbean,North America,Latin America and the Caribbean
 Peru,Latin America and Caribbean,South America,Latin America and the Caribbean
 Philippines,East Asia and Pacific,Asia,Asia
@@ -66,6 +82,7 @@ Saudi Arabia,Middle East and North Africa,Asia,Asia
 Seychelles,Sub-Saharan Africa,Africa,Africa
 Singapore,East Asia and Pacific,Asia,Asia
 South Africa,Sub-Saharan Africa,Africa,Africa
+South Korea,East Asia and Pacific,Asia,Asia
 Spain,Europe and Central Asia,Europe,Europe
 Sweden,Europe and Central Asia,Europe,Europe
 Switzerland,Europe and Central Asia,Europe,Europe
@@ -73,9 +90,15 @@ Taiwan,East Asia and Pacific,Asia,Asia
 Thailand,East Asia and Pacific,Asia,Asia
 Togo,Sub-Saharan Africa,Africa,Africa
 Turkey,Europe and Central Asia,Asia,Asia
+UK,Europe and Central Asia,Europe,Europe
 United Arab Emirates,Middle East and North Africa,Asia,Asia
 United Kingdom,Europe and Central Asia,Europe,Europe
+United States,North America,North America,Northern America
 United States of America,North America,North America,Northern America
 Uruguay,Latin America and Caribbean,South America,Latin America and the Caribbean
+USA,North America,North America,Northern America
+Venezuela,Latin America and Caribbean,South America,Latin America and the Caribbean
+Vietnam,East Asia and Pacific,Asia,Asia
+Virgin Islands,Latin America and Caribbean,North America,Latin America and the Caribbean
 Virgin Islands; British,Latin America and Caribbean,North America,Latin America and the Caribbean
 Yemen,Middle East and North Africa,Asia,Asia
