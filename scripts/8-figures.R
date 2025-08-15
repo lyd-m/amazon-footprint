@@ -11,10 +11,12 @@ library(janitor)
 library(patchwork)
 library(RColorBrewer)
 
+rm(list = ls())
+
 ### DIRECTORIES --------------------------
 
 ### DATA IMPORT --------------------------
-
+#### Companies --------------------------
 companies_all_yrs <- read_csv("./analytical-results/companies_all_years.csv") %>%
   clean_names() %>%
   select(-1) %>%
@@ -30,6 +32,38 @@ company_info_by_permid <- company_info_by_permid %>%
   left_join(unsd_regions %>% select(country, region_unsd),
             by = c("country_of_headquarters"="country")) %>%
   rename(region_of_headquarters_unsd = region_unsd)
+
+#### Flows --------------------------
+
+flows_2010_2022_files <- list.files("./intermediate-results/",
+                                       pattern = "flows_clean_manager_level_2010-2022_attributed_")
+
+flows_2010_2022 <- list()
+for (file_ in flows_2010_2022_files) {
+  var_name <- str_replace(file_, "flows_clean_manager_level_2010-2022_attributed_flows_", "")
+  var_name <- str_replace(var_name, "\\(.*","")
+  var_name <- str_replace(var_name, ".csv","")
+  
+  df <- read_csv(paste0("./intermediate-results/",file_)) %>%
+    clean_names()
+  
+  flows_2010_2022[[var_name]] <- df
+}
+
+flows_sei_trase_dates_simple_files <- list.files("./intermediate-results/",
+                                    pattern = "flows_clean_manager_level_sei_trase_dates_simple_attributed_")
+
+flows_sei_trase_dates_simple <- list()
+for (file_ in flows_sei_trase_dates_simple_files) {
+  var_name <- str_replace(file_, "flows_clean_manager_level_sei_trase_dates_simple_attributed_flows_", "")
+  var_name <- str_replace(var_name, "\\(.*","")
+  var_name <- str_replace(var_name, ".csv","")
+  
+  df <- read_csv(paste0("./intermediate-results/",file_)) %>%
+    clean_names()
+  
+  flows_sei_trase_dates_simple[[var_name]] <- df
+}
 
 ### CODES FOR PLOT TYPES ---------------------
 horizontal_bar_chart <- function(grouped_data,# all variable names need to be in quotes "" 
@@ -373,4 +407,117 @@ wrap_plots(plt_legal_entity_types_by_count,
 ggsave("./figures/draft_legal_entity_types_all.pdf")
 
 ### FINANCIAL DATA ANALYSIS --------------------------
+# simple descriptive plots to start with
 
+#### ABSOLUTE AMOUNTS ------------
+flows_totals_2010_2022 <- tibble()
+for (country_commodity in names(flows_2010_2022)) {
+  print(country_commodity)
+  df <- flows_2010_2022[[country_commodity]]
+  if (nrow(df) > 0) {
+  result <- df %>%
+    group_by(producer_country, commodity) %>%
+    summarise(
+      total_usd_m_high_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength=="High"], na.rm = TRUE),
+      total_usd_m_medium_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength %in% c("High", "Medium")], na.rm = TRUE),
+      total_usd_m_low_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE),
+      .groups = "drop"
+    )
+  
+  flows_totals_2010_2022 <- bind_rows(flows_totals_2010_2022, result)
+
+  } else {
+    result <- df %>%
+      distinct(producer_country, commodity) %>%
+      mutate(total_usd_m_high_conf = 0,
+             total_usd_m_low_conf = 0)
+    
+    flows_totals_2010_2022 <- bind_rows(flows_totals_2010_2022, result)
+  }
+}
+
+write_csv(flows_totals_2010_2022,"./analytical-results/flows_totals_2010_2022.csv")
+
+#### FLOW TYPES (asset class, use of proceeds, directness) ------------
+
+
+
+#### GEOGRAPHY ------------
+create_country_col_plot <- function(data, 
+                                    y_label_position_change, # 60000/60000 for Amazon/Indonesia
+                                    y_label_hjust, # 12000/1000 for Amazon/Indonesia
+                                    y_breaks, 
+                                    y_max) {
+  df <- data
+  
+  plot_data <- df %>%
+    filter(etp_risk_region == region_) %>%
+    mutate(manager_true_ultimate_parent_country_of_headquarters = if_else(is.na(manager_true_ultimate_parent_country_of_headquarters),
+                                                                          "Unknown",
+                                                                          manager_true_ultimate_parent_country_of_headquarters)) %>%
+    group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
+    summarise(amount_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)) %>%
+    ungroup() %>%
+    arrange(desc(amount_usd_m)) %>%
+    mutate(rank = dense_rank(desc(amount_usd_m)),
+           pct = amount_usd_m/sum(amount_usd_m))
+  
+  write_csv(plot_data, paste0("./figures/country_col_chart_data_", region_, ".csv"))
+  
+  plot_data <- plot_data %>%
+    filter(rank <= 20) %>%
+    ungroup() %>%
+    left_join(regions_unsd, by = c("manager_true_ultimate_parent_country_of_headquarters" = "country")) %>%
+    mutate(region_unsd = if_else(is.na(region_unsd),
+                                 "Unknown",
+                                 region_unsd)) # correct for NA regions
+  
+  plot <- ggplot(plot_data, aes(x = reorder(manager_true_ultimate_parent_country_of_headquarters, desc(rank)), y = amount_usd_m, fill = region_unsd)) +
+    geom_col() +
+    geom_text(aes(label = paste0(percent(pct, accuracy = 0.1)),
+                  y = if_else(amount_usd_m > y_label_position_change, 
+                              (amount_usd_m - y_label_hjust), 
+                              (amount_usd_m + y_label_hjust))),
+              size = 3) +
+    theme_minimal() +
+    scale_fill_manual(
+      values = c(
+        "Asia" = "#FC8D62",
+        "Europe" = "#8DA0CB",
+        "Latin America and the Caribbean" = "#E78AC3",
+        "Northern America" = "#A6D854",
+        "Oceania" = "#FFD92F",
+        "Unknown" = "#E5C494"
+      )
+    ) + 
+    scale_y_continuous(labels = comma,
+                       expand = expansion(mult = c(0,0.04)),
+                       limits = c(0, y_max),
+                       breaks = seq(0,y_max,y_breaks)) +
+    scale_x_discrete(expand = expansion(mult = c(0))) +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          panel.grid = element_line(colour = "grey70"),
+          axis.text.x = element_text(size = 12, colour = "black"),
+          axis.text.y = element_text(size = 10, colour = "black"),
+          axis.title.y = element_text(size = 12, colour = "black"),
+          axis.title.x = element_text(size = 12, colour = "black"),
+          legend.position = c(0.75,0.3)) +
+    labs(x = NULL,
+         y = "Financial flows 2014-2024 (US$m)",
+         #caption = "All asset classes. Deals between 1 January 2014 and 31 December 2023",
+         fill = "Region",
+         title = paste0()) +
+    coord_flip()
+  
+  print(plot)
+}
+
+create_country_col_plot(flows,
+                        region_ = "Canada",
+                        y_label_position_change = 15000,
+                        y_label_hjust = 2000,
+                        y_breaks = 10000,
+                        y_max = 40000)
+
+#### ACTORS ------------
