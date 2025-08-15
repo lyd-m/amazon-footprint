@@ -46,6 +46,9 @@ for (file_ in flows_by_manager_files) {
 flows_all_amazon <- flows[["flows_clean_manager_level_2008_2024_all_amazon"]]
 flows[["flows_clean_manager_level_2008_2024_all_amazon"]] <- NULL
 
+companies_yearly <- read_csv("./analytical-results/companies_all_years.csv") %>%
+  select(-1)
+
 # totals for each country_commodity
 
 totals_usd_m <- tibble()
@@ -151,7 +154,7 @@ for (country_commodity in names(flows)) {
   } else print("Empty df")
 }
 
-write_csv(flows_by_financed_location_type, "./analytical-results/flows_by_issuance_location_type.csv")
+write_csv(flows_by_financed_location_type, "./analytical-results/flows_by_financed_location_type.csv")
 
 
 ### Sector issued in ----------------
@@ -182,7 +185,125 @@ write_csv(trbc_activities, "./intermediate-results/trbc_activities_classificatio
 trbc_activities_classified <- read_excel("./intermediate-results/trbc_activities_classification_final.xlsx") %>%
   select(-Notes)
 
-## 3. exclusion SEI-Trase/DeDuCE data, all dates -------------------
+flows_by_trbc_activity_strength_classification <- tibble()
+for (country_commodity in names(flows)) {
+  print(country_commodity)
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) { # skip empty data (Brazil coffee, Brazil maize)
+    df <- df %>%
+      # reclassify financier regions in line with unsd
+      left_join(trbc_activities_classified, by = c(
+        "producer_country",
+        "commodity",
+        "borrower_issuer_trbc_activity"
+        )) %>%
+      rename(borrower_issuer_trbc_activity_strength_classification = direct_indirect_classification)
+    
+    flows[[country_commodity]] <- df # add adjusted data back to df
+    
+    result <- df %>%
+      group_by(borrower_issuer_trbc_activity_strength_classification) %>%
+      summarise(amount_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE),
+                .groups = "drop") %>%
+      mutate(pct = percent(amount_usd_m/sum(amount_usd_m), accuracy = 0.01)) %>%
+      as_tibble() %>% 
+      arrange(factor(borrower_issuer_trbc_activity_strength_classification, levels = c("Direct", "Indirect", "Minimally related"))) %>%
+      mutate(case = paste0(country_commodity))
+    
+    print(result, n = Inf) 
+    
+    flows_by_trbc_activity_strength_classification <- bind_rows(flows_by_trbc_activity_strength_classification, result)
+    
+  } else print("Empty df")
+}
 
-## 3. exclusion SEI-Trase/DeDuCE data, appearance (i.e., phase-in / phase-out) -------------------
+write_csv(flows_by_trbc_activity_strength_classification, "./analytical-results/flows_by_trbc_activity_strength_classification.csv")
 
+### Combining country and sector issued in to classify flows as low, medium, high ----------------
+flows_by_link_strength <- tibble()
+for (country_commodity in names(flows)) {
+  print(country_commodity)
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) { # skip empty data (Brazil coffee, Brazil maize)
+    df <- df %>%
+      # reclassify financier regions in line with unsd
+      mutate(financial_flow_link_strength = case_when(
+        flow_financed_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
+        flow_financed_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "High",
+        flow_financed_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
+        flow_financed_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Medium",
+        flow_financed_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Medium",
+        flow_financed_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "Medium",
+        flow_financed_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low",
+        flow_financed_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Low",
+        flow_financed_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low"
+      ))
+    
+    flows[[country_commodity]] <- df # add adjusted data back to df
+    
+    result <- df %>%
+      group_by(financial_flow_link_strength) %>%
+      summarise(amount_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE),
+                .groups = "drop") %>%
+      mutate(pct = percent(amount_usd_m/sum(amount_usd_m), accuracy = 0.01)) %>%
+      as_tibble() %>% 
+      arrange(factor(financial_flow_link_strength, levels = c("High", "Medium", "Low"))) %>%
+      mutate(case = paste0(country_commodity))
+    
+    print(result, n = Inf) 
+    
+    flows_by_link_strength <- bind_rows(flows_by_link_strength, result)
+    
+  } else print("Empty df")
+}
+
+write_csv(flows_by_link_strength, "./analytical-results/flows_by_link_strength.csv")
+
+
+## 3. Boundary periods -------------------
+
+### 3.1 2008-2024 all -------------------
+# save version of file with strength attributed (direct/indirect)
+# original time period +- two 
+for (country_commodity in names(flows)) {
+  print(country_commodity)
+  df <- flows[[country_commodity]]
+  
+  write_csv(df, paste0("./intermediate-results/flows_clean_manager_level_2008-2024_attributed_", country_commodity,".csv"))
+}
+
+### 3.2 2010-2022 all -------------------
+# original time period agreed
+for (country_commodity in names(flows)) {
+  print(country_commodity)
+  df <- flows[[country_commodity]]
+  
+  df <- df %>%
+    filter(year >= 2010 & year <= 2022)
+  
+  write_csv(df, paste0("./intermediate-results/flows_clean_manager_level_2010-2022_attributed_", country_commodity,".csv"))
+}
+
+### 3.3 SEI-Trase/DeDuCE data boundary periods, uniformly within country-commodities -------------------
+# i.e., not accounting for phase out
+# call 'simple' since just use the exact SEI-Trase dates
+sei_trase_dates_available <- 
+  companies_yearly %>% 
+  distinct(producer_country, commodity, years_available) %>%
+  separate_wider_delim(years_available, delim = "-", names = c("sei_trase_data_min_year", "sei_trase_data_max_year"))
+  
+for (country_commodity in names(flows)) {
+  print(country_commodity)
+  df <- flows[[country_commodity]]
+  
+  df <- df %>%
+    # join on years available for country_commodity
+    left_join(sei_trase_dates_available, 
+              by = c("producer_country", "commodity")) %>%
+    filter(year >= sei_trase_data_min_year & year <= sei_trase_data_max_year)
+  
+  write_csv(df, paste0("./intermediate-results/flows_clean_manager_level_sei_trase_dates_simple_attributed_", country_commodity,".csv"))
+}
+
+### 3.4 SEI-Trase/DeDuCE data boundary periods, within country-commodities exclude based on pattern (i.e., phase-in / phase-out) -------------------
+# discuss with colleagues before doing
