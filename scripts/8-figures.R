@@ -14,6 +14,11 @@ library(RColorBrewer)
 rm(list = ls())
 
 ### DIRECTORIES --------------------------
+to_file_save_format <- function(str) {
+  file_save_format_string <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", str, perl = TRUE)
+  file_save_format_string <- gsub(" ", "-", tolower(file_save_format_string))
+  return(file_save_format_string)
+}
 
 ### DATA IMPORT --------------------------
 regions_unsd <- read_csv("./input-data/regions_map.csv") %>%
@@ -621,3 +626,142 @@ flows_2010_2022[["brazil_soya_beans"]] %>%
   write_csv("./intermediate-results/flows_by_country_top_counterparties_brazil_soya_beans.csv") # big Japan contribution due to Mitsubishi
 
 #### ACTORS ------------
+create_manager_league_table_w_fill <- function(data, # includes government-owned entities marked with a *
+                                               fill_option,
+                                               case,
+                                               n_shown,
+                                               y_label_position_change, # shift labels from inside cols to outside cols
+                                               y_label_hjust, # position of labels
+                                               y_max,
+                                               y_breaks,
+                                               analytical_variable
+) {
+  plot_data <- data %>%
+    group_by(manager_true_ultimate_parent_organisation_name) %>%
+    summarise(amount_usd_m = sum(!!sym(analytical_variable), na.rm = TRUE)) %>%
+    ungroup() %>%
+    arrange(desc(amount_usd_m)) %>%
+    mutate(rank = dense_rank(desc(amount_usd_m)),
+           prop = amount_usd_m / sum(amount_usd_m)) %>%
+    filter(rank <= n_shown) %>%
+    # join on additional info
+    left_join((data %>% 
+                 distinct(manager_true_ultimate_parent_organisation_name,.keep_all = TRUE) %>%
+                 select(manager_true_ultimate_parent_organisation_name, !!sym(fill_option), government_ultimate_parent)), 
+              by = c("manager_true_ultimate_parent_organisation_name")) %>%
+    # tag government ultimate parent 
+    # handling "Not Applicable" as managers (self-arranged)
+    mutate(government_ultimate_parent = if_else(is.na(government_ultimate_parent),
+                                                                             FALSE,
+                                                                             government_ultimate_parent),
+           manager_true_ultimate_parent_organisation_name = case_when(
+             government_ultimate_parent == TRUE ~ paste0(manager_true_ultimate_parent_organisation_name,"*"),
+             is.na(manager_true_ultimate_parent_organisation_name) ~ "Unknown",
+             grepl("DZ BANK",manager_true_ultimate_parent_organisation_name) ~ "DZ Bank AG",
+             manager_true_ultimate_parent_organisation_name == "Not Applicable" ~ "Self-arranged",
+             TRUE ~ manager_true_ultimate_parent_organisation_name)
+           )
+  
+  write_csv(plot_data, paste0("./figures/",
+                              "/flows_by_manager_",
+                              to_file_save_format(case),
+                              "_",
+                              ".csv"))
+  
+  plot <- plot_data %>%
+    ggplot(aes(x = reorder(manager_true_ultimate_parent_organisation_name, desc(rank)), 
+               y = amount_usd_m, 
+               label = percent(prop, accuracy = 0.1),
+               fill = !!sym(fill_option))) +
+    geom_col() +
+    geom_text(aes(label = percent(prop, accuracy = 0.1),
+                  y = if_else(amount_usd_m > y_label_position_change, 
+                              (amount_usd_m - y_label_hjust), 
+                              (amount_usd_m + y_label_hjust))),
+              size = 3) +
+    theme_minimal() +
+    scale_fill_manual(
+      values = c(
+        "Asia" = "#FC8D62",
+        "Europe" = "#8DA0CB",
+        "Latin America and the Caribbean" = "#E78AC3",
+        "Northern America" = "#A6D854",
+        "Oceania" = "#FFD92F",
+        "Unknown" = "#E5C494"
+      )
+    ) +
+    scale_y_continuous(labels = comma,
+                       expand = expansion(mult = c(0.01,0.05)),
+                       breaks = seq(0,y_max,y_breaks)) +
+    scale_x_discrete(expand = expansion(mult = c(0))) +
+    theme(panel.grid.major.y = element_blank(),
+          panel.grid.minor.y = element_blank(),
+          axis.text.x = element_text(size = 10, color = "black"),
+          axis.text.y = element_text(size = 10, color = "black"),
+          axis.title.y = element_text(size = 8, color = "black"),
+          axis.title.x = element_text(size = 10, color = "black"),
+          legend.position = "none",
+          axis.line.x = element_line(color = "grey"),
+          plot.title = element_text(hjust = 0.9, size = 10, color = "black")) +
+    labs(x = NULL,
+         y = "",
+         fill = "Region",
+         title = case) +
+    coord_flip()
+  
+  print(plot)
+}
+
+league_table_plot_params <- tribble(
+  ~country_commodity, ~y_label_position_change, ~y_label_hjust, ~y_breaks, ~y_max,
+  "bolivia_soya_beans", 6000, 500, 5000, 9000,
+  "brazil_cattle_meat", 5500, 500, 5000, 6500,
+  "brazil_oil_palm_fruit", 2600, 200, 2000, 3500,
+  "brazil_soya_beans", 50000, 7500, 50000, 110000,
+  "brazil_sugar_cane", 20000, 2500, 20000, 45000,
+  "colombia_cattle_meat", 1750, 100, 2000, 3000,
+  "colombia_coffee_green", 7500, 1000, 10000, 15000,
+  "ecuador_cocoa_beans", 25000, 2500, 25000, 50000,
+  "peru_cocoa_beans", 1000, 100, 500, 1200,
+  "peru_coffee_green", 10000, 1000, 10000, 20000)
+
+for (country_commodity in names(flows_2010_2022)) {
+  df <- flows_2010_2022[[country_commodity]]
+  if (nrow(df) > 0) {
+    
+    plot_name <- paste0("plot_", country_commodity)
+    
+    params <- league_table_plot_params %>%
+      filter(country_commodity == !!country_commodity)
+    
+    plot <- create_manager_league_table_w_fill(df,
+                                               case = country_commodity,
+                                               fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
+                                               n_shown = 20,
+                                               y_label_position_change = params$y_label_position_change,
+                                               y_label_hjust = params$y_label_hjust,
+                                               y_max = params$y_max,
+                                               y_breaks = params$y_breaks,
+                                               analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd")
+    
+    assign(plot_name, plot, envir = .GlobalEnv)
+  } else {print(paste0("No financial flows for ", country_commodity))}
+}
+
+plot_bolivia_soya_beans + 
+  plot_brazil_cattle_meat +
+  plot_brazil_oil_palm_fruit +
+  plot_brazil_soya_beans +
+  plot_brazil_sugar_cane +
+  plot_colombia_cattle_meat +
+  plot_colombia_coffee_green +
+  plot_ecuador_cocoa_beans +
+  plot_peru_cocoa_beans +
+  plot_peru_coffee_green +
+  patchwork::plot_layout(ncol = 5,
+                         guides = "collect") 
+
+ggsave('./figures/flows_by_manager_rough_plot.pdf',
+       width = 20,
+       height = 12)
+
