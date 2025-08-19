@@ -16,14 +16,10 @@ rm(list = ls())
 library(tidyverse)
 library(readxl)
 library(fuzzyjoin)
-library(gridExtra)
 library(janitor)
 library(purrr)
-library(RColorBrewer)
 library(stringr)
 library(lubridate)
-library(stringr)
-library(scales)
 
 ## 1. import data --------------------
 
@@ -228,15 +224,15 @@ for (country_commodity in names(flows)) {
     df <- df %>%
       # reclassify financier regions in line with unsd
       mutate(financial_flow_link_strength = case_when(
-        flow_financed_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
-        flow_financed_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "High",
-        flow_financed_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
-        flow_financed_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Medium",
-        flow_financed_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Medium",
-        flow_financed_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "Medium",
-        flow_financed_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low",
-        flow_financed_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Low",
-        flow_financed_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low"
+        financial_flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
+        financial_flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "High",
+        financial_flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
+        financial_flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Medium",
+        financial_flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Medium",
+        financial_flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "Medium",
+        financial_flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low",
+        financial_flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Low",
+        financial_flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low"
       ))
     
     flows[[country_commodity]] <- df # add adjusted data back to df
