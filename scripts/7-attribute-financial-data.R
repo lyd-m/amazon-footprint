@@ -280,15 +280,15 @@ for (country_commodity in names(flows)) {
     df <- df %>%
       # reclassify financier regions in line with unsd
       mutate(financial_flow_link_strength = case_when(
-        financial_flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
-        financial_flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "High",
-        financial_flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
-        financial_flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Medium",
-        financial_flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Medium",
-        financial_flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "Medium",
-        financial_flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low",
-        financial_flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Low",
-        financial_flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low"
+        flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
+        flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "High",
+        flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "High",
+        flow_issuance_location_type == "Domestic" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Medium",
+        flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Medium",
+        flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Direct" ~ "Medium",
+        flow_issuance_location_type == "Regional" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low",
+        flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Indirect" ~ "Low",
+        flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low"
       ))
     
   
@@ -310,7 +310,7 @@ for (country_commodity in names(flows)) {
   } else print("Empty df")
 }
 
-write_csv(flows_by_link_strength, "./analytical-results/flows_by_link_strength.csv")
+write_csv(flows_by_link_strength, "./analytical-results/flows_by_link_strength_v2.csv")
 
 
 
