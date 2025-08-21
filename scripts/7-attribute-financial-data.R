@@ -20,6 +20,7 @@ library(janitor)
 library(purrr)
 library(stringr)
 library(lubridate)
+library(scales)
 
 ## 1. import data --------------------
 
@@ -46,7 +47,6 @@ companies_yearly <- read_csv("./analytical-results/companies_all_years.csv") %>%
   select(-1)
 
 # totals for each country_commodity
-
 totals_usd_m <- tibble()
 for (country_commodity in names(flows)){
   df <- flows[[country_commodity]]
@@ -59,7 +59,42 @@ for (country_commodity in names(flows)){
   } else print("Empty df")
 }
 
-write_csv(totals_usd_m, "./analytical-results/flows_total_per_country_commodity.csv")
+write_csv(totals_usd_m, "./analytical-results/flows_total_2008_2024_per_country_commodity.csv")
+
+## 2. Boundary periods -------------------
+
+### 2.1 Simple SEI-Trase/DeDuCE data boundary periods +/- threshold -------------------
+# i.e., not accounting for phase out
+# call 'simple' since just use the exact SEI-Trase dates
+sei_trase_dates_available <- 
+  companies_yearly %>% 
+  distinct(producer_country, commodity, years_available) %>%
+  separate_wider_delim(years_available, delim = "-", names = c("sei_trase_data_min_year", "sei_trase_data_max_year")) %>%
+  mutate(sei_trase_data_min_year = as.numeric(sei_trase_data_min_year),
+         sei_trase_data_max_year = as.numeric(sei_trase_data_max_year))
+
+for (country_commodity in names(flows)) {
+  print(country_commodity)
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    df <- df %>%
+      # join on years available for country_commodity
+      left_join(sei_trase_dates_available, 
+                by = c("producer_country", "commodity")) %>%
+      rowwise() %>%
+      # add column marking boundary period
+      mutate(year_relative_to_trase_period = case_when(
+        year >= sei_trase_data_min_year & year <= sei_trase_data_max_year ~ 0,
+        year < sei_trase_data_min_year ~ year - sei_trase_data_min_year, 
+        year > sei_trase_data_max_year ~ year - sei_trase_data_max_year
+      ))
+    
+    flows[[country_commodity]] <- df
+  } else print(" Empty df")
+}
+
+### 2.2 SEI-Trase/DeDuCE data boundary periods, within country-commodities exclude based on pattern (i.e., phase-in / phase-out) -------------------
+# discuss with colleagues before doing
 
 ## 2. direct / indirect -------------------
 
@@ -178,8 +213,13 @@ for (country_commodity in names(flows)) {
 write_csv(trbc_activities, "./intermediate-results/trbc_activities_classification.csv")
 ## these were then manually assigned as 'direct', 'indirect', and 'minimally-related'
 
-trbc_activities_classified <- read_excel("./intermediate-results/trbc_activities_classification_final.xlsx") %>%
-  select(-Notes)
+trbc_activities_classified_v1 <- read_excel("./intermediate-results/trbc_activities_classification_final.xlsx",
+                                            sheet = "v1_15_August_25") %>%
+  select(-notes)
+
+trbc_activities_classified_v2 <- read_excel("./intermediate-results/trbc_activities_classification_final.xlsx",
+                                            sheet = "v2_20_August_25") %>%
+  select(-notes)
 
 flows_by_trbc_activity_strength_classification <- tibble()
 for (country_commodity in names(flows)) {
@@ -188,7 +228,7 @@ for (country_commodity in names(flows)) {
   if (nrow(df) > 0) { # skip empty data (Brazil coffee, Brazil maize)
     df <- df %>%
       # reclassify financier regions in line with unsd
-      left_join(trbc_activities_classified, by = c(
+      left_join(trbc_activities_classified_v2, by = c( # can change between v1 and v2 here
         "producer_country",
         "commodity",
         "borrower_issuer_trbc_activity"
@@ -212,8 +252,8 @@ for (country_commodity in names(flows)) {
     
   } else print("Empty df")
 }
-
-write_csv(flows_by_trbc_activity_strength_classification, "./analytical-results/flows_by_trbc_activity_strength_classification.csv")
+# remember to write version of classification in the file name
+write_csv(flows_by_trbc_activity_strength_classification, "./analytical-results/flows_by_trbc_activity_strength_classification_v2.csv")
 
 ### Combining country and sector issued in to classify flows as low, medium, high ----------------
 flows_by_link_strength <- tibble()
@@ -235,6 +275,7 @@ for (country_commodity in names(flows)) {
         financial_flow_issuance_location_type == "International" & borrower_issuer_trbc_activity_strength_classification == "Minimally related" ~ "Low"
       ))
     
+  
     flows[[country_commodity]] <- df # add adjusted data back to df
     
     result <- df %>%
@@ -256,50 +297,4 @@ for (country_commodity in names(flows)) {
 write_csv(flows_by_link_strength, "./analytical-results/flows_by_link_strength.csv")
 
 
-## 3. Boundary periods -------------------
 
-### 3.1 2008-2024 all -------------------
-# save version of file with strength attributed (direct/indirect)
-# original time period +- two 
-for (country_commodity in names(flows)) {
-  print(country_commodity)
-  df <- flows[[country_commodity]]
-  
-  write_csv(df, paste0("./intermediate-results/flows_clean_manager_level_2008-2024_attributed_", country_commodity,".csv"))
-}
-
-### 3.2 2010-2022 all -------------------
-# original time period agreed
-for (country_commodity in names(flows)) {
-  print(country_commodity)
-  df <- flows[[country_commodity]]
-  
-  df <- df %>%
-    filter(year >= 2010 & year <= 2022)
-  
-  write_csv(df, paste0("./intermediate-results/flows_clean_manager_level_2010-2022_attributed_", country_commodity,".csv"))
-}
-
-### 3.3 SEI-Trase/DeDuCE data boundary periods, uniformly within country-commodities -------------------
-# i.e., not accounting for phase out
-# call 'simple' since just use the exact SEI-Trase dates
-sei_trase_dates_available <- 
-  companies_yearly %>% 
-  distinct(producer_country, commodity, years_available) %>%
-  separate_wider_delim(years_available, delim = "-", names = c("sei_trase_data_min_year", "sei_trase_data_max_year"))
-  
-for (country_commodity in names(flows)) {
-  print(country_commodity)
-  df <- flows[[country_commodity]]
-  
-  df <- df %>%
-    # join on years available for country_commodity
-    left_join(sei_trase_dates_available, 
-              by = c("producer_country", "commodity")) %>%
-    filter(year >= sei_trase_data_min_year & year <= sei_trase_data_max_year)
-  
-  write_csv(df, paste0("./intermediate-results/flows_clean_manager_level_sei_trase_dates_simple_attributed_", country_commodity,".csv"))
-}
-
-### 3.4 SEI-Trase/DeDuCE data boundary periods, within country-commodities exclude based on pattern (i.e., phase-in / phase-out) -------------------
-# discuss with colleagues before doing
