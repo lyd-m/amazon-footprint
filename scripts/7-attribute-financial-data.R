@@ -96,6 +96,22 @@ for (country_commodity in names(flows)) {
 ### 2.2 SEI-Trase/DeDuCE data boundary periods, within country-commodities exclude based on pattern (i.e., phase-in / phase-out) -------------------
 # discuss with colleagues before doing
 
+for (country_commodity in names(flows)) {
+  print(country_commodity)
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    df <- df %>%
+      # join on years available for country_commodity
+      rowwise() %>%
+      mutate(
+        deforestation_phase_out = !is.na(phase_out_year_consolidated) & phase_out_year_consolidated < sei_trase_data_max_year,
+        # tag to remove flow if entity phased out of Amazon deforestation and the financing year is after that phase out yaer
+        remove_flow_based_on_phase_out = deforestation_phase_out & year > phase_out_year_consolidated) 
+    
+    flows[[country_commodity]] <- df
+  } else print(" Empty df")
+}
+
 ## 2. direct / indirect -------------------
 
 ### Issued in producer country? ----------------
