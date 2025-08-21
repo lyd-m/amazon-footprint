@@ -252,7 +252,7 @@ for (country_commodity in names(flows_by_country_commodity_raw)) {
     filter(!is.na(tranche_amount_usd_m), # empty transactions
            !is.na(facility_amount_usd_m)) %>%
     tidydim_sum(col_sum = "tranche_amount_usd_m") %>% # give remaining count + total
-    filter(!is.na(date_close)) %>% # uncompleted transactions
+    filter(!is.na(date_close)) %>% # uncompleted transactions (not those with no maturity as these are equity issuances)
     tidydim_sum(col_sum = "tranche_amount_usd_m") # give remaining count + total
   
   flows_by_country_commodity_clean[[country_commodity]] <- df
@@ -282,7 +282,7 @@ for (country_commodity in names(flows_by_country_commodity_clean)) {
 }
 
 for (country_commodity in names(flows_by_country_commodity_clean)) {
-  df <- flows_by_country_commodity[[country_commodity]]
+  df <- flows_by_country_commodity_clean[[country_commodity]]
   write_csv(df, paste0("./intermediate-results/flows_clean_transaction_level_",country_commodity,".csv"))
 }
 
