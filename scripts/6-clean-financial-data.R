@@ -182,10 +182,12 @@ permid_map <- companies_yearly %>%
 
 # compressed map where for each country-commodity-year, each permid only appears once
 # i.e., permids associated with multiple exporter_groups compress those names together
-permid_map_compressed <- permid_map %>% distinct(producer_country, commodity, # treat each country-commodity setting as separate
+permid_map_compressed <- permid_map %>% 
+  distinct(producer_country, commodity, # treat each country-commodity setting as separate
                         year,
                         oa_perm_id, legal_entity_name,
-                        exporter_group) %>% 
+                        exporter_group, years_appeared) %>% 
+  unnest(years_appeared) %>%
   arrange(producer_country, commodity, year, legal_entity_name, exporter_group) %>%
   group_by(producer_country, commodity,
            year,
@@ -194,6 +196,9 @@ permid_map_compressed <- permid_map %>% distinct(producer_country, commodity, # 
     n_exporter_group = n_distinct(exporter_group),
     legal_entity_name = paste(sort(unique(legal_entity_name)), collapse = ", "),
     exporter_group = paste(sort(unique(exporter_group)), collapse = ", "),
+    years_appeared_consolidated = list(sort(unique(years_appeared))),
+    phase_in_year_consolidated  = min(years_appeared, na.rm = TRUE),
+    phase_out_year_consolidated = max(years_appeared, na.rm = TRUE),
     .groups = "drop"
   )
 
@@ -214,9 +219,11 @@ for (i in seq_len(nrow(country_commodity_combs))) {
            commodity == commodity_)
   
   flows_subset <- flows_data_all %>%
+    # filter out transactions that shouldn't be included for that year for that entity (e.g., due to hierarchy change)
     semi_join(permid_map_subset,
               by = c("year" = "year",
                      "queried_company_permid" = "oa_perm_id")) %>%
+    # join on permid info
     left_join(permid_map_subset,
               by = c("year" = "year",
                      "queried_company_permid" = "oa_perm_id"))
