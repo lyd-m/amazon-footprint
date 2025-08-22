@@ -5,25 +5,29 @@
 # This script takes the final company and financial data and visualises it
 
 rm(list = ls())
-### DEPENDENCIES --------------------------
+### 0. DEPENDENCIES --------------------------
 library(readxl)
 library(tidyverse)
 library(janitor)
 library(patchwork)
 library(RColorBrewer)
 
-### DIRECTORIES --------------------------
+### 0. FUNCTIONS --------------------------
 to_file_save_format <- function(str) {
   file_save_format_string <- gsub("([a-z0-9])([A-Z])", "\\1_\\2", str, perl = TRUE)
   file_save_format_string <- gsub(" ", "-", tolower(file_save_format_string))
   return(file_save_format_string)
 }
 
-### DATA IMPORT --------------------------
+modulus <- function(x) {
+  sqrt(x^2)
+}
+
+### 1. DATA IMPORT --------------------------
 regions_unsd <- read_csv("./input-data/regions_map.csv") %>%
   select(country, region_unsd)
 
-#### Companies --------------------------
+#### 1.1. Companies --------------------------
 companies_all_yrs <- read_csv("./analytical-results/companies_all_years.csv") %>%
   clean_names() %>%
   select(-1) %>%
@@ -40,7 +44,7 @@ company_info_by_permid <- company_info_by_permid %>%
             by = c("country_of_headquarters"="country")) %>%
   rename(region_of_headquarters_unsd = region_unsd)
 
-#### Flows --------------------------
+#### 1.2. Flows --------------------------
 flows_files <- list.files("./intermediate-results/",
                                        pattern = "flows_attributed_")
 
@@ -56,9 +60,9 @@ for (file_ in flows_files) {
   flows[[var_name]] <- df
 }
 
-### CODES FOR PLOT TYPES ---------------------
+### 2. CODES FOR STANDARD PLOT TYPES ---------------------
 horizontal_bar_chart <- function(grouped_data,# all variable names need to be in quotes "" 
-                                 x_value="dummy_x", # can change if you're using multiple categories
+                                 x_value="dummy_x", # can change if you're using multiple categories, remember to create dummy x if want one line
                                  y_value, # col being used (a prop between 0 and 1)
                                  fill_value, # what you're studying the distribution of
                                  y_value_label, 
@@ -96,7 +100,7 @@ horizontal_bar_chart <- function(grouped_data,# all variable names need to be in
 }
 
 
-### COMPANY DATA ANALYSIS --------------------------
+### 3. COMPANY DATA ANALYSIS --------------------------
 
 # Add on extra info
 companies_all_yrs <- companies_all_yrs %>%
@@ -104,7 +108,7 @@ companies_all_yrs <- companies_all_yrs %>%
             by = c("ultimate_parent_company_oa_perm_id" = "permid")) %>%
   rename_with(.fn = ~ paste0("ultimate_parent_", .x), .cols = 19:54)
 
-#### Legal entity data availability ------------------
+#### 3.1. Legal entity data availability ------------------
 # this data as it stands includes deforestation exposure attributed to UNKNOWN
 legal_entity_availability <- companies_all_yrs %>%
   group_by(producer_country, commodity, legal_entity_mapped) %>% # for each country-commodity setting (ignore years)
@@ -180,7 +184,7 @@ wrap_plots(plt_legal_entity_by_count,
 
 ggsave("./figures/draft_legal_entity_data_avail_all.pdf")
 
-#### Legal entity type ------------------
+#### 3.2. Legal entity type ------------------
 
 legal_entity_types <- companies_all_yrs %>%
   mutate(legal_entity_type = case_when(
@@ -300,7 +304,7 @@ wrap_plots(plt_legal_entity_types_by_count,
 
 ggsave("./figures/draft_legal_entity_types_all.pdf")
 
-#### Legal entity headquarters ------------------
+#### 3.3 Legal entity headquarters ------------------
 
 legal_entity_hqs <- companies_all_yrs %>%
   group_by(producer_country, commodity, ultimate_parent_region_of_headquarters_unsd) %>%
@@ -405,37 +409,67 @@ wrap_plots(plt_legal_entity_types_by_count,
 
 ggsave("./figures/draft_legal_entity_types_all.pdf")
 
-### FINANCIAL DATA ANALYSIS --------------------------
+### 4.FINANCIAL DATA ANALYSIS --------------------------
 # simple descriptive plots to start with
 
-#### ABSOLUTE AMOUNTS ------------
-flows_totals_2010_2022 <- tibble()
-for (country_commodity in names(flows_2010_2022)) {
-  print(country_commodity)
-  df <- flows_2010_2022[[country_commodity]]
-  if (nrow(df) > 0) {
-  result <- df %>%
-    group_by(producer_country, commodity) %>%
-    summarise(
-      total_usd_m_high_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength=="High"], na.rm = TRUE),
-      total_usd_m_medium_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength %in% c("High", "Medium")], na.rm = TRUE),
-      total_usd_m_low_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE),
-      .groups = "drop"
-    )
+#### 4.1. Setting up sensitivity testing --------------------------
+## boundary period (0-3 years)
+## deforestation phase out or not
+country_commodity_dict <- tibble() 
+for (country_commodity_ in names(flows)) {
+  df <- flows[[country_commodity_]]
+  df <- df %>% 
+    distinct(producer_country, commodity) %>%
+    mutate(country_commodity = country_commodity_) %>%
+    select(country_commodity, everything())
   
-  flows_totals_2010_2022 <- bind_rows(flows_totals_2010_2022, result)
+  country_commodity_dict <- bind_rows(country_commodity_dict, df)
+}
 
-  } else {
-    result <- df %>%
-      distinct(producer_country, commodity) %>%
-      mutate(total_usd_m_high_conf = 0,
-             total_usd_m_low_conf = 0)
-    
-    flows_totals_2010_2022 <- bind_rows(flows_totals_2010_2022, result)
+boundary_periods <- c(0, 1, 2, 3)
+deforestation_phase_out_status <- c(FALSE, TRUE) # if true, remove financial flows after the year deforestation has been phased out
+
+#### 4.2. Totals ------------
+flows_totals <- tibble()
+for (country_commodity in names(flows)) {
+  for (period_ in boundary_periods) {
+    for (defn_status_ in deforestation_phase_out_status) {
+      print(paste0(country_commodity, ": ", as.character(period_), " yrs around SEI-Trase dates - defn phase out included: ", defn_status_))
+      df <- flows[[country_commodity]]
+      df <- df %>%
+        filter(modulus(year_relative_to_trase_period) <= period_) %>%
+        filter(remove_flow_based_on_phase_out == defn_status_)
+      
+      if (nrow(df) > 0) {
+      result <- df %>%
+        summarise(
+          total_usd_m_high_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength=="High"], na.rm = TRUE),
+          total_usd_m_high_medium_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength %in% c("High", "Medium")], na.rm = TRUE),
+          total_usd_m_high_medium_low_conf = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE),
+          .groups = "drop"
+        ) %>%
+        mutate(boundary_period = period_,
+               defn_phase_out = defn_status_,
+               case = country_commodity) %>%
+        select(case, boundary_period, defn_phase_out, everything())
+      
+      } else {
+        print("Empty df")
+        result <- tibble(
+          case = country_commodity,
+          boundary_period = period_,
+          defn_phase_out = defn_status_,
+          total_usd_m_high_conf = 0,
+          total_usd_m_high_medium_conf = 0,
+          total_usd_m_high_medium_low_conf = 0
+        )
+      }
+      flows_totals <- bind_rows(flows_totals, result) # bind totals on
+    }
   }
 }
 
-write_csv(flows_totals_2010_2022,"./analytical-results/flows_totals_2010_2022.csv")
+write_csv(flows_totals,"./analytical-results/flows_totals_w_boundary_periods_po_conf_levels.csv")
 
 #### FLOW TYPES (asset class, use of proceeds, directness) ------------
 for (country_commodity in names(flows_2010_2022)) {
