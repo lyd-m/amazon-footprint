@@ -1,29 +1,29 @@
 borrower_issuer_trbc_activity_strength_classification,amount_usd_m,pct,case
-Direct,111472.82792981755,91.57%,flows_bolivia_soya_beans
-Indirect,9879.56576919572,8.12%,flows_bolivia_soya_beans
+Direct,113425.33210973744,93.17%,flows_bolivia_soya_beans
+Indirect,7927.0615892759715,6.51%,flows_bolivia_soya_beans
 Minimally related,386.51820705421295,0.32%,flows_bolivia_soya_beans
-Direct,82882.79740010054,75.52%,flows_brazil_cattle_meat
-Indirect,26863.76187240656,24.48%,flows_brazil_cattle_meat
+Direct,88299.70121650712,80.45%,flows_brazil_cattle_meat
+Indirect,21446.858055999972,19.54%,flows_brazil_cattle_meat
 Minimally related,9.144263555331403,0.01%,flows_brazil_cattle_meat
 Minimally related,35450.047994660425,100.00%,flows_brazil_oil_palm_fruit
-Direct,367847.88183694106,28.23%,flows_brazil_soya_beans
-Indirect,535495.3810212554,41.09%,flows_brazil_soya_beans
-Minimally related,399774.63590272446,30.68%,flows_brazil_soya_beans
-Direct,195146.86010831883,29.35%,flows_brazil_sugar_cane
-Indirect,386375.3631178249,58.10%,flows_brazil_sugar_cane
-Minimally related,83474.23030315974,12.55%,flows_brazil_sugar_cane
+Direct,389192.19162692723,29.87%,flows_brazil_soya_beans
+Indirect,513226.5044713679,39.38%,flows_brazil_soya_beans
+Minimally related,400699.2026626287,30.75%,flows_brazil_soya_beans
+Direct,190648.38618663658,28.67%,flows_brazil_sugar_cane
+Indirect,392269.38327541645,58.99%,flows_brazil_sugar_cane
+Minimally related,82078.68406724883,12.34%,flows_brazil_sugar_cane
 Direct,10394.261710071109,63.74%,flows_colombia_cattle_meat
 Indirect,5885.778608974074,36.09%,flows_colombia_cattle_meat
 Minimally related,27.932984813218688,0.17%,flows_colombia_cattle_meat
 Direct,363.74577901378683,100.00%,flows_colombia_cocoa_beans
-Direct,27606.57992672732,19.00%,flows_colombia_coffee_green
-Indirect,82858.01006629529,57.04%,flows_colombia_coffee_green
-Minimally related,34804.12248734308,23.96%,flows_colombia_coffee_green
-Direct,441196.2021580121,75.21%,flows_ecuador_cocoa_beans
-Indirect,110842.85802505825,18.90%,flows_ecuador_cocoa_beans
-Minimally related,34564.829354116766,5.89%,flows_ecuador_cocoa_beans
-Direct,363.74577901378683,1.84%,flows_peru_cocoa_beans
-Indirect,19353.267294419144,98.16%,flows_peru_cocoa_beans
-Direct,79925.56085713668,38.25%,flows_peru_coffee_green
-Indirect,93737.33875570471,44.86%,flows_peru_coffee_green
-Minimally related,35282.34899007182,16.89%,flows_peru_coffee_green
+Direct,33347.48270016675,22.96%,flows_colombia_coffee_green
+Indirect,76850.82878817656,52.90%,flows_colombia_coffee_green
+Minimally related,35070.40099202228,24.14%,flows_colombia_coffee_green
+Direct,461005.7481644031,78.59%,flows_ecuador_cocoa_beans
+Indirect,91370.4107177945,15.58%,flows_ecuador_cocoa_beans
+Minimally related,34227.73065498998,5.83%,flows_ecuador_cocoa_beans
+Direct,19396.190699578125,98.37%,flows_peru_cocoa_beans
+Indirect,320.822373854814,1.63%,flows_peru_cocoa_beans
+Direct,89402.94818955594,42.79%,flows_peru_coffee_green
+Indirect,84597.05012241201,40.49%,flows_peru_coffee_green
+Minimally related,34945.25029094502,16.72%,flows_peru_coffee_green

@@ -310,7 +310,137 @@ for (country_commodity in names(flows)) {
   } else print("Empty df")
 }
 
-write_csv(flows_by_link_strength, "./analytical-results/flows_by_link_strength_v2.csv")
+write_csv(flows_by_link_strength, "./analytical-results/flows_by_link_strength.csv")
 
 
+## 3. Checking totals for different attribution criteria -------------
+totals_usd_m <- tibble()
+# SEI-Trase years, simple (no phase out)
+for (country_commodity in names(flows)){
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    result <- df %>% 
+      filter(sqrt((year_relative_to_trase_period)^2) == 0) %>%
+      group_by(producer_country, commodity) %>%
+      summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm=TRUE)) %>%
+      mutate(method = "sei_trase_simple_no_boundary")
+    
+    totals_usd_m <- bind_rows(totals_usd_m, result)
+  } else print("Empty df")
+}
 
+# SEI-Trase years +/1, simple (no phase out)
+for (country_commodity in names(flows)){
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    result <- df %>% 
+      filter(sqrt((year_relative_to_trase_period)^2) <= 1) %>%
+      group_by(producer_country, commodity) %>%
+      summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm=TRUE)) %>%
+      mutate(method = "sei_trase_simple_1y")
+    
+    totals_usd_m <- bind_rows(totals_usd_m, result)
+  } else print("Empty df")
+}
+
+# SEI-Trase years +/2, simple (no phase out)
+for (country_commodity in names(flows)){
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    result <- df %>% 
+      filter(sqrt((year_relative_to_trase_period)^2) <= 2) %>%
+      group_by(producer_country, commodity) %>%
+      summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm=TRUE)) %>%
+      mutate(method = "sei_trase_simple_2y")
+    
+    totals_usd_m <- bind_rows(totals_usd_m, result)
+  } else print("Empty df")
+}
+
+# SEI-Trase years +/3, simple (no phase out)
+for (country_commodity in names(flows)){
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    result <- df %>% 
+      filter(sqrt((year_relative_to_trase_period)^2) <= 3) %>%
+      group_by(producer_country, commodity) %>%
+      summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm=TRUE)) %>%
+      mutate(method = "sei_trase_simple_3y")
+    
+    totals_usd_m <- bind_rows(totals_usd_m, result)
+  } else print("Empty df")
+}
+
+# SEI-Trase years, w phase out
+for (country_commodity in names(flows)){
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    result <- df %>% 
+      filter(sqrt((year_relative_to_trase_period)^2) == 0) %>%
+      filter(remove_flow_based_on_phase_out == FALSE) %>%
+      group_by(producer_country, commodity) %>%
+      summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm=TRUE)) %>%
+      mutate(method = "sei_trase_w_po_no_boundary")
+    
+    totals_usd_m <- bind_rows(totals_usd_m, result)
+  } else print("Empty df")
+}
+
+# SEI-Trase years +/-1, w phase out
+for (country_commodity in names(flows)){
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    result <- df %>% 
+      filter(sqrt((year_relative_to_trase_period)^2) <= 1) %>%
+      filter(remove_flow_based_on_phase_out == FALSE) %>%
+      group_by(producer_country, commodity) %>%
+      summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm=TRUE)) %>%
+      mutate(method = "sei_trase_w_po_1y")
+    
+    totals_usd_m <- bind_rows(totals_usd_m, result)
+  } else print("Empty df")
+}
+
+# SEI-Trase years +/- 2, w phase out
+for (country_commodity in names(flows)){
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    result <- df %>% 
+      filter(sqrt((year_relative_to_trase_period)^2) <= 2) %>%
+      filter(remove_flow_based_on_phase_out == FALSE) %>%
+      group_by(producer_country, commodity) %>%
+      summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm=TRUE)) %>%
+      mutate(method = "sei_trase_w_po_2y")
+    
+    totals_usd_m <- bind_rows(totals_usd_m, result)
+  } else print("Empty df")
+}
+
+# SEI-Trase years +/- 3, w phase out
+for (country_commodity in names(flows)){
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    result <- df %>% 
+      filter(sqrt((year_relative_to_trase_period)^2) <= 3) %>%
+      filter(remove_flow_based_on_phase_out == FALSE) %>%
+      group_by(producer_country, commodity) %>%
+      summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm=TRUE)) %>%
+      mutate(method = "sei_trase_w_po_3y")
+    
+    totals_usd_m <- bind_rows(totals_usd_m, result)
+  } else print("Empty df")
+}
+
+totals_usd_m %>% 
+  arrange(producer_country, commodity) %>%
+  write_csv("./analytical-results/flows_total_w_different_boundary_periods.csv")
+
+## 4. Save flows with attribution and boundary period ----------------
+for (country_commodity in names(flows)) {
+  df <- flows[[country_commodity]]
+  if (nrow(df) > 0) {
+    write_csv(df, paste0("./intermediate-results/flows_attributed_2008-2024_", country_commodity, ".csv"))
+  } else {
+    print("Empty df")
+  }
+}
