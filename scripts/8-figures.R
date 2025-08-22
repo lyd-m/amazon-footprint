@@ -60,6 +60,34 @@ for (file_ in flows_files) {
   flows[[var_name]] <- df
 }
 
+#### 1.3. Production volumes --------------------------
+production_volumes_file <- list.files("./input-data/",
+                                      pattern = "FAOSTAT_data",
+                                      full.names = TRUE)
+
+production_volumes <- read_csv(production_volumes_file) %>%
+  clean_names() %>%
+  filter(element == "Production") %>%
+  select(area, 
+         item,
+         year,
+         unit,
+         value) %>%
+  mutate(area = if_else(grepl("Bolivia", area), # change from plurinational nation of bolivia
+                        "Bolivia", 
+                        area),
+         item = if_else(grepl("cattle", item),
+                        "Cattle meat", # make consistent with data
+                        item))
+
+# allow 2024 production volumes to be the same as 2023 as no data available
+
+production_volumes_2024 <- production_volumes %>%
+  filter(year == 2023) %>%
+  mutate(year = 2024)
+ 
+production_volumes <- bind_rows(production_volumes, production_volumes_2024)
+
 ### 2. CODES FOR STANDARD PLOT TYPES ---------------------
 horizontal_bar_chart <- function(grouped_data,# all variable names need to be in quotes "" 
                                  x_value="dummy_x", # can change if you're using multiple categories, remember to create dummy x if want one line
@@ -429,6 +457,86 @@ for (country_commodity_ in names(flows)) {
 boundary_periods <- c(0, 1, 2, 3)
 deforestation_phase_out_status <- c(FALSE, TRUE) # if true, remove financial flows after the year deforestation has been phased out
 
+#### 4.1. Reweighted data to cover commodities from different countries together ---------------------------
+# bind all data together for same commodities
+# duplicate transactions are split between them based on relative production volumes between those countries for that year
+# start with doing SEI-Trase simple, no phase out
+
+all_flows_simple_bind <- tibble()
+for (country_commodity in names(flows)) {
+  df <- flows[[country_commodity]] %>%
+    filter(modulus(year_relative_to_trase_period) == 0) %>%
+    mutate(bond_isin = as.character(bond_isin)) # sorting out inconsistent column types
+  
+  all_flows_simple_bind <- bind_rows(all_flows_simple_bind, df)
+}
+
+parse_by_production_volumes <- function(df, commodity_filter) {
+  df %>% 
+    filter(commodity == commodity_filter) %>%
+    left_join(production_volumes %>% select(-unit), 
+              by = c("producer_country" = "area",
+                     "year" = "year",
+                     "commodity" = "item")) %>%
+    rename(production_volume_commodity_this_yr = value) %>%
+    group_by(tranche_id) %>% # handling where transactions exist across two countries for the same commodity (e.g., JBS)
+    mutate(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity =
+             tranche_amount_per_manager_usd_m_final_in_dec_2024_usd * (production_volume_commodity_this_yr / sum(unique(production_volume_commodity_this_yr)))) %>%
+    ungroup()
+}
+
+# creating individual commodity datasets
+
+flows_cattle_meat_all <- all_flows_simple_bind %>%
+  parse_by_production_volumes(commodity_filter = "Cattle meat")
+
+(sum((flows_cattle_meat_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd) - 
+    sum((flows_cattle_meat_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity))) / sum((flows_cattle_meat_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd)
+
+flows_cocoa_beans_all <- all_flows_simple_bind %>%
+  parse_by_production_volumes(commodity_filter = "Cocoa beans")
+
+(sum((flows_cocoa_beans_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd) - 
+    sum((flows_cocoa_beans_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity))) / sum((flows_cocoa_beans_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd)
+
+flows_coffee_green_all <- all_flows_simple_bind %>%
+  parse_by_production_volumes(commodity_filter = "Coffee, green")
+
+(sum((flows_coffee_green_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd) - 
+    sum((flows_coffee_green_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity))) / sum((flows_coffee_green_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd)
+
+flows_oil_palm_all <- all_flows_simple_bind %>%
+  parse_by_production_volumes(commodity_filter = "Oil palm fruit")
+
+(sum((flows_oil_palm_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd) - 
+    sum((flows_oil_palm_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity))) / sum((flows_oil_palm_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd)
+
+flows_soya_beans_all <- all_flows_simple_bind %>%
+  parse_by_production_volumes(commodity_filter = "Soya beans")
+
+(sum((flows_soya_beans_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE) - 
+    sum((flows_soya_beans_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity), na.rm = TRUE)) / sum((flows_soya_beans_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE))$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)
+
+flows_sugar_cane_all <- all_flows_simple_bind %>%
+  parse_by_production_volumes(commodity_filter = "Sugar cane")
+
+flows_by_commodity <- list(
+  "cattle_meat" = flows_cattle_meat_all,
+  "cocoa_beans" = flows_cocoa_beans_all,
+  "coffee_green" = flows_coffee_green_all,
+  "oil_palm" = flows_oil_palm_all,
+  "soya_beans" = flows_soya_beans_all,
+  "sugar_cane" = flows_sugar_cane_all
+)
+
+for (commodity_ in names(flows_by_commodity)) {
+  df <- flows_by_commodity[[commodity_]]
+  df <- df %>%
+    mutate(sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year,
+           tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity / sei_trase_years_available)
+  flows_by_commodity[[commodity_]] <- df
+}
+
 #### 4.2. Totals ------------
 flows_totals <- tibble()
 for (country_commodity in names(flows)) {
@@ -675,7 +783,7 @@ create_country_col_plot_w_alpha <- function(data,
   print(plot)
 }
 
-
+## these need adjusting for different loops possibly 
 country_col_plot_params <- tribble(
   ~country_commodity, ~y_label_position_change, ~y_label_hjust, ~y_breaks, ~y_max,
   "bolivia_soya_beans", 20000, 2000, 20000, 40000,
@@ -691,45 +799,53 @@ country_col_plot_params <- tribble(
 
 # without alpha - country plots
 for (country_commodity in names(flows)) {
-  df <- flows[[country_commodity]]
-  df <- df %>% filter(year >= 2010 & year <= 2022)
-  if (nrow(df) > 0) {
-    
-    plot_name <- paste0("plot_", country_commodity)
-    
-    params <- country_col_plot_params %>%
-      filter(country_commodity == !!country_commodity)
-    
-    plot <- create_country_col_plot(df,
-                                    case = country_commodity,
-                                    y_label_position_change = params$y_label_position_change,
-                                    y_label_hjust = params$y_label_hjust,
-                                    y_breaks = params$y_breaks,
-                                    y_max = params$y_max,
-                                    plot_title = country_commodity,
-                                    top_n = 10)
-    assign(plot_name, plot, envir = .GlobalEnv)
-  } else {print(paste0("No financial flows for ", country_commodity))}
+  for (period_ in boundary_periods) {
+    for (defn_status_ in deforestation_phase_out_status) {
+      print(paste0(country_commodity, ": ", as.character(period_), " yrs around SEI-Trase dates - defn phase out included: ", defn_status_))
+      df <- flows[[country_commodity]]
+      df <- df %>%
+        filter(modulus(year_relative_to_trase_period) <= period_) %>%
+        filter(remove_flow_based_on_phase_out == defn_status_)
+      
+      if (nrow(df) > 0) {
+
+        plot_name <- paste0("plot_", "boundary_period_", period_, "_defn_po_", defn_status_, "_", country_commodity)
+        
+        params <- country_col_plot_params %>%
+          filter(country_commodity == !!country_commodity)
+        
+        plot <- create_country_col_plot(df,
+                                        case = country_commodity,
+                                        y_label_position_change = params$y_label_position_change,
+                                        y_label_hjust = params$y_label_hjust,
+                                        y_breaks = params$y_breaks,
+                                        y_max = params$y_max,
+                                        plot_title = country_commodity,
+                                        top_n = 10)
+        assign(plot_name, plot, envir = .GlobalEnv)
+      } else {print(paste0("No financial flows for ", country_commodity))}
+    }
+  }
 }
 
-plot_bolivia_soya_beans + 
-  plot_brazil_cattle_meat +
-  plot_brazil_oil_palm_fruit +
-  plot_brazil_soya_beans +
-  plot_brazil_sugar_cane +
-  plot_colombia_cattle_meat +
-  plot_colombia_coffee_green +
-  plot_ecuador_cocoa_beans +
-  plot_peru_cocoa_beans +
-  plot_peru_coffee_green +
+plot_boundary_period_3_defn_po_FALSE_bolivia_soya_beans + 
+  plot_boundary_period_3_defn_po_FALSE_brazil_cattle_meat +
+  plot_boundary_period_3_defn_po_FALSE_brazil_oil_palm_fruit +
+  plot_boundary_period_3_defn_po_FALSE_brazil_soya_beans +
+  plot_boundary_period_3_defn_po_FALSE_brazil_sugar_cane +
+  plot_boundary_period_3_defn_po_FALSE_colombia_cattle_meat +
+  plot_boundary_period_3_defn_po_FALSE_colombia_coffee_green +
+  plot_boundary_period_3_defn_po_FALSE_ecuador_cocoa_beans +
+  plot_boundary_period_3_defn_po_FALSE_peru_cocoa_beans +
+  plot_boundary_period_3_defn_po_FALSE_peru_coffee_green +
   patchwork::plot_layout(ncol = 5,
                          guides = "collect") 
 
-ggsave('./figures/flows_by_country_rough_plot.pdf',
+ggsave('./figures/flows_by_country_rough_plot_boundary_period_3_defn_po_FALSE.pdf',
        height = 10,
        width = 20)
 
-# with alpha
+# with alpha - test for 2010-2022 version
 for (country_commodity in names(flows)) {
   df <- flows[[country_commodity]]
   df <- df %>% filter(year >= 2010 & year <= 2022)
@@ -770,9 +886,14 @@ plot_bolivia_soya_beans +
   patchwork::plot_layout(ncol = 5,
                          guides = "collect") 
 
+ggsave('./figures/flows_by_country_rough_plot_2010-2022_w_alpha.pdf',
+       height = 10,
+       width = 20)
+
 #### 4.5. summary tables per exporter_group ------------
 
 #### 4.6. financial actors ------------
+##### 4.6.1. simple league table --------------
 create_manager_league_table_w_fill <- function(data, # includes government-owned entities marked with a *
                                                fill_option,
                                                case,
@@ -780,6 +901,7 @@ create_manager_league_table_w_fill <- function(data, # includes government-owned
                                                y_label_position_change, # shift labels from inside cols to outside cols
                                                y_label_hjust, # position of labels
                                                y_max,
+                                               y_lab,
                                                y_breaks,
                                                analytical_variable
 ) {
@@ -826,7 +948,6 @@ create_manager_league_table_w_fill <- function(data, # includes government-owned
                               (amount_usd_m - y_label_hjust), 
                               (amount_usd_m + y_label_hjust))),
               size = 3) +
-    theme_minimal() +
     scale_fill_manual(
       values = c(
         "Asia" = "#FC8D62",
@@ -841,17 +962,18 @@ create_manager_league_table_w_fill <- function(data, # includes government-owned
                        expand = expansion(mult = c(0.01,0.05)),
                        breaks = seq(0,y_max,y_breaks)) +
     scale_x_discrete(expand = expansion(mult = c(0))) +
+    theme_minimal() +
     theme(panel.grid.major.y = element_blank(),
           panel.grid.minor.y = element_blank(),
           axis.text.x = element_text(size = 10, color = "black"),
           axis.text.y = element_text(size = 10, color = "black"),
           axis.title.y = element_text(size = 8, color = "black"),
           axis.title.x = element_text(size = 10, color = "black"),
-          legend.position.inside = "none",
+          legend.position = "none",
           axis.line.x = element_line(color = "grey"),
           plot.title = element_text(hjust = 0.9, size = 10, color = "black")) +
     labs(x = NULL,
-         y = "",
+         y = y_lab,
          fill = "Region",
          title = case) +
     coord_flip()
@@ -912,3 +1034,30 @@ ggsave('./figures/flows_by_manager_rough_plot.pdf',
        width = 20,
        height = 12)
 
+##### 4.6.2. all country-commodity combined league table -------------
+
+
+vertical_bar_chart_theme_elements <- function(df) {
+  theme_minimal() +
+  theme(panel.grid.major.y = element_blank(),
+        panel.grid.minor.y = element_blank(),
+        axis.text.x = element_text(size = 10, color = "black"),
+        axis.text.y = element_text(size = 10, color = "black"),
+        axis.title.y = element_text(size = 8, color = "black"),
+        axis.title.x = element_text(size = 10, color = "black"),
+        legend.position.inside = "none",
+        axis.line.x = element_line(color = "grey"),
+        plot.title = element_text(hjust = 0.9, size = 10, color = "black")) +
+  coord_flip()
+}
+
+create_manager_league_table_w_fill(flows_by_commodity[["soya_beans"]],
+                                   case = "soya_beans", 
+                                   n_shown = 10,
+                                   y_label_position_change = 0,
+                                   y_label_hjust = 0,
+                                   y_max = 10000,
+                                   y_breaks = 2000,
+                                   y_lab = "Financial flows US$m/yr (production-weighted annual average)",
+                                   fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
+                                   analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average")
