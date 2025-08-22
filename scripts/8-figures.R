@@ -4,14 +4,13 @@
 # This project contains the financial analysis for the paper, Singh et al. (2025)
 # This script takes the final company and financial data and visualises it
 
+rm(list = ls())
 ### DEPENDENCIES --------------------------
 library(readxl)
 library(tidyverse)
 library(janitor)
 library(patchwork)
 library(RColorBrewer)
-
-rm(list = ls())
 
 ### DIRECTORIES --------------------------
 to_file_save_format <- function(str) {
@@ -23,6 +22,7 @@ to_file_save_format <- function(str) {
 ### DATA IMPORT --------------------------
 regions_unsd <- read_csv("./input-data/regions_map.csv") %>%
   select(country, region_unsd)
+
 #### Companies --------------------------
 companies_all_yrs <- read_csv("./analytical-results/companies_all_years.csv") %>%
   clean_names() %>%
@@ -41,34 +41,19 @@ company_info_by_permid <- company_info_by_permid %>%
   rename(region_of_headquarters_unsd = region_unsd)
 
 #### Flows --------------------------
-flows_2010_2022_files <- list.files("./intermediate-results/",
-                                       pattern = "flows_clean_manager_level_2010-2022_attributed_")
+flows_files <- list.files("./intermediate-results/",
+                                       pattern = "flows_attributed_")
 
-flows_2010_2022 <- list()
-for (file_ in flows_2010_2022_files) {
-  var_name <- str_replace(file_, "flows_clean_manager_level_2010-2022_attributed_flows_", "")
+flows <- list()
+for (file_ in flows_files) {
+  var_name <- str_replace(file_, "flows_attributed_2008-2024_flows_", "")
   var_name <- str_replace(var_name, "\\(.*","")
   var_name <- str_replace(var_name, ".csv","")
   
   df <- read_csv(paste0("./intermediate-results/",file_)) %>%
     clean_names()
   
-  flows_2010_2022[[var_name]] <- df
-}
-
-flows_sei_trase_dates_simple_files <- list.files("./intermediate-results/",
-                                    pattern = "flows_clean_manager_level_sei_trase_dates_simple_attributed_")
-
-flows_sei_trase_dates_simple <- list()
-for (file_ in flows_sei_trase_dates_simple_files) {
-  var_name <- str_replace(file_, "flows_clean_manager_level_sei_trase_dates_simple_attributed_flows_", "")
-  var_name <- str_replace(var_name, "\\(.*","")
-  var_name <- str_replace(var_name, ".csv","")
-  
-  df <- read_csv(paste0("./intermediate-results/",file_)) %>%
-    clean_names()
-  
-  flows_sei_trase_dates_simple[[var_name]] <- df
+  flows[[var_name]] <- df
 }
 
 ### CODES FOR PLOT TYPES ---------------------
