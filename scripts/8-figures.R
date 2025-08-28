@@ -461,11 +461,12 @@ deforestation_phase_out_status <- c(FALSE, TRUE) # if true, remove financial flo
 # bind all data together for same commodities
 # duplicate transactions are split between them based on relative production volumes between those countries for that year
 # start with doing SEI-Trase simple, no phase out
+boundary_period <- 3
 
 all_flows_simple_bind <- tibble()
 for (country_commodity in names(flows)) {
   df <- flows[[country_commodity]] %>%
-    filter(modulus(year_relative_to_trase_period) <= 3) %>%
+    filter(modulus(year_relative_to_trase_period) <= boundary_period) %>% 
     mutate(bond_isin = as.character(bond_isin)) # sorting out inconsistent column types
   
   all_flows_simple_bind <- bind_rows(all_flows_simple_bind, df)
@@ -530,10 +531,12 @@ flows_by_commodity <- list(
 )
 
 # annualising the data to account for differences in commodity years
+# this allows a structural comparison (i.e., who are the most important countries financing these companies over the available period of SEI-trase data?)
+# so we normalise to the number of years of trase data that's available to make it more comparable - longer time periods see their flows reduced by more. 
 for (commodity_ in names(flows_by_commodity)) {
   df <- flows_by_commodity[[commodity_]]
   df <- df %>%
-    mutate(sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year,
+    mutate(sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year, # N.B: that as this stands it does not account for the boundary period
            tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity / sei_trase_years_available)
   flows_by_commodity[[commodity_]] <- df
 }
