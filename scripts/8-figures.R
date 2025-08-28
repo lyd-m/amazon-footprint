@@ -465,7 +465,7 @@ deforestation_phase_out_status <- c(FALSE, TRUE) # if true, remove financial flo
 all_flows_simple_bind <- tibble()
 for (country_commodity in names(flows)) {
   df <- flows[[country_commodity]] %>%
-    filter(modulus(year_relative_to_trase_period) == 0) %>%
+    filter(modulus(year_relative_to_trase_period) <= 3) %>%
     mutate(bond_isin = as.character(bond_isin)) # sorting out inconsistent column types
   
   all_flows_simple_bind <- bind_rows(all_flows_simple_bind, df)
@@ -529,6 +529,7 @@ flows_by_commodity <- list(
   "sugar_cane" = flows_sugar_cane_all
 )
 
+# annualising the data to account for differences in commodity years
 for (commodity_ in names(flows_by_commodity)) {
   df <- flows_by_commodity[[commodity_]]
   df <- df %>%
@@ -703,17 +704,19 @@ create_country_col_plot_w_alpha <- function(data,
                                     top_n,
                                     alpha_var,
                                     alpha_var_order, 
-                                    alpha_values) {
+                                    alpha_values,
+                                    analytical_variable,
+                                    y_lab) {
   df <- data
   
-  total_flows_for_this_df <- sum(df$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE)
+  total_flows_for_this_df <- sum(pull(df, !!sym(analytical_variable)), na.rm = TRUE)
   
   plot_data <- df %>%
     mutate(manager_true_ultimate_parent_country_of_headquarters = if_else(is.na(manager_true_ultimate_parent_country_of_headquarters),
                                                                           "Unknown",
                                                                           manager_true_ultimate_parent_country_of_headquarters)) %>%
     group_by(manager_true_ultimate_parent_country_of_headquarters, !!sym(alpha_var)) %>%
-    summarise(amount_usd_m_alpha_var = sum(tranche_amount_per_manager_usd_m_final_in_dec_2024_usd, na.rm = TRUE), .groups = "drop") %>%
+    summarise(amount_usd_m_alpha_var = sum(!!sym(analytical_variable), na.rm = TRUE), .groups = "drop") %>%
     group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
     mutate(amount_usd_m = sum(amount_usd_m_alpha_var, na.rm = TRUE)) %>%
     ungroup() %>%
@@ -774,7 +777,7 @@ create_country_col_plot_w_alpha <- function(data,
           axis.title.x = element_text(size = 12, colour = "black"),
           legend.position.inside = c(0.75,0.3)) +
     labs(x = NULL,
-         y = "Flows (2024 USDm)",
+         y = y_lab,
          fill = "Region",
          title = plot_title,
          alpha = str_to_title(alpha_var)) +
@@ -889,6 +892,58 @@ plot_bolivia_soya_beans +
 ggsave('./figures/flows_by_country_rough_plot_2010-2022_w_alpha.pdf',
        height = 10,
        width = 20)
+
+##### commodity-wide country plots, weighted ----------
+col_plot_params <- tribble(
+  ~commodity, ~y_label_position_change, ~y_label_hjust, ~y_breaks, ~y_max,
+  "cattle_meat", 0, 0, 2500, 2500,
+  "cocoa_beans", 0, 0, 12000, 12000,
+  "coffee_green", 0, 0, 4000, 4000,
+  "oil_palm", 0, 0, 1500, 1500,
+  "soya_beans", 0, 0, 25000, 25000,
+  "sugar_cane", 0, 0, 13000, 13000)
+
+for (commodity_ in names(flows_by_commodity)) {
+  df <- flows_by_commodity[[commodity_]]
+  df <- df %>% filter(modulus(year_relative_to_trase_period) == 0) # intensive boundary
+  if (nrow(df) > 0) {
+  
+    plot_name <- paste0("plot_", commodity_)
+    
+    params <- col_plot_params %>%
+      filter(commodity == !!commodity_)
+    
+    plot <- create_country_col_plot_w_alpha(df,
+                                            case = commodity_,
+                                            y_label_position_change = params$y_label_position_change,
+                                            y_label_hjust = params$y_label_hjust,
+                                            y_breaks = params$y_breaks,
+                                            y_max = params$y_max,
+                                            analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average",
+                                            plot_title = commodity_,
+                                            top_n = 10,
+                                            alpha_var = "financial_flow_link_strength",
+                                            alpha_var_order = c("Low", "Medium", "High"),
+                                            alpha_values = c("High" = 1.0,
+                                                             "Medium" = 0.7,
+                                                             "Low" = 0.4),
+                                            y_lab = "Financial flows US$m/y \n (Production-weighted annual average)")
+    assign(plot_name, plot, envir = .GlobalEnv)
+  } else {print(paste0("No financial flows for ", commodity_))}
+}
+
+plot_cattle_meat +
+  plot_cocoa_beans +
+  plot_coffee_green +
+  plot_oil_palm + 
+  plot_soya_beans +
+  plot_sugar_cane +
+  patchwork::plot_layout(ncol = 2,
+                         guides = "collect")
+
+ggsave("./figures/plot_by_commodity_top_countries.pdf",
+       height = 13,
+       width = 11)
 
 #### 4.5. summary tables per exporter_group ------------
 
@@ -1051,13 +1106,40 @@ vertical_bar_chart_theme_elements <- function(df) {
   coord_flip()
 }
 
-create_manager_league_table_w_fill(flows_by_commodity[["soya_beans"]],
+p1 <- create_manager_league_table_w_fill(flows_by_commodity[["soya_beans"]] %>% filter(modulus(year_relative_to_trase_period)==0),
                                    case = "soya_beans", 
-                                   n_shown = 10,
+                                   n_shown = 20,
                                    y_label_position_change = 0,
                                    y_label_hjust = 0,
                                    y_max = 10000,
                                    y_breaks = 2000,
-                                   y_lab = "Financial flows US$m/yr (production-weighted annual average)",
+                                   y_lab = "Financial flows US$m/yr \n (production-weighted annual average)",
                                    fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
                                    analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average")
+
+p2 <- create_manager_league_table_w_fill(flows_by_commodity[["sugar_cane"]] %>% filter(modulus(year_relative_to_trase_period)==0),
+                                   case = "sugar_cane", 
+                                   n_shown = 20,
+                                   y_label_position_change = 0,
+                                   y_label_hjust = 0,
+                                   y_max = 10000,
+                                   y_breaks = 2000,
+                                   y_lab = "Financial flows US$m/yr \n (production-weighted annual average)",
+                                   fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
+                                   analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average")
+
+p3 <- create_manager_league_table_w_fill(flows_by_commodity[["oil_palm"]] %>% filter(modulus(year_relative_to_trase_period)==0),
+                                   case = "oil_palm", 
+                                   n_shown = 20,
+                                   y_label_position_change = 0,
+                                   y_label_hjust = 0,
+                                   y_max = 10000,
+                                   y_breaks = 2000,
+                                   y_lab = "Financial flows US$m/yr \n (production-weighted annual average)",
+                                   fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
+                                   analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average")
+
+p1 + p2 + p3 + patchwork::plot_layout(ncol = 1)
+ggsave("./figures/china_top_fis.pdf",
+       height = 14,
+       width = 6)
