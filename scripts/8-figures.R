@@ -554,6 +554,8 @@ for (country_commodity in names(flows)) {
   all_flows_simple_bind <- bind_rows(all_flows_simple_bind, df)
 }
 
+##### parse commodity datasets between different countries based on production volumes ------
+
 parse_by_production_volumes <- function(df, commodity_filter) {
   df %>%
     filter(commodity == commodity_filter) %>%
@@ -575,8 +577,6 @@ parse_by_production_volumes <- function(df, commodity_filter) {
     ) %>%
     ungroup()
 }
-
-# creating individual commodity datasets
 
 flows_cattle_meat_all <- all_flows_simple_bind %>%
   parse_by_production_volumes(commodity_filter = "Cattle meat")
@@ -661,6 +661,8 @@ na.rm = TRUE
 flows_sugar_cane_all <- all_flows_simple_bind %>%
   parse_by_production_volumes(commodity_filter = "Sugar cane")
 
+##### commodity datasets ------
+
 flows_by_commodity <- list(
   "cattle_meat" = flows_cattle_meat_all,
   "cocoa_beans" = flows_cocoa_beans_all,
@@ -670,6 +672,7 @@ flows_by_commodity <- list(
   "sugar_cane" = flows_sugar_cane_all
 )
 
+##### annualising the data to account for number of SEI-TRASE years available (so the financial data spans different time periods) ------
 # annualising the data to account for differences in commodity years
 # this allows a structural comparison (i.e., who are the most important countries financing these companies over the available period of SEI-trase data?)
 # so we normalise to the number of years of trase data that's available to make it more comparable - longer time periods see their flows reduced by more.
@@ -765,11 +768,70 @@ flows_country_commodity_totals <- country_commodity_param_grid %>%
   unnest(results)
 
 write_csv(
-  flows_totals,
-  "./analytical-results/flows_totals_w_boundary_periods_po_conf_levels.csv"
+  flows_country_commodity_totals,
+  "./analytical-results/flows_totals_country_commodity_w_boundary_periods_po_conf_levels.csv"
 )
 
-# countries combined for each commodity ------
+# do the same for each commodity (noting that this will be normalised to the number of SEI-Trase years available)
+flows_commodity_totals <- commodity_param_grid %>%
+  mutate(results = pmap(list(commodity_case, boundary_period, defn_phase_out), function(commodity, period_, defn_status_) {
+    message(
+      commodity,
+      ": ",
+      period_,
+      " yrs around SEI-Trase dates - defn phase out included: ",
+      defn_status_
+    )
+    
+    df <- flows_by_commodity[[commodity]] %>%
+      filter(modulus(year_relative_to_trase_period) <= period_)
+    
+    if (defn_status_ == TRUE) {
+      df <- df %>% filter(!remove_flow_based_on_phase_out == TRUE) # remove flows that have phased out (keep ones with FALSE for remove)
+    }
+    
+    if (nrow(df) == 0) {
+      return(
+        tibble(
+          total_usd_m_high_conf = 0,
+          total_usd_m_medium_conf = 0,
+          total_usd_m_low_conf = 0,
+          total_usd_m = 0
+        )
+      )
+    }
+    
+    df %>%
+      summarise(
+        total_usd_m_sei_trase_normalised_high_conf = sum(
+          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "High"],
+          na.rm = TRUE
+        ),
+        total_usd_m_sei_trase_normalised_medium_conf = sum(
+          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "Medium"],
+          na.rm = TRUE
+        ),
+        total_usd_m_sei_trase_normalised_low_conf = sum(
+          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "Low"],
+          na.rm = TRUE
+        )
+      ) %>%
+      mutate(
+        total_usd_m_sei_trase_normalised = sum(
+          total_usd_m_sei_trase_normalised_high_conf,
+          total_usd_m_sei_trase_normalised_medium_conf,
+          total_usd_m_sei_trase_normalised_low_conf,
+          na.rm = TRUE
+        )
+      )
+  })) %>%
+  unnest(results)
+
+write_csv(
+  flows_country_commodity_totals,
+  "./analytical-results/flows_totals_commodity_sei_trase_normalised_w_boundary_periods_po_conf_levels.csv"
+)
+
 
 #### 4.3. flow types (asset class, use of proceeds, directness) ------------
 ## NB - Fri 29 August - NEEDS UPDATING TO NEW DATA
@@ -990,8 +1052,7 @@ create_country_col_plot_w_alpha <- function(data,
         manager_true_ultimate_parent_country_of_headquarters
       )
     ) %>%
-    group_by(manager_true_ultimate_parent_country_of_headquarters,
-             !!sym(alpha_var)) %>%
+    group_by(manager_true_ultimate_parent_country_of_headquarters,!!sym(alpha_var)) %>%
     summarise(amount_usd_m_alpha_var = sum(!!sym(analytical_variable), na.rm = TRUE),
               .groups = "drop") %>%
     group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
@@ -1002,8 +1063,7 @@ create_country_col_plot_w_alpha <- function(data,
            pct = amount_usd_m / total_flows_for_this_df) %>%
     group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
     mutate(!!sym(alpha_var) := factor(!!sym(alpha_var), levels = alpha_var_order)) %>%
-    arrange(manager_true_ultimate_parent_country_of_headquarters,
-            !!sym(alpha_var))
+    arrange(manager_true_ultimate_parent_country_of_headquarters,!!sym(alpha_var))
   
   write_csv(
     plot_data,
@@ -1491,7 +1551,8 @@ create_manager_league_table_w_fill <- function(data,
           .keep_all = TRUE
         ) %>%
         select(
-          manager_true_ultimate_parent_organisation_name,!!sym(fill_option),
+          manager_true_ultimate_parent_organisation_name,
+          !!sym(fill_option),
           government_ultimate_parent
         )
     ),
