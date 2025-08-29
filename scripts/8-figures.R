@@ -83,6 +83,7 @@ production_volumes_2024 <- production_volumes %>%
 production_volumes <- bind_rows(production_volumes, production_volumes_2024)
 
 ### 2. CODES FOR STANDARD PLOT TYPES ---------------------
+## NB - legal entity ownership charts need checking that they still work
 horizontal_bar_chart <- function(grouped_data,
                                  # all variable names need to be in quotes ""
                                  x_value = "dummy_x",
@@ -535,25 +536,9 @@ wrap_plots(
 
 ggsave("./figures/draft_legal_entity_types_all.pdf")
 
+
 ### 4.FINANCIAL DATA ANALYSIS --------------------------
 # simple descriptive plots to start with
-
-#### 4.1. Setting up sensitivity testing --------------------------
-## boundary period (0-3 years)
-## deforestation phase out or not
-country_commodity_dict <- tibble()
-for (country_commodity_ in names(flows)) {
-  df <- flows[[country_commodity_]]
-  df <- df %>%
-    distinct(producer_country, commodity) %>%
-    mutate(country_commodity = country_commodity_) %>%
-    select(country_commodity, everything())
-  
-  country_commodity_dict <- bind_rows(country_commodity_dict, df)
-}
-
-boundary_periods <- c(0, 1, 2, 3)
-deforestation_phase_out_status <- c(FALSE, TRUE) # if true, remove financial flows after the year deforestation has been phased out
 
 #### 4.1. Reweighted data to cover commodities from different countries together ---------------------------
 # bind all data together for same commodities
@@ -699,72 +684,95 @@ for (commodity_ in names(flows_by_commodity)) {
   flows_by_commodity[[commodity_]] <- df
 }
 
+#### 4.2. Setting up sensitivity testing --------------------------
+## boundary period (0-3 years)
+## deforestation phase out or not
+country_commodity_dict <- tibble()
+for (country_commodity_ in names(flows)) {
+  df <- flows[[country_commodity_]]
+  df <- df %>%
+    distinct(producer_country, commodity) %>%
+    mutate(country_commodity = country_commodity_) %>%
+    select(country_commodity, everything())
+  
+  country_commodity_dict <- bind_rows(country_commodity_dict, df)
+}
+
+boundary_periods <- c(0, 1, 2, 3)
+deforestation_phase_out_status <- c(FALSE, TRUE) # if true, remove financial flows after the year deforestation has been phased out
+
+country_commodity_param_grid <- tibble(country_commodity_case = names(flows)) %>%
+  crossing(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
+
+commodity_param_grid <- tibble(commodity_case = names(flows_by_commodity)) %>%
+  crossing(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
+
+## then can use purrr pmap function to do this for the different cases
+
 #### 4.2. Totals ------------
-flows_totals <- tibble()
-for (country_commodity in names(flows)) {
-  for (period_ in boundary_periods) {
-    for (defn_status_ in deforestation_phase_out_status) {
-      print(
-        paste0(
-          country_commodity,
-          ": ",
-          as.character(period_),
-          " yrs around SEI-Trase dates - defn phase out included: ",
-          defn_status_
+flows_country_commodity_totals <- country_commodity_param_grid %>%
+  mutate(results = pmap(list(country_commodity_case, boundary_period, defn_phase_out), function(country_commodity, period_, defn_status_) {
+    message(
+      country_commodity,
+      ": ",
+      period_,
+      " yrs around SEI-Trase dates - defn phase out included: ",
+      defn_status_
+    )
+    
+    df <- flows[[country_commodity]] %>%
+      filter(modulus(year_relative_to_trase_period) <= period_)
+    
+    if (defn_status_ == TRUE) {
+      df <- df %>% filter(!remove_flow_based_on_phase_out == TRUE) # remove flows that have phased out (keep ones with FALSE for remove)
+    }
+    
+    if (nrow(df) == 0) {
+      return(
+        tibble(
+          total_usd_m_high_conf = 0,
+          total_usd_m_medium_conf = 0,
+          total_usd_m_low_conf = 0,
+          total_usd_m = 0
         )
       )
-      df <- flows[[country_commodity]]
-      df <- df %>%
-        filter(modulus(year_relative_to_trase_period) <= period_) %>%
-        filter(remove_flow_based_on_phase_out == defn_status_)
-      
-      if (nrow(df) > 0) {
-        result <- df %>%
-          summarise(
-            total_usd_m_high_conf = sum(
-              tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength ==
-                                                                       "High"],
-              na.rm = TRUE
-            ),
-            total_usd_m_high_medium_conf = sum(
-              tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength %in% c("High", "Medium")],
-              na.rm = TRUE
-            ),
-            total_usd_m_high_medium_low_conf = sum(
-              tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
-              na.rm = TRUE
-            ),
-            .groups = "drop"
-          ) %>%
-          mutate(
-            boundary_period = period_,
-            defn_phase_out = defn_status_,
-            case = country_commodity
-          ) %>%
-          select(case, boundary_period, defn_phase_out, everything())
-        
-      } else {
-        print("Empty df")
-        result <- tibble(
-          case = country_commodity,
-          boundary_period = period_,
-          defn_phase_out = defn_status_,
-          total_usd_m_high_conf = 0,
-          total_usd_m_high_medium_conf = 0,
-          total_usd_m_high_medium_low_conf = 0
-        )
-      }
-      flows_totals <- bind_rows(flows_totals, result) # bind totals on
     }
-  }
-}
+    
+    df %>%
+      summarise(
+        total_usd_m_high_conf = sum(
+          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength == "High"],
+          na.rm = TRUE
+        ),
+        total_usd_m_medium_conf = sum(
+          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength == "Medium"],
+          na.rm = TRUE
+        ),
+        total_usd_m_low_conf = sum(
+          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength == "Low"],
+          na.rm = TRUE
+        )
+      ) %>%
+      mutate(
+        total_usd_m = sum(
+          total_usd_m_high_conf,
+          total_usd_m_medium_conf,
+          total_usd_m_low_conf,
+          na.rm = TRUE
+        )
+      )
+  })) %>%
+  unnest(results)
 
 write_csv(
   flows_totals,
   "./analytical-results/flows_totals_w_boundary_periods_po_conf_levels.csv"
 )
 
+# countries combined for each commodity ------
+
 #### 4.3. flow types (asset class, use of proceeds, directness) ------------
+## NB - Fri 29 August - NEEDS UPDATING TO NEW DATA
 for (country_commodity in names(flows_2010_2022)) {
   df <- flows_2010_2022[[country_commodity]]
   plot_name <- paste0("plot_", country_commodity)
@@ -1431,11 +1439,7 @@ for (commodity_ in names(flows_by_commodity)) {
         )
       ) %>%
       # calculate % high, medium, low for each financier country for that commodity
-      group_by(
-        commodity,
-        producer_country,
-        manager_country_grouped
-      ) %>%
+      group_by(commodity, producer_country, manager_country_grouped) %>%
       mutate(
         manager_country_grouped_link_strength_pct = total_usd_m_normalised_to_sei_trase_by_strength / total_usd_m_normalised_to_sei_trase
       ) %>%
@@ -1487,8 +1491,7 @@ create_manager_league_table_w_fill <- function(data,
           .keep_all = TRUE
         ) %>%
         select(
-          manager_true_ultimate_parent_organisation_name,
-          !!sym(fill_option),
+          manager_true_ultimate_parent_organisation_name,!!sym(fill_option),
           government_ultimate_parent
         )
     ),
