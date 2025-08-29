@@ -712,7 +712,7 @@ commodity_param_grid <- tibble(commodity_case = names(flows_by_commodity)) %>%
 
 ## then can use purrr pmap function to do this for the different cases
 
-#### 4.2. Totals ------------
+#### 4.2. Total financial flows (overall for country-commodity, normalised for commodity) ------------
 flows_country_commodity_totals <- country_commodity_param_grid %>%
   mutate(results = pmap(list(country_commodity_case, boundary_period, defn_phase_out), function(country_commodity, period_, defn_status_) {
     message(
@@ -1416,14 +1416,42 @@ ggsave(
 # For Sankeys, we want financing country --> receiving country, coloured or shaded by direct/indirect
 # Because we are looking at structural trends, we use the data normalised to the SEI-Trase years available, to keep the breadth of data available while maintaining comparability
 # Sensitivity test the data
-sankey_data_all <- tibble()
 
-for (commodity_ in names(flows_by_commodity)) {
-  df <- flows_by_commodity[[commodity_]]
-  df <- df %>% filter(modulus(year_relative_to_trase_period) == 0) # make this dynamic later
-  if (nrow(df) > 0) {
+sankey_data_all <- commodity_param_grid %>%
+  mutate(results = pmap(list(commodity_case, boundary_period, defn_phase_out), function(commodity_, period_, defn_status_) {
+    message(
+      commodity_,
+      ": ",
+      period_,
+      " yrs around SEI-Trase dates - defn phase out included: ",
+      defn_status_
+    )
+    
+    df <- flows_by_commodity[[commodity_]] %>%
+      filter(modulus(year_relative_to_trase_period) <= period_)
+    
+    if (defn_status_ == TRUE) {
+      df <- df %>% filter(!remove_flow_based_on_phase_out == TRUE) # remove flows that have phased out (keep ones with FALSE for remove)
+    }
+    
+    if (nrow(df) == 0) {
+      message("No financial flows for ", commodity_)
+      return(
+        tibble(
+          commodity_case = commodity_,
+          boundary_period = period_,
+          defn_phase_out = defn_status_,
+          manager_country_grouped = character(),
+          producer_country = character(),
+          financial_flow_link_strength = character(),
+          total_usd_m_normalised_to_sei_trase_by_strength = numeric(),
+          total_usd_m_normalised_to_sei_trase = numeric(),
+          manager_country_grouped_link_strength_pct = numeric()
+        )
+      )
+    }
+    # group EU together and mark NA as unknown
     df <- df %>%
-      # group eu countries together for figure
       mutate(
         manager_true_ultimate_parent_country_of_headquarters_sankey = case_when(
           manager_true_ultimate_parent_country_of_headquarters %in% eu_countries ~ "EU27",
@@ -1432,6 +1460,7 @@ for (commodity_ in names(flows_by_commodity)) {
         )
       )
     
+    # get totals for ranking and showing only top ten for each commodity
     totals <- df %>%
       group_by(
         commodity,
@@ -1446,9 +1475,7 @@ for (commodity_ in names(flows_by_commodity)) {
         .groups = "drop"
       ) %>%
       group_by(commodity, producer_country) %>%
-      mutate(rank = dense_rank(desc(
-        total_usd_m_normalised_to_sei_trase
-      )))
+      mutate(rank = dense_rank(desc(total_usd_m_normalised_to_sei_trase)))
     
     top10 <- totals %>%
       group_by(commodity, producer_country) %>%
@@ -1505,23 +1532,20 @@ for (commodity_ in names(flows_by_commodity)) {
       ) %>%
       ungroup()
     
-    sankey_data_all <- bind_rows(sankey_data_all, sankey_data)
-    
-  } else {
-    print(paste0("No financial flows for ", commodity_))
+    return(sankey_data)
   }
-}
+  ) 
+  ) %>%
+  unnest(results)
 
-View(sankey_data_all)
-write_csv(sankey_data_all, "./analytical-results/sankey_data_all.csv")
-
+write_csv(sankey_data_all, "./analytical-results/sankey_data_w_sensitivity_analysis.csv")
 
 ##### 4.4.3. Own Sankey plots
 
 
-#### 4.5. summary tables per exporter_group ------------
+### 4.5. summary tables per exporter_group ------------
 
-#### 4.6. financial actors ------------
+### 4.6. financial actors ------------
 ##### 4.6.1. simple league table --------------
 create_manager_league_table_w_fill <- function(data,
                                                # includes government-owned entities marked with a *
