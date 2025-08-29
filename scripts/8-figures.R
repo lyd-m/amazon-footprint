@@ -1456,6 +1456,8 @@ sankey_data_all <- commodity_param_grid %>%
         manager_true_ultimate_parent_country_of_headquarters_sankey = case_when(
           manager_true_ultimate_parent_country_of_headquarters %in% eu_countries ~ "EU27",
           is.na(manager_true_ultimate_parent_country_of_headquarters) ~ "Unknown",
+          manager_true_ultimate_parent_country_of_headquarters == "United States of America" ~ "USA",
+          manager_true_ultimate_parent_country_of_headquarters == "United Kingdom" ~ "UK",
           TRUE ~ manager_true_ultimate_parent_country_of_headquarters
         )
       )
@@ -1464,7 +1466,6 @@ sankey_data_all <- commodity_param_grid %>%
     totals <- df %>%
       group_by(
         commodity,
-        producer_country,
         manager_true_ultimate_parent_country_of_headquarters_sankey
       ) %>%
       summarise(
@@ -1474,11 +1475,12 @@ sankey_data_all <- commodity_param_grid %>%
         ),
         .groups = "drop"
       ) %>%
-      group_by(commodity, producer_country) %>%
-      mutate(rank = dense_rank(desc(total_usd_m_normalised_to_sei_trase)))
+      group_by(commodity) %>%
+      mutate(rank = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
+      ungroup()
     
     top10 <- totals %>%
-      group_by(commodity, producer_country) %>%
+      group_by(commodity) %>%
       mutate(
         manager_country_grouped = if_else(
           rank <= 10,
@@ -1488,7 +1490,6 @@ sankey_data_all <- commodity_param_grid %>%
       ) %>%
       select(
         commodity,
-        producer_country,
         manager_true_ultimate_parent_country_of_headquarters_sankey,
         manager_country_grouped
       )
@@ -1498,7 +1499,6 @@ sankey_data_all <- commodity_param_grid %>%
         top10,
         by = c(
           "commodity",
-          "producer_country",
           "manager_true_ultimate_parent_country_of_headquarters_sankey"
         )
       ) %>%
@@ -1521,7 +1521,6 @@ sankey_data_all <- commodity_param_grid %>%
         totals,
         by = c(
           "commodity" = "commodity",
-          "producer_country" = "producer_country",
           "manager_country_grouped" = "manager_true_ultimate_parent_country_of_headquarters_sankey"
         )
       ) %>%
