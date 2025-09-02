@@ -147,14 +147,6 @@ horizontal_bar_chart <- function(grouped_data,
       color = "white",
       size = 4
     ) +
-    # outside labels
-    geom_text(
-      data = distinct(df_plot, dummy_x) %>% mutate(label = total_label),
-      aes(x = dummy_x, y = 1.01, label = label),
-      inherit.aes = FALSE,
-      hjust = 0,
-      size = 4
-    ) +
     labs(
       fill = fill_value_label,
       x = "",
@@ -460,7 +452,8 @@ legal_entity_hqs <- companies_all_yrs %>%
   ) %>%
   mutate(country_commodity = str_c(producer_country, " - ", commodity))
 
-plt_legal_entity_hqs_by_count <- horizontal_bar_chart(
+# PLOTS NEED FIXING
+#plt_legal_entity_hqs_by_count <- horizontal_bar_chart(
   legal_entity_hqs,
   x_value = "country_commodity",
   y_value = "prop_count",
@@ -468,10 +461,11 @@ plt_legal_entity_hqs_by_count <- horizontal_bar_chart(
   y_value_label = "% (count)",
   fill_value_label = "Ultimate parent HQ region",
   title_label = "% (count)",
-  custom_colours = brewer.pal()
+  custom_colours = "grey"
 )
 
-plt_legal_entity_types_by_defn_exposure <- horizontal_bar_chart(
+# PLOTS NEED FIXING
+#plt_legal_entity_types_by_defn_exposure <- horizontal_bar_chart(
   legal_entity_types,
   x_value = "country_commodity",
   y_value = "prop_adjusted_deforestation_exposure",
@@ -489,7 +483,7 @@ plt_legal_entity_types_by_defn_exposure <- horizontal_bar_chart(
   )
 )
 
-legal_entity_types_wo_unknown <- companies_all_yrs %>%
+#legal_entity_types_wo_unknown <- companies_all_yrs %>%
   filter(!exporter_group == "UNKNOWN") %>%
   mutate(
     legal_entity_type = case_when(
@@ -524,7 +518,7 @@ legal_entity_types_wo_unknown <- companies_all_yrs %>%
   ) %>%
   mutate(country_commodity = str_c(producer_country, " - ", commodity))
 
-plt_legal_entity_types_by_count_wo_unknown <- horizontal_bar_chart(
+#plt_legal_entity_types_by_count_wo_unknown <- horizontal_bar_chart(
   legal_entity_types_wo_unknown,
   x_value = "country_commodity",
   y_value = "prop_count",
@@ -542,7 +536,7 @@ plt_legal_entity_types_by_count_wo_unknown <- horizontal_bar_chart(
   )
 )
 
-plt_legal_entity_types_by_defn_exposure_wo_unknown <- horizontal_bar_chart(
+#plt_legal_entity_types_by_defn_exposure_wo_unknown <- horizontal_bar_chart(
   legal_entity_types_wo_unknown,
   x_value = "country_commodity",
   y_value = "prop_adjusted_deforestation_exposure",
@@ -561,7 +555,7 @@ plt_legal_entity_types_by_defn_exposure_wo_unknown <- horizontal_bar_chart(
 )
 
 
-wrap_plots(
+#wrap_plots(
   plt_legal_entity_types_by_count,
   plt_legal_entity_types_by_count_wo_unknown,
   plt_legal_entity_types_by_defn_exposure,
@@ -571,13 +565,15 @@ wrap_plots(
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
 
-ggsave("./figures/draft_legal_entity_types_all.pdf")
+#ggsave("./figures/draft_legal_entity_types_all.pdf")
 
 
 ### 4.FINANCIAL DATA ANALYSIS --------------------------
 # simple descriptive plots to start with
+boundary_periods <- c(0, 1, 2, 3)
 
-#### 4.1. Reweighted data to cover commodities from different countries together ---------------------------
+#### 4.1. Combined datasets ---------------
+##### 4.1.1. Commodity dataset (i.e., combine same commodities from different countries) ---------------------------
 # bind all data together for same commodities
 # duplicate transactions are split between them based on relative production volumes between those countries for that year
 # start with doing SEI-Trase simple, no phase out
@@ -591,7 +587,7 @@ for (country_commodity in names(flows)) {
   all_flows_simple_bind <- bind_rows(all_flows_simple_bind, df)
 }
 
-##### parse commodity datasets between different countries based on production volumes ------
+# parse commodity datasets between different countries based on production volumes 
 
 parse_by_production_volumes <- function(df, commodity_filter) {
   df %>%
@@ -698,7 +694,7 @@ na.rm = TRUE
 flows_sugar_cane_all <- all_flows_simple_bind %>%
   parse_by_production_volumes(commodity_filter = "Sugar cane")
 
-##### commodity datasets ------
+# create list of commodity datasets
 
 flows_by_commodity <- list(
   "cattle_meat" = flows_cattle_meat_all,
@@ -709,8 +705,7 @@ flows_by_commodity <- list(
   "sugar_cane" = flows_sugar_cane_all
 )
 
-##### annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods) ------
-# annualising the data to account for differences in commodity years
+# annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods) 
 # this allows a structural comparison (i.e., who are the most important countries financing these companies over the available period of SEI-trase data?)
 # so we normalise to the number of years of trase data that's available to make it more comparable - longer time periods see their flows reduced by more.
 for (commodity_ in names(flows_by_commodity)) {
@@ -723,6 +718,71 @@ for (commodity_ in names(flows_by_commodity)) {
     )
   flows_by_commodity[[commodity_]] <- df
 }
+
+##### 4.1.2. Overall amazon dataset (i.e., combine different commodities from different countries) ---------------------------
+# bind all data together for same commodities
+# duplicate transactions are split between them based on relative production MONETARY VALUES between those commodity/countries for that year
+# Ideally you would have firm-level production volumes / monetary values but this is not readily available in a consistent format
+
+# create combined dataset of all country-commodity groups 
+parse_by_production_value <- function(df) {
+  df %>%
+    left_join(
+      production_monetary %>% select(-unit),
+      by = c(
+        "producer_country" = "area",
+        "year" = "year",
+        "commodity" = "item"
+      )
+    ) %>%
+    rename(production_value_country_commodity_this_yr = value) %>%
+    group_by(tranche_id) %>% # handling where transactions exist across multiple commodities/countries for the same commodity
+    mutate(
+      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates =
+        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd * (production_value_country_commodity_this_yr / sum(
+          unique(production_value_country_commodity_this_yr)
+        ))
+    ) %>%
+    ungroup()
+}
+
+flows_all_countries_commodities <- all_flows_simple_bind %>%
+  parse_by_production_value()
+
+# check the calculation is consistent (i.e., deals are actually split)
+(
+  sum((
+    flows_all_countries_commodities %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
+  )$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
+  na.rm = TRUE
+  ) -
+    sum((
+      flows_all_countries_commodities$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates
+    ),
+    na.rm = TRUE
+    )
+) / sum((
+  flows_all_countries_commodities %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
+)$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
+na.rm = TRUE
+) # only rounding error worth of difference
+
+# annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods) 
+# this allows a structural comparison (i.e., who are the most important countries financing these companies over the available period of SEI-trase data?)
+# so we normalise to the number of years of trase data that's available to make it more comparable - longer time periods see their flows reduced by more.
+flows_all_countries_commodities <- flows_all_countries_commodities %>%
+  mutate(
+    sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1, # add one since inclusive (e.g., 2015, 2016, 2017)
+    # N.B: that as this stands it does not account for the boundary period, just the SEI-Trase years
+    tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_normalised = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates / sei_trase_years_available
+  )
+
+# save version in intermediate results
+write_csv(
+  flows_all_countries_commodities,
+  "./intermediate-results/flows_all_countries_commodities.csv"
+)
+
 
 #### 4.2. Setting up sensitivity testing --------------------------
 ## boundary period (0-3 years)
@@ -1890,65 +1950,6 @@ ggsave("./figures/china_top_fis.pdf",
        height = 14,
        width = 6)
 
-##### 4.6.3. All country-commodity league table -------------
-# Where duplicates (i.e., companies operating across multiple country-commodities), parse between country-commodities by production value
-# Production monetary value is comparable across different commodities and is more comparable to the monetary value of our flows?
-# Ideally you would have firm-level production volumes / monetary values but this is not readily available in a consistent format
-
-###### create combined dataset of all country-commodity groups -------------
-parse_by_production_value <- function(df) {
-  df %>%
-    left_join(
-      production_monetary %>% select(-unit),
-      by = c(
-        "producer_country" = "area",
-        "year" = "year",
-        "commodity" = "item"
-      )
-    ) %>%
-    rename(production_value_country_commodity_this_yr = value) %>%
-    group_by(tranche_id) %>% # handling where transactions exist across multiple commodities/countries for the same commodity
-    mutate(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates =
-        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd * (production_value_country_commodity_this_yr / sum(
-          unique(production_value_country_commodity_this_yr)
-        ))
-    ) %>%
-    ungroup()
-}
-
-flows_all_countries_commodities <- all_flows_simple_bind %>%
-  parse_by_production_value()
-
-# check the calculation is consistent (i.e., deals are actually split)
-(
-  sum((
-    flows_all_countries_commodities %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-  )$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
-  na.rm = TRUE
-  ) -
-    sum((
-      flows_all_countries_commodities$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates
-    ),
-    na.rm = TRUE
-    )
-) / sum((
-  flows_all_countries_commodities %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-)$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
-na.rm = TRUE
-) # only rounding error worth of difference
-
-flows_all_countries_commodities <- flows_all_countries_commodities %>%
-  mutate(
-    sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1, # add one since inclusive (e.g., 2015, 2016, 2017)
-    # N.B: that as this stands it does not account for the boundary period, just the SEI-Trase years
-    tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_normalised = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates / sei_trase_years_available
-  )
-
-write_csv(
-  flows_all_countries_commodities,
-  "./intermediate-results/flows_all_countries_commodities.csv"
-)
 
 ###### create grouped data -------------
 
