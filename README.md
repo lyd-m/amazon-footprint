@@ -36,34 +36,34 @@ README.txt             Documentation
 ------------------------------------------------------------
 ## Running the Analysis
 
-# create company list
+##### create company list
 scripts/1-companies.R
 
-# find initial legal entity matches
+##### find initial legal entity matches
 scripts/2-companies-legal-entities.py
 
-# manual construction of historical legal hierarchies
+##### manual construction of historical legal hierarchies
 analytical-results/companies_all_years.csv
 
-# pull financial flows
+##### pull financial flows
 scripts/3-financial-flows.py
 
-# map financial institutions involved in financial flows
+##### map financial institutions involved in financial flows
 scripts/4-ultimate-parents-mapping.py
 
-# manual checks of poor matches of ultimate parents
+##### manual checks of poor matches of ultimate parents
 confidential data saved in intermediate-results
 
-# pull characteristics of companies and financial institutions
+##### pull characteristics of companies and financial institutions
 scripts/5-info-by-permid.py
 
-# clean financial flows, match with deforestation data, and split between financial institutions
+##### clean financial flows, match with deforestation data, and split between financial institutions
 scripts/6-clean-financial-data.R
 
-# match financial flows to deforestation time periods and attribute as high-low confidence
+##### match financial flows to deforestation time periods and attribute as high-low confidence
 scripts/7-attribute-financial-data.R
 
-# exploratory data analysis and figures
+##### exploratory data analysis and figures
 scripts/8-figures.R
 
 ------------------------------------------------------------
