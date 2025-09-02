@@ -454,37 +454,23 @@ legal_entity_hqs <- companies_all_yrs %>%
 
 # PLOTS NEED FIXING
 #plt_legal_entity_hqs_by_count <- horizontal_bar_chart(
-  legal_entity_hqs,
-  x_value = "country_commodity",
-  y_value = "prop_count",
-  fill_value = "ultimate_parent_region_of_headquarters",
-  y_value_label = "% (count)",
-  fill_value_label = "Ultimate parent HQ region",
-  title_label = "% (count)",
-  custom_colours = "grey"
+legal_entity_hqs, x_value = "country_commodity", y_value = "prop_count", fill_value = "ultimate_parent_region_of_headquarters", y_value_label = "% (count)", fill_value_label = "Ultimate parent HQ region", title_label = "% (count)", custom_colours = "grey"
 )
 
 # PLOTS NEED FIXING
 #plt_legal_entity_types_by_defn_exposure <- horizontal_bar_chart(
-  legal_entity_types,
-  x_value = "country_commodity",
-  y_value = "prop_adjusted_deforestation_exposure",
-  fill_value = "legal_entity_type",
-  y_value_label = "% (deforestation exposure)",
-  fill_value_label = "Ultimate parent type",
-  title_label = "% (deforestation exposure)",
-  custom_colours = c(
-    "Unknown" = "grey",
-    "No legal entity mapped" = "lightgrey",
-    "Publicly listed" = "lightblue",
-    "Part-listed" = "lightgreen",
-    "Private" = "darkgreen",
-    "State-owned" = "darkblue"
-  )
+legal_entity_types, x_value = "country_commodity", y_value = "prop_adjusted_deforestation_exposure", fill_value = "legal_entity_type", y_value_label = "% (deforestation exposure)", fill_value_label = "Ultimate parent type", title_label = "% (deforestation exposure)", custom_colours = c(
+  "Unknown" = "grey",
+  "No legal entity mapped" = "lightgrey",
+  "Publicly listed" = "lightblue",
+  "Part-listed" = "lightgreen",
+  "Private" = "darkgreen",
+  "State-owned" = "darkblue"
+)
 )
 
 #legal_entity_types_wo_unknown <- companies_all_yrs %>%
-  filter(!exporter_group == "UNKNOWN") %>%
+filter(!exporter_group == "UNKNOWN") %>%
   mutate(
     legal_entity_type = case_when(
       ultimate_parent_government_ultimate_parent == "True" ~ "State-owned",
@@ -519,48 +505,30 @@ legal_entity_hqs <- companies_all_yrs %>%
   mutate(country_commodity = str_c(producer_country, " - ", commodity))
 
 #plt_legal_entity_types_by_count_wo_unknown <- horizontal_bar_chart(
-  legal_entity_types_wo_unknown,
-  x_value = "country_commodity",
-  y_value = "prop_count",
-  fill_value = "legal_entity_type",
-  y_value_label = "% (count)",
-  fill_value_label = "Ultimate parent type",
-  title_label = "% (count)",
-  custom_colours = c(
-    "Unknown" = "grey",
-    "No legal entity mapped" = "lightgrey",
-    "Publicly listed" = "lightblue",
-    "Part-listed" = "lightgreen",
-    "Private" = "darkgreen",
-    "State-owned" = "darkblue"
-  )
+legal_entity_types_wo_unknown, x_value = "country_commodity", y_value = "prop_count", fill_value = "legal_entity_type", y_value_label = "% (count)", fill_value_label = "Ultimate parent type", title_label = "% (count)", custom_colours = c(
+  "Unknown" = "grey",
+  "No legal entity mapped" = "lightgrey",
+  "Publicly listed" = "lightblue",
+  "Part-listed" = "lightgreen",
+  "Private" = "darkgreen",
+  "State-owned" = "darkblue"
+)
 )
 
 #plt_legal_entity_types_by_defn_exposure_wo_unknown <- horizontal_bar_chart(
-  legal_entity_types_wo_unknown,
-  x_value = "country_commodity",
-  y_value = "prop_adjusted_deforestation_exposure",
-  fill_value = "legal_entity_type",
-  y_value_label = "% (deforestation exposure)",
-  fill_value_label = "Ultimate parent type",
-  title_label = "% (deforestation exposure)",
-  custom_colours = c(
-    "Unknown" = "grey",
-    "No legal entity mapped" = "lightgrey",
-    "Publicly listed" = "lightblue",
-    "Part-listed" = "lightgreen",
-    "Private" = "darkgreen",
-    "State-owned" = "darkblue"
-  )
+legal_entity_types_wo_unknown, x_value = "country_commodity", y_value = "prop_adjusted_deforestation_exposure", fill_value = "legal_entity_type", y_value_label = "% (deforestation exposure)", fill_value_label = "Ultimate parent type", title_label = "% (deforestation exposure)", custom_colours = c(
+  "Unknown" = "grey",
+  "No legal entity mapped" = "lightgrey",
+  "Publicly listed" = "lightblue",
+  "Part-listed" = "lightgreen",
+  "Private" = "darkgreen",
+  "State-owned" = "darkblue"
+)
 )
 
 
 #wrap_plots(
-  plt_legal_entity_types_by_count,
-  plt_legal_entity_types_by_count_wo_unknown,
-  plt_legal_entity_types_by_defn_exposure,
-  plt_legal_entity_types_by_defn_exposure_wo_unknown,
-  ncol = 2
+plt_legal_entity_types_by_count, plt_legal_entity_types_by_count_wo_unknown, plt_legal_entity_types_by_defn_exposure, plt_legal_entity_types_by_defn_exposure_wo_unknown, ncol = 2
 ) +
   plot_layout(guides = "collect") &
   theme(legend.position = "bottom")
@@ -587,7 +555,7 @@ for (country_commodity in names(flows)) {
   all_flows_simple_bind <- bind_rows(all_flows_simple_bind, df)
 }
 
-# parse commodity datasets between different countries based on production volumes 
+# parse commodity datasets between different countries based on production volumes
 
 parse_by_production_volumes <- function(df, commodity_filter) {
   df %>%
@@ -705,14 +673,15 @@ flows_by_commodity <- list(
   "sugar_cane" = flows_sugar_cane_all
 )
 
-# annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods) 
+# annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods)
 # this allows a structural comparison (i.e., who are the most important countries financing these companies over the available period of SEI-trase data?)
 # so we normalise to the number of years of trase data that's available to make it more comparable - longer time periods see their flows reduced by more.
 for (commodity_ in names(flows_by_commodity)) {
   df <- flows_by_commodity[[commodity_]]
   df <- df %>%
     mutate(
-      sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1, # add one since inclusive (e.g., 2015, 2016, 2017)
+      sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1,
+      # add one since inclusive (e.g., 2015, 2016, 2017)
       # N.B: that as this stands it does not account for the boundary period
       tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity / sei_trase_years_available
     )
@@ -724,7 +693,7 @@ for (commodity_ in names(flows_by_commodity)) {
 # duplicate transactions are split between them based on relative production MONETARY VALUES between those commodity/countries for that year
 # Ideally you would have firm-level production volumes / monetary values but this is not readily available in a consistent format
 
-# create combined dataset of all country-commodity groups 
+# create combined dataset of all country-commodity groups
 parse_by_production_value <- function(df) {
   df %>%
     left_join(
@@ -767,14 +736,15 @@ flows_all_countries_commodities <- all_flows_simple_bind %>%
 na.rm = TRUE
 ) # only rounding error worth of difference
 
-# annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods) 
+# annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods)
 # this allows a structural comparison (i.e., who are the most important countries financing these companies over the available period of SEI-trase data?)
 # so we normalise to the number of years of trase data that's available to make it more comparable - longer time periods see their flows reduced by more.
 flows_all_countries_commodities <- flows_all_countries_commodities %>%
   mutate(
-    sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1, # add one since inclusive (e.g., 2015, 2016, 2017)
+    sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1,
+    # add one since inclusive (e.g., 2015, 2016, 2017)
     # N.B: that as this stands it does not account for the boundary period, just the SEI-Trase years
-    tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_normalised = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates / sei_trase_years_available
+    tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates / sei_trase_years_available
   )
 
 # save version in intermediate results
@@ -932,7 +902,7 @@ write_csv(
 
 #### 4.3. flow types (asset class, use of proceeds, directness) ------------
 ## NB - Fri 29 August - NEEDS UPDATING TO NEW DATA
-for (country_commodity in names(flows_2010_2022)) {
+#for (country_commodity in names(flows_2010_2022)) {
   df <- flows_2010_2022[[country_commodity]]
   plot_name <- paste0("plot_", country_commodity)
   if (nrow(df) > 0) {
@@ -974,7 +944,7 @@ for (country_commodity in names(flows_2010_2022)) {
   }
 }
 
-plot_bolivia_soya_beans +
+#plot_bolivia_soya_beans +
   plot_brazil_cattle_meat +
   plot_brazil_oil_palm_fruit +
   plot_brazil_soya_beans +
@@ -1016,6 +986,7 @@ eu_countries <- c(
   "Portugal",
   "Romania",
   "Slovakia",
+  "Slovak Republic",
   "Slovenia",
   "Spain",
   "Sweden"
@@ -1149,7 +1120,8 @@ create_country_col_plot_w_alpha <- function(data,
         manager_true_ultimate_parent_country_of_headquarters
       )
     ) %>%
-    group_by(manager_true_ultimate_parent_country_of_headquarters,!!sym(alpha_var)) %>%
+    group_by(manager_true_ultimate_parent_country_of_headquarters,
+             !!sym(alpha_var)) %>%
     summarise(amount_usd_m_alpha_var = sum(!!sym(analytical_variable), na.rm = TRUE),
               .groups = "drop") %>%
     group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
@@ -1160,7 +1132,8 @@ create_country_col_plot_w_alpha <- function(data,
            pct = amount_usd_m / total_flows_for_this_df) %>%
     group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
     mutate(!!sym(alpha_var) := factor(!!sym(alpha_var), levels = alpha_var_order)) %>%
-    arrange(manager_true_ultimate_parent_country_of_headquarters,!!sym(alpha_var))
+    arrange(manager_true_ultimate_parent_country_of_headquarters,
+            !!sym(alpha_var))
   
   write_csv(
     plot_data,
@@ -1509,11 +1482,12 @@ ggsave(
   width = 11
 )
 
-##### 4.4.3. data for country-level Sankey plots (then generated in Graphica) -----------
+##### 4.4.3. data for commodity-level Sankey plots (then generated in Graphica) -----------
 # For Sankeys, we want financing country --> receiving country, coloured or shaded by direct/indirect
 # Because we are looking at structural trends, we use the data normalised to the SEI-Trase years available, to keep the breadth of data available while maintaining comparability
 # Sensitivity test the data
 
+# commodity level (duplicates adjusted by production volumes)
 sankey_data_all <- commodity_param_grid %>%
   mutate(results = pmap(list(commodity_case, boundary_period, defn_phase_out), function(commodity_, period_, defn_status_) {
     message(
@@ -1631,9 +1605,53 @@ sankey_data_all <- commodity_param_grid %>%
   unnest(results)
 
 write_csv(sankey_data_all,
-          "./analytical-results/sankey_data_w_sensitivity_analysis.csv")
+          "./analytical-results/sankey_data_commodity_grouped_w_sensitivity_analysis.csv")
 
-##### 4.4.3. Own Sankey plots
+
+# all-amazon dataset (duplicates adjusted by monetary values)
+
+sankey_data_all_amazon <- tibble() 
+
+df <- flows_all_countries_commodities %>%
+  mutate(
+    manager_true_ultimate_parent_country_of_headquarters_sankey = case_when(
+      manager_true_ultimate_parent_country_of_headquarters %in% eu_countries ~ "EU27",
+      is.na(manager_true_ultimate_parent_country_of_headquarters) ~ "Unknown",
+      manager_true_ultimate_parent_country_of_headquarters == "United States of America" ~ "USA",
+      manager_true_ultimate_parent_country_of_headquarters == "United Kingdom" ~ "UK",
+      TRUE ~ manager_true_ultimate_parent_country_of_headquarters
+    )
+  )
+
+totals <- df %>%
+  group_by(commodity,
+           manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
+  summarise(
+    total_usd_m_normalised_to_sei_trase = sum(
+      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+      na.rm = TRUE
+    ),
+    .groups = "drop"
+  ) %>%
+  group_by(commodity) %>%
+  mutate(rank = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
+  ungroup()
+
+top10 <- totals %>%
+  group_by(commodity) %>%
+  mutate(
+    manager_country_grouped = if_else(
+      rank <= 10,
+      manager_true_ultimate_parent_country_of_headquarters_sankey,
+      "Other countries"
+    )
+  ) %>%
+  select(
+    commodity,
+    manager_true_ultimate_parent_country_of_headquarters_sankey,
+    manager_country_grouped
+  )
+  
 
 
 ### 4.5. summary tables per exporter_group ------------
@@ -1669,8 +1687,7 @@ create_manager_league_table_w_fill <- function(data,
           .keep_all = TRUE
         ) %>%
         select(
-          manager_true_ultimate_parent_organisation_name,
-          !!sym(fill_option),
+          manager_true_ultimate_parent_organisation_name,!!sym(fill_option),
           government_ultimate_parent
         )
     ),
@@ -1951,7 +1968,7 @@ ggsave("./figures/china_top_fis.pdf",
        width = 6)
 
 
-###### create grouped data -------------
+###### 4.6.3. Final league table data (visualised in Graphica) -------------
 
 government_owned_flag <- flows_all_countries_commodities %>%
   distinct(manager_true_ultimate_parent_organisation_name,
@@ -1969,41 +1986,54 @@ manager_totals <- flows_all_countries_commodities %>%
   group_by(manager_true_ultimate_parent_organisation_name) %>%
   summarise(
     total_usd_m_yr_overall = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_normalised,
+      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
       na.rm = TRUE
     ),
     .groups = "drop"
   ) %>%
   arrange(desc(total_usd_m_yr_overall)) %>%
-  mutate(rank_overall = dense_rank(desc(total_usd_m_yr_overall)), prop_overall = total_usd_m_yr_overall / sum(total_usd_m_yr_overall))
+  mutate(
+    rank_overall = dense_rank(desc(total_usd_m_yr_overall)),
+    prop_overall = total_usd_m_yr_overall / sum(total_usd_m_yr_overall)
+  )
 
 manager_by_country_commodity <- flows_all_countries_commodities %>%
   filter(modulus(year_relative_to_trase_period) == 0) %>%
   mutate(country_commodity = str_c(producer_country, commodity, sep = " - ")) %>%
-  group_by(manager_true_ultimate_parent_organisation_name, country_commodity) %>%
+  group_by(manager_true_ultimate_parent_organisation_name,
+           country_commodity) %>%
   summarise(
     total_usd_m_yr_this_country_commodity = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_normalised,
+      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
       na.rm = TRUE
     ),
     .groups = "drop"
   ) %>%
   group_by(manager_true_ultimate_parent_organisation_name) %>%
-  mutate(prop_this_country_commodity = percent(total_usd_m_yr_this_country_commodity / sum(total_usd_m_yr_this_country_commodity), accuracy = 1))
+  mutate(
+    prop_this_country_commodity = percent(
+      total_usd_m_yr_this_country_commodity / sum(total_usd_m_yr_this_country_commodity),
+      accuracy = 1
+    )
+  )
 
 manager_by_strength <- flows_all_countries_commodities %>%
   filter(modulus(year_relative_to_trase_period) == 0) %>%
   mutate(country_commodity = str_c(producer_country, commodity, sep = " - ")) %>%
-  group_by(manager_true_ultimate_parent_organisation_name, financial_flow_link_strength) %>%
+  group_by(manager_true_ultimate_parent_organisation_name,
+           financial_flow_link_strength) %>%
   summarise(
     total_usd_m_yr_this_strength = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_normalised,
+      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
       na.rm = TRUE
     ),
     .groups = "drop"
   ) %>%
   group_by(manager_true_ultimate_parent_organisation_name) %>%
-  mutate(prop_this_strength = percent(total_usd_m_yr_this_strength / sum(total_usd_m_yr_this_strength), accuracy = 1))
+  mutate(prop_this_strength = percent(
+    total_usd_m_yr_this_strength / sum(total_usd_m_yr_this_strength),
+    accuracy = 1
+  ))
 
 league_table_all_data <- flows_all_countries_commodities %>%
   filter(modulus(year_relative_to_trase_period) == 0) %>%
@@ -2015,7 +2045,7 @@ league_table_all_data <- flows_all_countries_commodities %>%
   ) %>%
   summarise(
     total_usd_m_yr_this_strength = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_normalised,
+      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
       na.rm = TRUE
     ),
     .groups = "drop"
@@ -2023,19 +2053,35 @@ league_table_all_data <- flows_all_countries_commodities %>%
   # join on totals, ranks, hqs, and ownership status
   left_join(manager_totals,
             by = c("manager_true_ultimate_parent_organisation_name")) %>%
-  left_join(manager_by_strength %>% select(manager_true_ultimate_parent_organisation_name, financial_flow_link_strength, prop_this_strength),
-            by = c("manager_true_ultimate_parent_organisation_name", "financial_flow_link_strength")) %>%
-  left_join(manager_by_country_commodity %>% select(manager_true_ultimate_parent_organisation_name, country_commodity, prop_this_country_commodity),
-            by = c("manager_true_ultimate_parent_organisation_name", "country_commodity")) %>%
+  left_join(
+    manager_by_strength %>% select(
+      manager_true_ultimate_parent_organisation_name,
+      financial_flow_link_strength,
+      prop_this_strength
+    ),
+    by = c(
+      "manager_true_ultimate_parent_organisation_name",
+      "financial_flow_link_strength"
+    )
+  ) %>%
+  left_join(
+    manager_by_country_commodity %>% select(
+      manager_true_ultimate_parent_organisation_name,
+      country_commodity,
+      prop_this_country_commodity
+    ),
+    by = c(
+      "manager_true_ultimate_parent_organisation_name",
+      "country_commodity"
+    )
+  ) %>%
   left_join(government_owned_flag,
             by = c("manager_true_ultimate_parent_organisation_name")) %>%
   left_join(manager_hqs,
             by = c("manager_true_ultimate_parent_organisation_name")) %>%
   arrange(desc(total_usd_m_yr_overall))
 
-write_csv(league_table_all_data, "./analytical-results/league_table_all_data_bp_0_po_FALSE.csv")  
-  
-  
-  
-  
-  
+write_csv(
+  league_table_all_data,
+  "./analytical-results/league_table_all_data_bp_0_po_FALSE.csv"
+)
