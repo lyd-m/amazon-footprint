@@ -717,7 +717,7 @@ for (commodity_ in names(flows_by_commodity)) {
   df <- flows_by_commodity[[commodity_]]
   df <- df %>%
     mutate(
-      sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year,
+      sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1, # add one since inclusive (e.g., 2015, 2016, 2017)
       # N.B: that as this stands it does not account for the boundary period
       tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity / sei_trase_years_available
     )
@@ -1940,7 +1940,7 @@ na.rm = TRUE
 
 flows_all_countries_commodities <- flows_all_countries_commodities %>%
   mutate(
-    sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year,
+    sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1, # add one since inclusive (e.g., 2015, 2016, 2017)
     # N.B: that as this stands it does not account for the boundary period, just the SEI-Trase years
     tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_normalised = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates / sei_trase_years_available
   )
