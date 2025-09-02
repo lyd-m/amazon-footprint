@@ -1488,7 +1488,7 @@ ggsave(
 # Sensitivity test the data
 
 # commodity level (duplicates adjusted by production volumes)
-sankey_data_all <- commodity_param_grid %>%
+sankey_data_by_commodity <- commodity_param_grid %>%
   mutate(results = pmap(list(commodity_case, boundary_period, defn_phase_out), function(commodity_, period_, defn_status_) {
     message(
       commodity_,
@@ -1604,55 +1604,150 @@ sankey_data_all <- commodity_param_grid %>%
   })) %>%
   unnest(results)
 
-write_csv(sankey_data_all,
+write_csv(sankey_data_by_commodity,
           "./analytical-results/sankey_data_commodity_grouped_w_sensitivity_analysis.csv")
 
+##### 4.4.3. data for all Amazon Sankey plot (then generated in Graphica) -----------
+all_amazon_param_grid <- tibble(
+  "boundary_period" = c(rep(0, 2), rep(1, 2), rep(2,2), rep(3,2)),
+  "defn_phase_out" = c(rep(c(FALSE, TRUE), 4))
+)
 
-# all-amazon dataset (duplicates adjusted by monetary values)
-
-sankey_data_all_amazon <- tibble() 
-
-df <- flows_all_countries_commodities %>%
-  mutate(
-    manager_true_ultimate_parent_country_of_headquarters_sankey = case_when(
-      manager_true_ultimate_parent_country_of_headquarters %in% eu_countries ~ "EU27",
-      is.na(manager_true_ultimate_parent_country_of_headquarters) ~ "Unknown",
-      manager_true_ultimate_parent_country_of_headquarters == "United States of America" ~ "USA",
-      manager_true_ultimate_parent_country_of_headquarters == "United Kingdom" ~ "UK",
-      TRUE ~ manager_true_ultimate_parent_country_of_headquarters
+sankey_data_overall <- all_amazon_param_grid %>%
+  mutate(results = pmap(list(boundary_period, defn_phase_out), function(period_, defn_status_) {
+    message(
+      period_,
+      " yrs around SEI-Trase dates - defn phase out included: ",
+      defn_status_
     )
-  )
+    
+    df <- flows_all_countries_commodities %>% # adjust for boundary period
+      filter(modulus(year_relative_to_trase_period) <= period_)
+    
+    if (defn_status_ == TRUE) {
+      df <- df %>% filter(!remove_flow_based_on_phase_out == TRUE) # remove flows that have phased out (keep ones with FALSE for remove)
+    }
+    
+    if (nrow(df) == 0) {
+      message("No financial flows for this spec")
+      return(
+        tibble(
+          boundary_period = period_,
+          defn_phase_out = defn_status_,
+          manager_country_grouped = character(),
+          producer_country = character(),
+          financial_flow_link_strength = character(),
+          total_usd_m_normalised_to_sei_trase_by_strength = numeric(),
+          total_usd_m_normalised_to_sei_trase = numeric(),
+          manager_country_grouped_link_strength_pct = numeric()
+        )
+      )
+    }
 
-totals <- df %>%
-  group_by(commodity,
-           manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
-  summarise(
-    total_usd_m_normalised_to_sei_trase = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
-      na.rm = TRUE
-    ),
-    .groups = "drop"
-  ) %>%
-  group_by(commodity) %>%
-  mutate(rank = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
-  ungroup()
-
-top10 <- totals %>%
-  group_by(commodity) %>%
-  mutate(
-    manager_country_grouped = if_else(
-      rank <= 10,
-      manager_true_ultimate_parent_country_of_headquarters_sankey,
-      "Other countries"
+  df <- flows_all_countries_commodities %>%
+    mutate(
+      manager_true_ultimate_parent_country_of_headquarters_sankey = case_when(
+        manager_true_ultimate_parent_country_of_headquarters %in% eu_countries ~ "EU27",
+        is.na(manager_true_ultimate_parent_country_of_headquarters) ~ "Unknown",
+        manager_true_ultimate_parent_country_of_headquarters == "United States of America" ~ "USA",
+        manager_true_ultimate_parent_country_of_headquarters == "United Kingdom" ~ "UK",
+        TRUE ~ manager_true_ultimate_parent_country_of_headquarters
+      )
     )
-  ) %>%
-  select(
-    commodity,
-    manager_true_ultimate_parent_country_of_headquarters_sankey,
-    manager_country_grouped
-  )
   
-
+  totals_by_commodity <- df %>%
+    group_by(commodity,
+             manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
+    summarise(
+      total_usd_m_normalised_to_sei_trase = sum(
+        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+        na.rm = TRUE
+      ),
+      .groups = "drop"
+    ) %>%
+    group_by(commodity) %>%
+    mutate(rank = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
+    ungroup()
+  
+  top10_by_commodity <- totals_by_commodity %>% # top ten financing countries for each commodity shown, rest attributed as 'other'
+    group_by(commodity) %>%
+    mutate(
+      manager_country_grouped = if_else(
+        rank <= 10,
+        manager_true_ultimate_parent_country_of_headquarters_sankey,
+        "Other countries"
+      )
+    ) %>%
+    select(
+      commodity,
+      manager_true_ultimate_parent_country_of_headquarters_sankey,
+      manager_country_grouped
+    )
+  
+  totals_overall <- df %>%
+    group_by(manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
+    summarise(
+      total_usd_m_normalised_to_sei_trase = sum(
+        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+        na.rm = TRUE
+      ),
+      .groups = "drop"
+    ) %>%
+    mutate(rank_overall = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
+    ungroup()
+  
+  top10_overall <- totals_overall %>%
+    mutate(
+      manager_country_grouped = if_else(
+        rank_overall <= 10,
+        manager_true_ultimate_parent_country_of_headquarters_sankey,
+        "Other countries"
+      )
+    ) %>%
+    select(
+      manager_true_ultimate_parent_country_of_headquarters_sankey,
+      manager_country_grouped
+    )
+   
+  sankey_data <- df %>% # only show top ten overall 
+    left_join(
+      top10_overall,
+      by = c(
+        "manager_true_ultimate_parent_country_of_headquarters_sankey"
+      )
+    ) %>%
+    # calculate flows by link strength, for aggregated groups
+    group_by(
+      commodity,
+      producer_country,
+      manager_country_grouped,
+      financial_flow_link_strength
+    ) %>%
+    summarise(
+      total_usd_m_normalised_to_sei_trase_by_strength = sum(
+        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+        na.rm = TRUE
+      ),
+      .groups = "drop"
+    ) %>%
+    # add totals
+    left_join(
+      totals_overall,
+      by = c( # note that this won't return a total for 'other'
+        "manager_country_grouped" = "manager_true_ultimate_parent_country_of_headquarters_sankey"
+      )
+    ) %>%
+    # calculate % high, medium, low for each financier country for that commodity
+    group_by(commodity, producer_country, manager_country_grouped) %>%
+    mutate(
+      manager_country_grouped_link_strength_pct = total_usd_m_normalised_to_sei_trase_by_strength / total_usd_m_normalised_to_sei_trase
+    ) %>%
+    ungroup()
+  return(sankey_data)
+  })) %>%
+  unnest(results)
+  
+write_csv(sankey_data_overall, "./analytical-results/sankey_data_all_amazon_w_sensitivity_analysis.csv")
 
 ### 4.5. summary tables per exporter_group ------------
 
