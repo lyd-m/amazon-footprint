@@ -2063,7 +2063,7 @@ ggsave("./figures/china_top_fis.pdf",
        width = 6)
 
 
-###### 4.6.3. Final league table data (visualised in Graphica) -------------
+##### 4.6.3. Final league table data (visualised in Graphica) -------------
 
 government_owned_flag <- flows_all_countries_commodities %>%
   distinct(manager_true_ultimate_parent_organisation_name,
