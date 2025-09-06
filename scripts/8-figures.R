@@ -796,7 +796,7 @@ flows_by_commodity_sensitivity_df <- commodity_param_grid %>%
     # apply boundary period filter
     if (bp != "all") {
       df <- df %>%
-        filter(modulus(year_relative_to_trase_period) <= bp)
+        filter(abs(as.numeric(year_relative_to_trase_period)) <= as.numeric(bp))
     }
     
     # apply deforestation phase-out filter
@@ -849,7 +849,7 @@ flows_all_countries_commodities_sensitivity_df <- overall_param_grid %>%
     # boundary filter only if bp is not 'all'
     if (bp != "all") {
       df <- df %>%
-        filter(modulus(year_relative_to_trase_period) <= bp)
+        filter(abs(as.numeric(year_relative_to_trase_period)) <= as.numeric(bp))
     }
     
     # defn phase out filter
@@ -2702,3 +2702,18 @@ flows_all_countries_commodities %>% filter(!!brazil_rcs_filter) %>%
 flows_all_countries_commodities %>% filter(!!brazil_rcs_filter) %>%
   group_by(financial_flow_link_strength, flow_financed_location_type) %>%
   summarise(total = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE))
+
+#### 4.7. Supplementary data -------------
+# yearly flows
+df <- (flows_all_countries_commodities_sensitivity_df %>% filter(boundary_period==3 & !defn_phase_out))$flows_filtered[[1]]
+
+df %>%
+  ggplot(aes(
+    x = year,
+    y = tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates,
+    alpha = year_relative_to_trase_period
+  )) +
+  geom_col() +
+  facet_wrap(~country_commodity, 
+             scales = "free_y",
+             ncol = 1)
