@@ -24,6 +24,14 @@ modulus <- function(x) {
   sqrt(x^2)
 }
 
+rowsum_helper <- function(df,
+                          cols,
+                          new_col = "row_sum",
+                          na.rm = TRUE) {
+  df %>%
+    dplyr::mutate({{new_col}} := rowSums(dplyr::select(., dplyr::all_of(cols)), na.rm = na.rm))
+}
+
 ### 1. DATA IMPORT --------------------------
 regions_unsd <- read_csv("./input-data/regions_map.csv") %>%
   select(country, region_unsd)
@@ -537,7 +545,7 @@ plt_legal_entity_types_by_count, plt_legal_entity_types_by_count_wo_unknown, plt
 
 
 ### 4.FINANCIAL DATA ANALYSIS --------------------------
-# simple descriptive plots to start with
+
 boundary_periods <- c(0, 1, 2, 3)
 
 #### 4.1. Combined datasets ---------------
@@ -549,7 +557,6 @@ boundary_periods <- c(0, 1, 2, 3)
 all_flows_simple_bind <- tibble()
 for (country_commodity in names(flows)) {
   df <- flows[[country_commodity]] %>%
-    filter(modulus(year_relative_to_trase_period) <= max(boundary_periods)) %>%
     mutate(bond_isin = as.character(bond_isin)) # sorting out inconsistent column types
   
   all_flows_simple_bind <- bind_rows(all_flows_simple_bind, df)
@@ -571,122 +578,52 @@ parse_by_production_volumes <- function(df, commodity_filter) {
     rename(production_volume_commodity_this_yr = value) %>%
     group_by(tranche_id) %>% # handling where transactions exist across two countries for the same commodity (e.g., JBS)
     mutate(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity =
-        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd * (production_volume_commodity_this_yr / sum(
+      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity =
+        tranche_amount_per_manager_usd_m_final_in_2024_av_usd * (production_volume_commodity_this_yr / sum(
           unique(production_volume_commodity_this_yr)
         ))
     ) %>%
     ungroup()
 }
 
-flows_cattle_meat_all <- all_flows_simple_bind %>%
-  parse_by_production_volumes(commodity_filter = "Cattle meat")
-
-(sum((
-  flows_cattle_meat_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-)$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd
-) -
-    sum((
-      flows_cattle_meat_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity
-    )
-    )) / sum((
-      flows_cattle_meat_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-    )$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd
-    )
-
-flows_cocoa_beans_all <- all_flows_simple_bind %>%
-  parse_by_production_volumes(commodity_filter = "Cocoa beans")
-
-(sum((
-  flows_cocoa_beans_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-)$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd
-) -
-    sum((
-      flows_cocoa_beans_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity
-    )
-    )) / sum((
-      flows_cocoa_beans_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-    )$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd
-    )
-
-flows_coffee_green_all <- all_flows_simple_bind %>%
-  parse_by_production_volumes(commodity_filter = "Coffee, green")
-
-(sum((
-  flows_coffee_green_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-)$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd
-) -
-    sum((
-      flows_coffee_green_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity
-    )
-    )) / sum((
-      flows_coffee_green_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-    )$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd
-    )
-
-flows_oil_palm_all <- all_flows_simple_bind %>%
-  parse_by_production_volumes(commodity_filter = "Oil palm fruit")
-
-(sum((
-  flows_oil_palm_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-)$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd
-) -
-    sum((
-      flows_oil_palm_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity
-    )
-    )) / sum((
-      flows_oil_palm_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-    )$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd
-    )
-
-flows_soya_beans_all <- all_flows_simple_bind %>%
-  parse_by_production_volumes(commodity_filter = "Soya beans")
-
-(
-  sum((
-    flows_soya_beans_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-  )$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
-  na.rm = TRUE
-  ) -
-    sum((
-      flows_soya_beans_all$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity
-    ),
-    na.rm = TRUE
-    )
-) / sum((
-  flows_soya_beans_all %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-)$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
-na.rm = TRUE
+commodity_names <- c(
+  "Cattle meat",
+  "Cocoa beans",
+  "Coffee, green",
+  "Oil palm fruit",
+  "Soya beans",
+  "Sugar cane"
 )
 
-flows_sugar_cane_all <- all_flows_simple_bind %>%
-  parse_by_production_volumes(commodity_filter = "Sugar cane")
-
-# create list of commodity datasets
-
-flows_by_commodity <- list(
-  "cattle_meat" = flows_cattle_meat_all,
-  "cocoa_beans" = flows_cocoa_beans_all,
-  "coffee_green" = flows_coffee_green_all,
-  "oil_palm" = flows_oil_palm_all,
-  "soya_beans" = flows_soya_beans_all,
-  "sugar_cane" = flows_sugar_cane_all
+commodity_map <- setNames(
+  commodity_names,
+  c("cattle_meat", "cocoa_beans", "coffee_green", "oil_palm", "soya_beans", "sugar_cane")
 )
 
-# annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods)
-# this allows a structural comparison (i.e., who are the most important countries financing these companies over the available period of SEI-trase data?)
-# so we normalise to the number of years of trase data that's available to make it more comparable - longer time periods see their flows reduced by more.
-for (commodity_ in names(flows_by_commodity)) {
-  df <- flows_by_commodity[[commodity_]]
-  df <- df %>%
+flows_by_commodity <- tibble(
+  commodity = names(commodity_map)
+) %>% mutate(
+  data = map(commodity, ~ {
+  df <- parse_by_production_volumes(all_flows_simple_bind, commodity_map[[.x]])
+  
+  # also create annualised data by sei_trase years
+  df %>%
     mutate(
       sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1,
-      # add one since inclusive (e.g., 2015, 2016, 2017)
-      # N.B: that as this stands it does not account for the boundary period
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity / sei_trase_years_available
+      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average =
+        tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity / sei_trase_years_available
     )
-  flows_by_commodity[[commodity_]] <- df
-}
+  })
+)
+
+check_sums <- purrr::map_dbl(flows_by_commodity$data, function(df) {
+  df_distinct <- df %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
+  
+  (sum(df_distinct$tranche_amount_per_manager_usd_m_final_in_2024_av_usd, na.rm = TRUE) -
+      sum(df$tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity, na.rm = TRUE)) /
+    sum(df_distinct$tranche_amount_per_manager_usd_m_final_in_2024_av_usd, na.rm = TRUE)
+})
+check_sums
 
 ##### 4.1.2. Overall amazon dataset (i.e., combine different commodities from different countries) ---------------------------
 # bind all data together for same commodities
@@ -707,8 +644,8 @@ parse_by_production_value <- function(df) {
     rename(production_value_country_commodity_this_yr = value) %>%
     group_by(tranche_id) %>% # handling where transactions exist across multiple commodities/countries for the same commodity
     mutate(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates =
-        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd * (production_value_country_commodity_this_yr / sum(
+      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates =
+        tranche_amount_per_manager_usd_m_final_in_2024_av_usd * (production_value_country_commodity_this_yr / sum(
           unique(production_value_country_commodity_this_yr)
         ))
     ) %>%
@@ -719,32 +656,31 @@ flows_all_countries_commodities <- all_flows_simple_bind %>%
   parse_by_production_value()
 
 # check the calculation is consistent (i.e., deals are actually split)
-(
+check_sums <- (
   sum((
     flows_all_countries_commodities %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-  )$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
+  )$tranche_amount_per_manager_usd_m_final_in_2024_av_usd,
   na.rm = TRUE
   ) -
     sum((
-      flows_all_countries_commodities$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates
+      flows_all_countries_commodities$tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates
     ),
     na.rm = TRUE
     )
 ) / sum((
   flows_all_countries_commodities %>% distinct(tranche_id, manager_name, .keep_all = TRUE)
-)$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
+)$tranche_amount_per_manager_usd_m_final_in_2024_av_usd,
 na.rm = TRUE
-) # only rounding error worth of difference
+)
+check_sums # only a rounding errors
 
 # annualising the data to account for number of SEI-TRASE years available (bc the financial data spans different time periods)
-# this allows a structural comparison (i.e., who are the most important countries financing these companies over the available period of SEI-trase data?)
-# so we normalise to the number of years of trase data that's available to make it more comparable - longer time periods see their flows reduced by more.
 flows_all_countries_commodities <- flows_all_countries_commodities %>%
   mutate(
     sei_trase_years_available = sei_trase_data_max_year - sei_trase_data_min_year + 1,
     # add one since inclusive (e.g., 2015, 2016, 2017)
     # N.B: that as this stands it does not account for the boundary period, just the SEI-Trase years
-    tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised = tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates / sei_trase_years_available
+    tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised = tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates / sei_trase_years_available
   )
 
 # save version in intermediate results
@@ -753,10 +689,43 @@ write_csv(
   "./intermediate-results/flows_all_countries_commodities.csv"
 )
 
+##### 4.1.3. Financial flows data availability ------------------
+exporter_gps_consol_in_flows <- flows_all_countries_commodities %>%
+  distinct(exporter_group)
 
-#### 4.2. Setting up sensitivity testing --------------------------
-## boundary period (0-3 years)
-## deforestation phase out or not
+# noting that some exporter groups are combined (w a separator) in the flows data as they relate to the same legal entity
+# this means we need to do a substring match from the company data rather than a 1:1 match
+
+exporter_gps_data_availability <- companies_all_yrs %>%
+  distinct(producer_country, commodity, exporter_group) %>%
+  rowwise() %>%
+  mutate(fin_flows = any(
+    grepl(exporter_group, exporter_gps_consol_in_flows$exporter_group)
+  ))
+
+##### 4.1.4. Combine financial flows and legal entity data availability ------------------
+exporter_gps_w_legal_entities <- companies_all_yrs %>%
+  distinct(producer_country,
+           commodity,
+           exporter_group,
+           legal_entity_mapped) %>%
+  filter(legal_entity_mapped == TRUE)
+
+exporter_gps_data_availability <- exporter_gps_data_availability %>%
+  mutate(legal_entity = any(
+    grepl(
+      exporter_group,
+      exporter_gps_w_legal_entities$exporter_group
+    )
+  ))
+
+write_csv(
+  exporter_gps_data_availability,
+  "./analytical-results/exporter_groups_financial_data_availability.csv"
+)
+
+
+#### 4.2. Setting up sensitivity testing datasets --------------------------
 country_commodity_dict <- tibble()
 for (country_commodity_ in names(flows)) {
   df <- flows[[country_commodity_]]
@@ -768,184 +737,220 @@ for (country_commodity_ in names(flows)) {
   country_commodity_dict <- bind_rows(country_commodity_dict, df)
 }
 
-boundary_periods <- c(0, 1, 2, 3)
+boundary_periods <- c("all", 0, 1, 2, 3)
 deforestation_phase_out_status <- c(FALSE, TRUE) # if true, remove financial flows after the year deforestation has been phased out
 
+##### for unadjusted data (explore unadjusted flows individually for each commodity) ----------
 country_commodity_param_grid <- tibble(country_commodity_case = names(flows)) %>%
   crossing(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
 
-commodity_param_grid <- tibble(commodity_case = names(flows_by_commodity)) %>%
+flows_by_country_commodity_sensitivity_df
+
+##### for countries combined together for each commodity ----------
+commodity_param_grid <- tibble(commodity_case = unique(flows_by_commodity$commodity)) %>%
   crossing(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
 
-## then can use purrr pmap function to do this for the different cases
+flows_by_commodity_sensitivity_df <- commodity_param_grid %>%
+  mutate(flows_filtered = pmap(
+    list(commodity_case, boundary_period, defn_phase_out),
+    function(comm, bp, defn) {
+      
+      # get the nested df
+      df <- flows_by_commodity %>%
+        filter(commodity == comm) %>%
+        pull(data) %>% .[[1]]
+      
+      # apply boundary period filter
+      if (bp != "all") {
+        df <- df %>%
+          filter(modulus(year_relative_to_trase_period) <= bp)
+      }
+      
+      # apply deforestation phase-out filter
+      if (defn) {
+        df <- df %>%
+          filter(!remove_flow_based_on_phase_out)
+      }
+      
+      df
+    }
+  ))
 
-#### 4.2. Total financial flows (overall for country-commodity, normalised for commodity) ------------
-flows_country_commodity_totals <- country_commodity_param_grid %>%
-  mutate(results = pmap(list(country_commodity_case, boundary_period, defn_phase_out), function(country_commodity, period_, defn_status_) {
-    message(
-      country_commodity,
-      ": ",
-      period_,
-      " yrs around SEI-Trase dates - defn phase out included: ",
-      defn_status_
-    )
+##### for all countries and commodities combined ----------
+overall_param_grid <- expand_grid(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
+
+flows_all_countries_commodities_sensitivity_df <- overall_param_grid %>%
+  mutate(flows_filtered = pmap(list(boundary_period, defn_phase_out), ~ {
+    bp <- ..1
+    defn <- ..2
     
-    df <- flows[[country_commodity]] %>%
-      filter(modulus(year_relative_to_trase_period) <= period_)
+    df <- flows_all_countries_commodities
     
-    if (defn_status_ == TRUE) {
-      df <- df %>% filter(!remove_flow_based_on_phase_out == TRUE) # remove flows that have phased out (keep ones with FALSE for remove)
+    # boundary filter only if bp is not 'all'
+    if (bp != "all") {
+      df <- df %>%
+        filter(modulus(year_relative_to_trase_period) <= bp)
     }
     
+    # defn phase out filter
+    if (defn) {
+      df <- df %>%
+        filter(!remove_flow_based_on_phase_out) # remove flows that have phased out
+    }
+    
+    df
+  }))
+
+#### 4.2. Totals ------------
+# find total in absolute USD millions and annualised by SEI-Trase dates
+
+# by commodity
+flows_by_commodity_totals <- flows_by_commodity_sensitivity_df %>%
+  mutate(results = map(flows_filtered, ~ {
+    df <- .x
+    
     if (nrow(df) == 0) {
-      return(
-        tibble(
-          total_usd_m_high_conf = 0,
-          total_usd_m_medium_conf = 0,
-          total_usd_m_low_conf = 0,
-          total_usd_m = 0
-        )
-      )
+      return(tibble(
+        total_usd_m_high_conf = 0,
+        total_usd_m_medium_conf = 0,
+        total_usd_m_low_conf = 0,
+        total_usd_m = 0
+      ))
     }
     
     df %>%
       summarise(
-        total_usd_m_high_conf = sum(
-          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength == "High"],
-          na.rm = TRUE
-        ),
-        total_usd_m_medium_conf = sum(
-          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength == "Medium"],
-          na.rm = TRUE
-        ),
-        total_usd_m_low_conf = sum(
-          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd[financial_flow_link_strength == "Low"],
-          na.rm = TRUE
-        )
+        total_usd_m_high_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity[financial_flow_link_strength == "High"], na.rm = TRUE),
+        total_usd_m_medium_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity[financial_flow_link_strength == "Medium"], na.rm = TRUE),
+        total_usd_m_low_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity[financial_flow_link_strength == "Low"], na.rm = TRUE)
       ) %>%
       mutate(
-        total_usd_m = sum(
-          total_usd_m_high_conf,
-          total_usd_m_medium_conf,
-          total_usd_m_low_conf,
-          na.rm = TRUE
-        )
-      )
+        total_usd_m = total_usd_m_high_conf + total_usd_m_medium_conf + total_usd_m_low_conf
+        ) 
   })) %>%
-  unnest(results)
-
-write_csv(
-  flows_country_commodity_totals,
-  "./analytical-results/flows_totals_country_commodity_w_boundary_periods_po_conf_levels.csv"
-)
-
-# do the same for each commodity (noting that this will be normalised to the number of SEI-Trase years available)
-flows_commodity_totals <- commodity_param_grid %>%
-  mutate(results = pmap(list(commodity_case, boundary_period, defn_phase_out), function(commodity, period_, defn_status_) {
-    message(
-      commodity,
-      ": ",
-      period_,
-      " yrs around SEI-Trase dates - defn phase out included: ",
-      defn_status_
-    )
-    
-    df <- flows_by_commodity[[commodity]] %>%
-      filter(modulus(year_relative_to_trase_period) <= period_)
-    
-    if (defn_status_ == TRUE) {
-      df <- df %>% filter(!remove_flow_based_on_phase_out == TRUE) # remove flows that have phased out (keep ones with FALSE for remove)
-    }
+  unnest(results) %>% 
+  mutate(results = map(flows_filtered, ~ {
+    df <- .x
     
     if (nrow(df) == 0) {
-      return(
-        tibble(
-          total_usd_m_high_conf = 0,
-          total_usd_m_medium_conf = 0,
-          total_usd_m_low_conf = 0,
-          total_usd_m = 0
-        )
-      )
+      return(tibble(
+        total_usd_m_yr_high_conf = 0,
+        total_usd_m_yr_medium_conf = 0,
+        total_usd_m_yr_low_conf = 0,
+        total_usd_m_yr = 0
+      ))
     }
     
     df %>%
       summarise(
-        total_usd_m_sei_trase_normalised_high_conf = sum(
-          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "High"],
-          na.rm = TRUE
-        ),
-        total_usd_m_sei_trase_normalised_medium_conf = sum(
-          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "Medium"],
-          na.rm = TRUE
-        ),
-        total_usd_m_sei_trase_normalised_low_conf = sum(
-          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "Low"],
-          na.rm = TRUE
-        )
+        total_usd_m_yr_high_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "High"], na.rm = TRUE),
+        total_usd_m_yr_medium_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "Medium"], na.rm = TRUE),
+        total_usd_m_yr_low_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average[financial_flow_link_strength == "Low"], na.rm = TRUE)
       ) %>%
       mutate(
-        total_usd_m_sei_trase_normalised = sum(
-          total_usd_m_sei_trase_normalised_high_conf,
-          total_usd_m_sei_trase_normalised_medium_conf,
-          total_usd_m_sei_trase_normalised_low_conf,
-          na.rm = TRUE
-        )
+        total_usd_m_yr = total_usd_m_yr_high_conf + total_usd_m_yr_medium_conf + total_usd_m_yr_low_conf
+      ) 
+  })) %>%
+  unnest(results) %>%
+  select(-flows_filtered)
+
+# for combined data
+flows_all_combined_totals <- flows_all_countries_commodities_sensitivity_df %>%
+  mutate(results = map(flows_filtered, ~ {
+    df <- .x
+    
+    if (nrow(df) == 0) {
+      return(tibble(
+        total_usd_m_high_conf = 0,
+        total_usd_m_medium_conf = 0,
+        total_usd_m_low_conf = 0,
+        total_usd_m = 0
+      ))
+    }
+    
+    df %>%
+      summarise(
+        total_usd_m_high_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates[financial_flow_link_strength == "High"], na.rm = TRUE),
+        total_usd_m_medium_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates[financial_flow_link_strength == "Medium"], na.rm = TRUE),
+        total_usd_m_low_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates[financial_flow_link_strength == "Low"], na.rm = TRUE)
+      ) %>%
+      mutate(
+        total_usd_m = total_usd_m_high_conf + total_usd_m_medium_conf + total_usd_m_low_conf
       )
   })) %>%
-  unnest(results)
-
-write_csv(
-  flows_country_commodity_totals,
-  "./analytical-results/flows_totals_commodity_sei_trase_normalised_w_boundary_periods_po_conf_levels.csv"
-)
+  unnest(results) %>%
+  mutate(results = map(flows_filtered, ~ {
+    df <- .x
+    
+    if (nrow(df) == 0) {
+      return(tibble(
+        total_usd_m_yr_high_conf = 0,
+        total_usd_m_yr_medium_conf = 0,
+        total_usd_m_yr_low_conf = 0,
+        total_usd_m_yr = 0
+      ))
+    }
+    
+    df %>%
+      summarise(
+        total_usd_m_yr_high_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised[financial_flow_link_strength == "High"], na.rm = TRUE),
+        total_usd_m_yr_medium_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised[financial_flow_link_strength == "Medium"], na.rm = TRUE),
+        total_usd_m_yr_low_conf = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised[financial_flow_link_strength == "Low"], na.rm = TRUE)
+      ) %>%
+      mutate(
+        total_usd_m_yr = total_usd_m_yr_high_conf + total_usd_m_yr_medium_conf + total_usd_m_yr_low_conf
+      ) 
+  })) %>%
+  unnest(results) %>%
+  select(-flows_filtered)
 
 
 #### 4.3. flow types (asset class, use of proceeds, directness) ------------
 ## NB - Fri 29 August - NEEDS UPDATING TO NEW DATA
 #for (country_commodity in names(flows_2010_2022)) {
-  df <- flows_2010_2022[[country_commodity]]
-  plot_name <- paste0("plot_", country_commodity)
-  if (nrow(df) > 0) {
-    total_label = sum(df$tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
-                      na.rm = TRUE)
-    plot <- horizontal_bar_chart(
-      df %>%
-        mutate(
-          financial_flow_link_strength = factor(
-            financial_flow_link_strength,
-            levels = c("Low", "Medium", "High")
-          )
-        ) %>%
-        group_by(financial_flow_link_strength) %>%
-        summarise(
-          total_usd_m = sum(
-            tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
-            na.rm = TRUE
-          ),
-          .groups = "drop"
-        ) %>%
-        mutate(pct = total_usd_m / sum(total_usd_m), dummy_x = "All flows"),
-      x_value = "dummy_x",
-      y_value = "pct",
-      fill_value = "financial_flow_link_strength",
-      y_value_label = "Proportion of financial flows",
-      fill_value_label = "Strength of link to Amazon",
-      title_label = country_commodity,
-      custom_colours = c(
-        "High" = "grey20",
-        "Medium" = "grey60",
-        "Low" = "grey85"
-      )
+df <- flows_2010_2022[[country_commodity]]
+plot_name <- paste0("plot_", country_commodity)
+if (nrow(df) > 0) {
+  total_label = sum(df$tranche_amount_per_manager_usd_m_final_in_2024_av_usd,
+                    na.rm = TRUE)
+  plot <- horizontal_bar_chart(
+    df %>%
+      mutate(
+        financial_flow_link_strength = factor(
+          financial_flow_link_strength,
+          levels = c("Low", "Medium", "High")
+        )
+      ) %>%
+      group_by(financial_flow_link_strength) %>%
+      summarise(
+        total_usd_m = sum(
+          tranche_amount_per_manager_usd_m_final_in_2024_av_usd,
+          na.rm = TRUE
+        ),
+        .groups = "drop"
+      ) %>%
+      mutate(pct = total_usd_m / sum(total_usd_m), dummy_x = "All flows"),
+    x_value = "dummy_x",
+    y_value = "pct",
+    fill_value = "financial_flow_link_strength",
+    y_value_label = "Proportion of financial flows",
+    fill_value_label = "Strength of link to Amazon",
+    title_label = country_commodity,
+    custom_colours = c(
+      "High" = "grey20",
+      "Medium" = "grey60",
+      "Low" = "grey85"
     )
-    print(plot)
-    assign(plot_name, plot, envir = .GlobalEnv)
-  } else {
-    print(paste0("No financial flows for ", country_commodity))
-  }
+  )
+  print(plot)
+  assign(plot_name, plot, envir = .GlobalEnv)
+} else {
+  print(paste0("No financial flows for ", country_commodity))
+}
 }
 
 #plot_bolivia_soya_beans +
-  plot_brazil_cattle_meat +
+plot_brazil_cattle_meat +
   plot_brazil_oil_palm_fruit +
   plot_brazil_soya_beans +
   plot_brazil_sugar_cane +
@@ -1016,7 +1021,7 @@ create_country_col_plot <- function(data,
     group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
     summarise(
       amount_usd_m = sum(
-        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd,
+        tranche_amount_per_manager_usd_m_final_in_2024_av_usd,
         na.rm = TRUE
       )
     ) %>%
@@ -1120,8 +1125,7 @@ create_country_col_plot_w_alpha <- function(data,
         manager_true_ultimate_parent_country_of_headquarters
       )
     ) %>%
-    group_by(manager_true_ultimate_parent_country_of_headquarters,
-             !!sym(alpha_var)) %>%
+    group_by(manager_true_ultimate_parent_country_of_headquarters,!!sym(alpha_var)) %>%
     summarise(amount_usd_m_alpha_var = sum(!!sym(analytical_variable), na.rm = TRUE),
               .groups = "drop") %>%
     group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
@@ -1132,8 +1136,7 @@ create_country_col_plot_w_alpha <- function(data,
            pct = amount_usd_m / total_flows_for_this_df) %>%
     group_by(manager_true_ultimate_parent_country_of_headquarters) %>%
     mutate(!!sym(alpha_var) := factor(!!sym(alpha_var), levels = alpha_var_order)) %>%
-    arrange(manager_true_ultimate_parent_country_of_headquarters,
-            !!sym(alpha_var))
+    arrange(manager_true_ultimate_parent_country_of_headquarters,!!sym(alpha_var))
   
   write_csv(
     plot_data,
@@ -1450,7 +1453,7 @@ for (commodity_ in names(flows_by_commodity)) {
       y_label_hjust = params$y_label_hjust,
       y_breaks = params$y_breaks,
       y_max = params$y_max,
-      analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average",
+      analytical_variable = "tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average",
       plot_title = commodity_,
       top_n = 10,
       alpha_var = "financial_flow_link_strength",
@@ -1539,7 +1542,7 @@ sankey_data_by_commodity <- commodity_param_grid %>%
                manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
       summarise(
         total_usd_m_normalised_to_sei_trase = sum(
-          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average,
+          tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average,
           na.rm = TRUE
         ),
         .groups = "drop"
@@ -1580,7 +1583,7 @@ sankey_data_by_commodity <- commodity_param_grid %>%
       ) %>%
       summarise(
         total_usd_m_normalised_to_sei_trase_by_strength = sum(
-          tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average,
+          tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average,
           na.rm = TRUE
         ),
         .groups = "drop"
@@ -1604,22 +1607,22 @@ sankey_data_by_commodity <- commodity_param_grid %>%
   })) %>%
   unnest(results)
 
-write_csv(sankey_data_by_commodity,
-          "./analytical-results/sankey_data_commodity_grouped_w_sensitivity_analysis.csv")
+write_csv(
+  sankey_data_by_commodity,
+  "./analytical-results/sankey_data_commodity_grouped_w_sensitivity_analysis.csv"
+)
 
 ##### 4.4.3. data for all Amazon Sankey plot (then generated in Graphica) -----------
 all_amazon_param_grid <- tibble(
-  "boundary_period" = c(rep(0, 2), rep(1, 2), rep(2,2), rep(3,2)),
+  "boundary_period" = c(rep(0, 2), rep(1, 2), rep(2, 2), rep(3, 2)),
   "defn_phase_out" = c(rep(c(FALSE, TRUE), 4))
 )
 
 sankey_data_overall <- all_amazon_param_grid %>%
   mutate(results = pmap(list(boundary_period, defn_phase_out), function(period_, defn_status_) {
-    message(
-      period_,
-      " yrs around SEI-Trase dates - defn phase out included: ",
-      defn_status_
-    )
+    message(period_,
+            " yrs around SEI-Trase dates - defn phase out included: ",
+            defn_status_)
     
     df <- flows_all_countries_commodities %>% # adjust for boundary period
       filter(modulus(year_relative_to_trase_period) <= period_)
@@ -1643,89 +1646,88 @@ sankey_data_overall <- all_amazon_param_grid %>%
         )
       )
     }
-
-  df <- flows_all_countries_commodities %>%
-    mutate(
-      manager_true_ultimate_parent_country_of_headquarters_sankey = case_when(
-        manager_true_ultimate_parent_country_of_headquarters %in% eu_countries ~ "EU27",
-        is.na(manager_true_ultimate_parent_country_of_headquarters) ~ "Unknown",
-        manager_true_ultimate_parent_country_of_headquarters == "United States of America" ~ "USA",
-        manager_true_ultimate_parent_country_of_headquarters == "United Kingdom" ~ "UK",
-        TRUE ~ manager_true_ultimate_parent_country_of_headquarters
+    
+    df <- flows_all_countries_commodities %>%
+      mutate(
+        manager_true_ultimate_parent_country_of_headquarters_sankey = case_when(
+          manager_true_ultimate_parent_country_of_headquarters %in% eu_countries ~ "EU27",
+          is.na(manager_true_ultimate_parent_country_of_headquarters) ~ "Unknown",
+          manager_true_ultimate_parent_country_of_headquarters == "United States of America" ~ "USA",
+          manager_true_ultimate_parent_country_of_headquarters == "United Kingdom" ~ "UK",
+          TRUE ~ manager_true_ultimate_parent_country_of_headquarters
+        )
       )
-    )
-  
-  totals_by_commodity <- df %>%
-    group_by(commodity,
-             manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
-    summarise(
-      total_usd_m_normalised_to_sei_trase = sum(
-        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
-        na.rm = TRUE
-      ),
-      .groups = "drop"
-    ) %>%
-    group_by(commodity) %>%
-    mutate(rank = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
-    ungroup()
-  
-  top10_by_commodity <- totals_by_commodity %>% # top ten financing countries for each commodity shown, rest attributed as 'other'
-    group_by(commodity) %>%
-    mutate(
-      manager_country_grouped = if_else(
-        rank <= 10,
+    
+    totals_by_commodity <- df %>%
+      group_by(commodity,
+               manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
+      summarise(
+        total_usd_m_normalised_to_sei_trase = sum(
+          tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
+          na.rm = TRUE
+        ),
+        .groups = "drop"
+      ) %>%
+      group_by(commodity) %>%
+      mutate(rank = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
+      ungroup()
+    
+    top10_by_commodity <- totals_by_commodity %>% # top ten financing countries for each commodity shown, rest attributed as 'other'
+      group_by(commodity) %>%
+      mutate(
+        manager_country_grouped = if_else(
+          rank <= 10,
+          manager_true_ultimate_parent_country_of_headquarters_sankey,
+          "Other countries"
+        )
+      ) %>%
+      select(
+        commodity,
         manager_true_ultimate_parent_country_of_headquarters_sankey,
-        "Other countries"
+        manager_country_grouped
       )
-    ) %>%
-    select(
-      commodity,
-      manager_true_ultimate_parent_country_of_headquarters_sankey,
-      manager_country_grouped
-    )
-  
-  totals_overall <- df %>%
-    group_by(manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
-    summarise(
-      total_usd_m_normalised_to_sei_trase = sum(
-        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
-        na.rm = TRUE
-      ),
-      .groups = "drop"
-    ) %>%
-    mutate(rank_overall = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
-    ungroup()
-  
-  top10_overall <- totals_overall %>%
-    mutate(
-      manager_country_grouped = if_else(
-        rank_overall <= 10,
+    
+    totals_overall <- df %>%
+      group_by(manager_true_ultimate_parent_country_of_headquarters_sankey) %>%
+      summarise(
+        total_usd_m_normalised_to_sei_trase = sum(
+          tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
+          na.rm = TRUE
+        ),
+        .groups = "drop"
+      ) %>%
+      mutate(rank_overall = dense_rank(desc(total_usd_m_normalised_to_sei_trase))) %>%
+      ungroup()
+    
+    top10_overall <- totals_overall %>%
+      mutate(
+        manager_country_grouped = if_else(
+          rank_overall <= 10,
+          manager_true_ultimate_parent_country_of_headquarters_sankey,
+          "Other countries"
+        )
+      ) %>%
+      select(
         manager_true_ultimate_parent_country_of_headquarters_sankey,
-        "Other countries"
+        manager_country_grouped
       )
-    ) %>%
-    select(
-      manager_true_ultimate_parent_country_of_headquarters_sankey,
-      manager_country_grouped
-    )
-   
-  sankey_data <- df %>% # only show top ten overall 
-    left_join(
-      top10_overall,
-      by = c(
-        "manager_true_ultimate_parent_country_of_headquarters_sankey"
-      )
-    ) %>%
-    # calculate flows by link strength, for aggregated groups
-    group_by(
-      commodity,
+    
+    sankey_data <- df %>% # only show top ten overall
+      left_join(
+        top10_overall,
+        by = c(
+          "manager_true_ultimate_parent_country_of_headquarters_sankey"
+        )
+      ) %>%
+      # calculate flows by link strength, for aggregated groups
+      group_by(      commodity,
       producer_country,
       manager_country_grouped,
       financial_flow_link_strength
     ) %>%
     summarise(
       total_usd_m_normalised_to_sei_trase_by_strength = sum(
-        tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+        tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
         na.rm = TRUE
       ),
       .groups = "drop"
@@ -1966,7 +1968,7 @@ for (country_commodity in names(flows)) {
       y_max = params$y_max,
       y_breaks = params$y_breaks,
       y_lab = params$y_lab,
-      analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd"
+      analytical_variable = "tranche_amount_per_manager_usd_m_final_in_2024_av_usd"
     )
     
     assign(plot_name, plot, envir = .GlobalEnv)
@@ -2026,7 +2028,7 @@ p1 <- create_manager_league_table_w_fill(
   y_breaks = 2000,
   y_lab = "Financial flows US$m/yr \n (production-weighted annual average)",
   fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
-  analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average"
+  analytical_variable = "tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average"
 )
 
 p2 <- create_manager_league_table_w_fill(
@@ -2040,7 +2042,7 @@ p2 <- create_manager_league_table_w_fill(
   y_breaks = 2000,
   y_lab = "Financial flows US$m/yr \n (production-weighted annual average)",
   fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
-  analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average"
+  analytical_variable = "tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average"
 )
 
 p3 <- create_manager_league_table_w_fill(
@@ -2054,7 +2056,7 @@ p3 <- create_manager_league_table_w_fill(
   y_breaks = 2000,
   y_lab = "Financial flows US$m/yr \n (production-weighted annual average)",
   fill_option = "manager_true_ultimate_parent_region_of_headquarters_unsd",
-  analytical_variable = "tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_commodity_annual_average"
+  analytical_variable = "tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_commodity_annual_average"
 )
 
 p1 + p2 + p3 + patchwork::plot_layout(ncol = 1)
@@ -2081,7 +2083,7 @@ manager_totals <- flows_all_countries_commodities %>%
   group_by(manager_true_ultimate_parent_organisation_name) %>%
   summarise(
     total_usd_m_yr_overall = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
       na.rm = TRUE
     ),
     .groups = "drop"
@@ -2099,7 +2101,7 @@ manager_by_country_commodity <- flows_all_countries_commodities %>%
            country_commodity) %>%
   summarise(
     total_usd_m_yr_this_country_commodity = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
       na.rm = TRUE
     ),
     .groups = "drop"
@@ -2119,7 +2121,7 @@ manager_by_strength <- flows_all_countries_commodities %>%
            financial_flow_link_strength) %>%
   summarise(
     total_usd_m_yr_this_strength = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
       na.rm = TRUE
     ),
     .groups = "drop"
@@ -2140,7 +2142,7 @@ league_table_all_data <- flows_all_countries_commodities %>%
   ) %>%
   summarise(
     total_usd_m_yr_this_strength = sum(
-      tranche_amount_per_manager_usd_m_final_in_dec_2024_usd_adjusted_for_duplicates_annualised,
+      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
       na.rm = TRUE
     ),
     .groups = "drop"
@@ -2180,3 +2182,20 @@ write_csv(
   league_table_all_data,
   "./analytical-results/league_table_all_data_bp_0_po_FALSE.csv"
 )
+
+##### 4.6.4. Comparison with Brazilian Rural Credit Scheme -------------
+brazil_rcs_filter <- expr(year >= 2020 & year <= 2024 &
+                        producer_country == "Brazil" &
+                        commodity %in% c("Cattle meat", "Soy", "Oil palm fruit"))
+
+flows_all_countries_commodities %>% filter(!!brazil_rcs_filter) %>% # no oil palm flows after 2019
+  group_by(financial_flow_link_strength) %>%
+  summarise(total = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE))
+
+flows_all_countries_commodities %>% filter(!!brazil_rcs_filter) %>%
+  group_by(flow_financed_location_type) %>%
+  summarise(total = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE))
+
+flows_all_countries_commodities %>% filter(!!brazil_rcs_filter) %>%
+  group_by(financial_flow_link_strength, flow_financed_location_type) %>%
+  summarise(total = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE))
