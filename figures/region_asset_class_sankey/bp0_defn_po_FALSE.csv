@@ -1,0 +1,163 @@
+manager_true_ultimate_parent_region_of_headquarters_unsd,asset_class,financial_flow_link_strength,total_usd_m,region_for_plot,asset_class_for_plot
+Africa,Equity deals,Low,10.750691207710869,"Africa 
+(US$7,494m)","Equity deals 
+(US$59,785m)"
+Africa,Loan deals,High,104.29739710409216,"Africa 
+(US$7,494m)","Loan deals 
+(US$964,338m)"
+Africa,Loan deals,Low,7048.920360909137,"Africa 
+(US$7,494m)","Loan deals 
+(US$964,338m)"
+Africa,Loan deals,Medium,330.38843591543963,"Africa 
+(US$7,494m)","Loan deals 
+(US$964,338m)"
+Asia,Bond deals,High,520.9214421865464,"Asia 
+(US$424,418m)","Bond deals 
+(US$356,157m)"
+Asia,Bond deals,Low,71525.8974980493,"Asia 
+(US$424,418m)","Bond deals 
+(US$356,157m)"
+Asia,Bond deals,Medium,13031.699606229355,"Asia 
+(US$424,418m)","Bond deals 
+(US$356,157m)"
+Asia,Equity deals,High,0,"Asia 
+(US$424,418m)","Equity deals 
+(US$59,785m)"
+Asia,Equity deals,Low,4349.481660139499,"Asia 
+(US$424,418m)","Equity deals 
+(US$59,785m)"
+Asia,Equity deals,Medium,2025.2741027157915,"Asia 
+(US$424,418m)","Equity deals 
+(US$59,785m)"
+Asia,Loan deals,High,5029.856547114183,"Asia 
+(US$424,418m)","Loan deals 
+(US$964,338m)"
+Asia,Loan deals,Low,266875.5216607258,"Asia 
+(US$424,418m)","Loan deals 
+(US$964,338m)"
+Asia,Loan deals,Medium,61059.577491147575,"Asia 
+(US$424,418m)","Loan deals 
+(US$964,338m)"
+Europe,Bond deals,High,5861.335646827635,"Europe 
+(US$491,603m)","Bond deals 
+(US$356,157m)"
+Europe,Bond deals,Low,82467.05029896171,"Europe 
+(US$491,603m)","Bond deals 
+(US$356,157m)"
+Europe,Bond deals,Medium,51388.17745003883,"Europe 
+(US$491,603m)","Bond deals 
+(US$356,157m)"
+Europe,Equity deals,High,1494.7680009055475,"Europe 
+(US$491,603m)","Equity deals 
+(US$59,785m)"
+Europe,Equity deals,Low,11912.043186006007,"Europe 
+(US$491,603m)","Equity deals 
+(US$59,785m)"
+Europe,Equity deals,Medium,2325.7927964247297,"Europe 
+(US$491,603m)","Equity deals 
+(US$59,785m)"
+Europe,Loan deals,High,12335.14114647552,"Europe 
+(US$491,603m)","Loan deals 
+(US$964,338m)"
+Europe,Loan deals,Low,170794.39472584543,"Europe 
+(US$491,603m)","Loan deals 
+(US$964,338m)"
+Europe,Loan deals,Medium,153024.33652038273,"Europe 
+(US$491,603m)","Loan deals 
+(US$964,338m)"
+Latin America and the Caribbean,Bond deals,High,11650.353932965829,"Latin America and the Caribbean 
+(US$39,017m)","Bond deals 
+(US$356,157m)"
+Latin America and the Caribbean,Bond deals,Low,7029.923331829462,"Latin America and the Caribbean 
+(US$39,017m)","Bond deals 
+(US$356,157m)"
+Latin America and the Caribbean,Bond deals,Medium,6434.777267333487,"Latin America and the Caribbean 
+(US$39,017m)","Bond deals 
+(US$356,157m)"
+Latin America and the Caribbean,Equity deals,High,5331.736105139586,"Latin America and the Caribbean 
+(US$39,017m)","Equity deals 
+(US$59,785m)"
+Latin America and the Caribbean,Equity deals,Low,113.0122769138098,"Latin America and the Caribbean 
+(US$39,017m)","Equity deals 
+(US$59,785m)"
+Latin America and the Caribbean,Equity deals,Medium,86.67633678771786,"Latin America and the Caribbean 
+(US$39,017m)","Equity deals 
+(US$59,785m)"
+Latin America and the Caribbean,Loan deals,High,1973.8175811797983,"Latin America and the Caribbean 
+(US$39,017m)","Loan deals 
+(US$964,338m)"
+Latin America and the Caribbean,Loan deals,Low,3357.8562485538678,"Latin America and the Caribbean 
+(US$39,017m)","Loan deals 
+(US$964,338m)"
+Latin America and the Caribbean,Loan deals,Medium,3038.3890403431897,"Latin America and the Caribbean 
+(US$39,017m)","Loan deals 
+(US$964,338m)"
+Northern America,Bond deals,High,4400.3256455693245,"Northern America 
+(US$334,228m)","Bond deals 
+(US$356,157m)"
+Northern America,Bond deals,Low,58736.273499339826,"Northern America 
+(US$334,228m)","Bond deals 
+(US$356,157m)"
+Northern America,Bond deals,Medium,38372.23884002597,"Northern America 
+(US$334,228m)","Bond deals 
+(US$356,157m)"
+Northern America,Equity deals,High,2087.2908309603745,"Northern America 
+(US$334,228m)","Equity deals 
+(US$59,785m)"
+Northern America,Equity deals,Low,15572.075253336034,"Northern America 
+(US$334,228m)","Equity deals 
+(US$59,785m)"
+Northern America,Equity deals,Medium,1543.1959296365535,"Northern America 
+(US$334,228m)","Equity deals 
+(US$59,785m)"
+Northern America,Loan deals,High,4454.944822007381,"Northern America 
+(US$334,228m)","Loan deals 
+(US$964,338m)"
+Northern America,Loan deals,Low,84996.46244827239,"Northern America 
+(US$334,228m)","Loan deals 
+(US$964,338m)"
+Northern America,Loan deals,Medium,124065.43678774056,"Northern America 
+(US$334,228m)","Loan deals 
+(US$964,338m)"
+Oceania,Bond deals,Low,1877.7475544702527,"Oceania 
+(US$36,008m)","Bond deals 
+(US$356,157m)"
+Oceania,Bond deals,Medium,724.2579504484278,"Oceania 
+(US$36,008m)","Bond deals 
+(US$356,157m)"
+Oceania,Equity deals,Medium,75.37887095723504,"Oceania 
+(US$36,008m)","Equity deals 
+(US$59,785m)"
+Oceania,Loan deals,High,318.88893901378367,"Oceania 
+(US$36,008m)","Loan deals 
+(US$964,338m)"
+Oceania,Loan deals,Low,20090.684595196053,"Oceania 
+(US$36,008m)","Loan deals 
+(US$964,338m)"
+Oceania,Loan deals,Medium,12921.275524700506,"Oceania 
+(US$36,008m)","Loan deals 
+(US$964,338m)"
+NA,Bond deals,High,503.5006760511276,"NA 
+(US$47,511m)","Bond deals 
+(US$356,157m)"
+NA,Bond deals,Low,51.14193791565857,"NA 
+(US$47,511m)","Bond deals 
+(US$356,157m)"
+NA,Bond deals,Medium,1581.0455269894792,"NA 
+(US$47,511m)","Bond deals 
+(US$356,157m)"
+NA,Equity deals,High,2062.0781620239136,"NA 
+(US$47,511m)","Equity deals 
+(US$59,785m)"
+NA,Equity deals,Low,9144.639131378963,"NA 
+(US$47,511m)","Equity deals 
+(US$59,785m)"
+NA,Equity deals,Medium,1650.47309680744,"NA 
+(US$47,511m)","Equity deals 
+(US$59,785m)"
+NA,Loan deals,Low,8884.724481379426,"NA 
+(US$47,511m)","Loan deals 
+(US$964,338m)"
+NA,Loan deals,Medium,23633.500455321297,"NA 
+(US$47,511m)","Loan deals 
+(US$964,338m)"

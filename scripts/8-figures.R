@@ -839,6 +839,7 @@ saveWorkbook(
 overall_param_grid <- expand_grid(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
 
 flows_all_countries_commodities_sensitivity_df <- overall_param_grid %>%
+  mutate(sensitivity_id = paste0("bp", boundary_period, "_defn_po_", defn_phase_out)) %>%
   mutate(flows_filtered = pmap(list(boundary_period, defn_phase_out), ~ {
     bp <- ..1
     defn <- ..2
@@ -1082,7 +1083,7 @@ vars_grouping <- c(
   "use_of_proceeds"
 ) # n.b. use of proceeds not consolidated
 
-vars_grouping_for_subgrouping <- vars_grouping <- c(
+vars_grouping_for_subgrouping <- c(
   "producer_country",
   "commodity",
   "country_commodity",
@@ -1152,7 +1153,6 @@ flows_all_by_grouping_vars_by_strength <- flows_all_countries_commodities_sensit
   })) %>%
   select(boundary_period, defn_phase_out, results) %>%
   mutate(sensitivity_id = paste0("bp", boundary_period, "_defn_po_", defn_phase_out))
-
 
 ##### 4.3.1. visualise changes in top commodity/countries, top countries, managers, regions, depending on the sensitivity analysis
 
@@ -2059,7 +2059,94 @@ sankey_data_overall <- all_amazon_param_grid %>%
 write_csv(sankey_data_overall, "./analytical-results/sankey_data_all_amazon_w_sensitivity_analysis.csv")
 
 
-### 4.6. financial actors ------------
+##### 4.4.4. data for bivariate (investment hubs) -----------
+
+by_country <- map(flows_all_by_grouping_vars$results, "manager_true_ultimate_parent_country_of_headquarters")
+names(by_country) <-flows_all_by_grouping_vars$sensitivity_id
+by_country_by_strength <- map(flows_all_by_grouping_vars_by_strength$results, "manager_true_ultimate_parent_country_of_headquarters")
+names(by_country_by_strength) <- flows_all_by_grouping_vars_by_strength$sensitivity_id
+
+for (i in names(by_country_by_strength)) {
+  df_by_strength <- by_country_by_strength[[i]] %>%
+    select(manager_true_ultimate_parent_country_of_headquarters, financial_flow_link_strength, total_usd_m) %>%
+    rename(total_usd_m_this_strength = total_usd_m)
+  
+  df <- by_country[[i]] %>%
+    select(manager_true_ultimate_parent_country_of_headquarters, total_usd_m, pct_total, rank_total)
+  
+  df_by_strength <- df_by_strength %>%
+    left_join(df,
+              by = "manager_true_ultimate_parent_country_of_headquarters")
+  
+  by_country_by_strength[[i]] <- df_by_strength
+}
+
+wb <- createWorkbook()
+
+for(name in names(by_country_by_strength)) {
+  addWorksheet(wb, name)
+  writeData(wb, sheet = name, by_country_by_strength[[name]])
+}
+
+# Save the workbook
+saveWorkbook(wb, "./analytical-results/by_country_by_strength_sensitivity_df.xlsx", overwrite = TRUE)
+
+#### 4.5. asset classes ------------
+##### 4.5.1. region->asset class sankey data (plot generated in Graphica) ----------
+by_region_asset <- flows_all_countries_commodities_sensitivity_df$flows_filtered
+names(by_region_asset) <- flows_all_countries_commodities_sensitivity_df$sensitivity_id
+
+for (i in names(by_region_asset)) {
+  
+  df <- by_region_asset[[i]]
+  
+  region_totals <- df %>%
+    group_by(manager_true_ultimate_parent_region_of_headquarters_unsd) %>%
+    summarise(total_usd_m_by_region = 
+                comma(
+                  sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE), 
+                  accuracy = 1),
+              .groups = "drop")
+  
+  asset_class_totals <- df %>%
+    group_by(asset_class) %>%
+    summarise(total_usd_m_by_asset_class = 
+                comma(
+                  sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE),
+                  accuracy = 1), 
+              .groups = "drop")
+  
+  df_grouped <- df %>% 
+    group_by(manager_true_ultimate_parent_region_of_headquarters_unsd,
+             asset_class,
+             financial_flow_link_strength) %>%
+    summarise(total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE), .groups = "drop") %>%
+    left_join(region_totals,
+              by = "manager_true_ultimate_parent_region_of_headquarters_unsd") %>%
+    mutate(region_for_plot = paste0(
+      manager_true_ultimate_parent_region_of_headquarters_unsd,
+      " \n(US$",
+      total_usd_m_by_region,
+      "m)"
+    )) %>%
+    select(-total_usd_m_by_region) %>%
+    left_join(asset_class_totals,
+              by = "asset_class") %>%
+    mutate(asset_class_for_plot = paste0(
+      asset_class,
+      " \n(US$",
+      total_usd_m_by_asset_class,
+      "m)"
+    )) %>%
+    select(-total_usd_m_by_asset_class)
+  
+  by_region_asset[[i]] <- df_grouped
+  
+  write_csv(df_grouped, paste0("./figures/region_asset_class_sankey/",i,".csv"))
+}
+
+
+#### 4.6. financial actors ------------
 ##### 4.6.1. simple league table --------------
 
 create_manager_league_table_w_fill <- function(data,
@@ -2392,12 +2479,51 @@ manager_hqs <- flows_all_countries_commodities %>%
     manager_true_ultimate_parent_region_of_headquarters_unsd
   )
 
+# calculating fi trends
+flows_by_manager_by_year <- flows_all_countries_commodities_sensitivity_df %>%
+  mutate(results = map(
+    flows_filtered,
+    ~ summarise_totals(
+      .x,
+      group_var = "manager_true_ultimate_parent_organisation_name",
+      subgroup_var = "year"
+    )
+  )) %>%
+  select(boundary_period, defn_phase_out, results) %>%
+  mutate(sensitivity_id = paste0("bp", boundary_period, "_defn_po_", defn_phase_out))
+
+fi_trends <- flows_by_manager_by_year %>%
+  mutate(
+    results = map(results, ~
+                    .x %>%
+                    group_by(manager_true_ultimate_parent_organisation_name) %>%
+                    summarise(
+                      slope = if (n_distinct(year) > 1 & var(total_usd_m, na.rm = TRUE) > 0) {
+                        coef(lm(total_usd_m ~ year, na.action = na.omit))[2]
+                      } else {
+                        0  # treat as flat if only one year
+                      },
+                      .groups = "drop"
+                    ) %>%
+                    mutate(trend_arrow = case_when(
+                      slope > 0 ~ "↗",
+                      slope < 0 ~ "↘",
+                      TRUE ~ "→"
+                    ))
+    )
+  )
+
+fi_trends_list <- fi_trends$results
+names(fi_trends_list) <- fi_trends$sensitivity_id
+
+
 # generate league table data
 fi_league_tables <- list() 
 
 for (i in names(by_fi_by_strength)) { # where i is the sensitivity analysis
   df <- by_fi_by_strength[[i]]
   df_total <- by_fi[[i]]
+  df_trends <- fi_trends_list[[i]]
   
   # join on totals
   df <- df %>%
@@ -2420,19 +2546,29 @@ for (i in names(by_fi_by_strength)) { # where i is the sensitivity analysis
   df <- df %>%
     left_join(manager_hqs,
               by = "manager_true_ultimate_parent_organisation_name")
+  
+  # join on trends
+  df <- df %>%
+    left_join(df_trends %>% select(manager_true_ultimate_parent_organisation_name, trend_arrow),
+              by = "manager_true_ultimate_parent_organisation_name")
     
-  # add * for government owned
+  # add * for government owned and the arrow
   df <- df %>%
     mutate(fi_name_for_plot = if_else(
       !is.na(government_ultimate_parent) & government_ultimate_parent, # handle NAs
       paste0(manager_true_ultimate_parent_organisation_name, "*"),
-      manager_true_ultimate_parent_organisation_name)
-      )
+      manager_true_ultimate_parent_organisation_name),
+      # add trend arrow
+      fi_name_for_plot = paste0(
+        fi_name_for_plot,
+        " ",
+        trend_arrow
+      ))
   
   # consolidate ones below 30 into "other financial institutions"
   df <- df %>%
     mutate(fi_name_for_plot = if_else(
-      rank_total <= 50,
+      rank_total <= 45,
       fi_name_for_plot,
       "Other financial institutions"
     )) %>%
@@ -2457,6 +2593,7 @@ for (i in names(by_fi_by_strength)) { # where i is the sensitivity analysis
   
   write_csv(df, paste0("./figures/league_tables/",i,".csv"))
 }
+
 
 
 ##### old code for league table ------
