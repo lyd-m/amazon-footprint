@@ -12,6 +12,8 @@ library(janitor)
 library(patchwork)
 library(RColorBrewer)
 library(scales)
+library(openxlsx)
+library(purrr)
 
 ### 0. FUNCTIONS --------------------------
 to_file_save_format <- function(str) {
@@ -625,6 +627,22 @@ check_sums <- purrr::map_dbl(flows_by_commodity$data, function(df) {
 })
 check_sums
 
+wb <- createWorkbook()
+pwalk(
+  flows_by_commodity,
+  function(commodity, data, ...) {
+    # Create a unique sheet name
+    sheet_name <- paste0(
+      commodity)
+    # Sheet names have to be <= 31 chars in Excel
+    sheet_name <- substr(sheet_name, 1, 31)
+    
+    addWorksheet(wb, sheet_name)
+    writeData(wb, sheet_name, data)
+  }
+)
+saveWorkbook(wb, "./intermediate-results/flows_by_commodity_all_yrs.xlsx", overwrite = TRUE)
+
 ##### 4.1.2. Overall amazon dataset (i.e., combine different commodities from different countries) ---------------------------
 # bind all data together for same commodities
 # duplicate transactions are split between them based on relative production MONETARY VALUES between those commodity/countries for that year
@@ -686,7 +704,7 @@ flows_all_countries_commodities <- flows_all_countries_commodities %>%
 # save version in intermediate results
 write_csv(
   flows_all_countries_commodities,
-  "./intermediate-results/flows_all_countries_commodities.csv"
+  "./intermediate-results/flows_all_countries_commodities_all_yrs.csv"
 )
 
 ##### 4.1.3. Financial flows data availability ------------------
@@ -741,10 +759,10 @@ boundary_periods <- c("all", 0, 1, 2, 3)
 deforestation_phase_out_status <- c(FALSE, TRUE) # if true, remove financial flows after the year deforestation has been phased out
 
 ##### for unadjusted data (explore unadjusted flows individually for each commodity) ----------
-country_commodity_param_grid <- tibble(country_commodity_case = names(flows)) %>%
-  crossing(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
+#country_commodity_param_grid <- tibble(country_commodity_case = names(flows)) %>%
+ # crossing(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
 
-flows_by_country_commodity_sensitivity_df
+#flows_by_country_commodity_sensitivity_df
 
 ##### for countries combined together for each commodity ----------
 commodity_param_grid <- tibble(commodity_case = unique(flows_by_commodity$commodity)) %>%
@@ -776,6 +794,25 @@ flows_by_commodity_sensitivity_df <- commodity_param_grid %>%
     }
   ))
 
+wb <- createWorkbook()
+
+pwalk(
+  flows_by_commodity_sensitivity_df,
+  function(commodity_case, boundary_period, defn_phase_out, flows_filtered, ...) {
+    
+    sheet_name <- paste0(
+      commodity_case, "_", boundary_period, "_", ifelse(defn_phase_out, "phaseout", "no_phaseout")
+    )
+    
+    sheet_name <- substr(sheet_name, 1, 31)
+    
+    addWorksheet(wb, sheet_name)
+    writeData(wb, sheet_name, flows_filtered)
+  }
+)
+
+saveWorkbook(wb, "./intermediate-results/flows_by_commodity_sensitivity_data.xlsx", overwrite = TRUE)
+
 ##### for all countries and commodities combined ----------
 overall_param_grid <- expand_grid(boundary_period = boundary_periods, defn_phase_out = deforestation_phase_out_status)
 
@@ -800,6 +837,25 @@ flows_all_countries_commodities_sensitivity_df <- overall_param_grid %>%
     
     df
   }))
+
+wb <- createWorkbook()
+
+pwalk(
+  flows_all_countries_commodities_sensitivity_df,
+  function(boundary_period, defn_phase_out, flows_filtered, ...) {
+    
+    sheet_name <- paste0(
+      "bp_", boundary_period, "_", ifelse(defn_phase_out, "phaseout", "no_phaseout")
+    )
+    
+    sheet_name <- substr(sheet_name, 1, 31)
+    
+    addWorksheet(wb, sheet_name)
+    writeData(wb, sheet_name, flows_filtered)
+  }
+)
+
+saveWorkbook(wb, "./intermediate-results/flows_all_countries_commodities_sensitivity_data.xlsx", overwrite = TRUE)
 
 #### 4.2. Totals ------------
 # find total in absolute USD millions and annualised by SEI-Trase dates
@@ -854,6 +910,8 @@ flows_by_commodity_totals <- flows_by_commodity_sensitivity_df %>%
   unnest(results) %>%
   select(-flows_filtered)
 
+write_csv(flows_by_commodity_totals, "./analytical-results/flows_by_commodity_totals_sensitivity.csv")
+
 # for combined data
 flows_all_combined_totals <- flows_all_countries_commodities_sensitivity_df %>%
   mutate(results = map(flows_filtered, ~ {
@@ -904,66 +962,76 @@ flows_all_combined_totals <- flows_all_countries_commodities_sensitivity_df %>%
   unnest(results) %>%
   select(-flows_filtered)
 
+write_csv(flows_all_combined_totals, "./analytical-results/flows_all_countries_commodities_totals_sensitivity.csv")
 
-#### 4.3. flow types (asset class, use of proceeds, directness) ------------
-## NB - Fri 29 August - NEEDS UPDATING TO NEW DATA
-#for (country_commodity in names(flows_2010_2022)) {
-df <- flows_2010_2022[[country_commodity]]
-plot_name <- paste0("plot_", country_commodity)
-if (nrow(df) > 0) {
-  total_label = sum(df$tranche_amount_per_manager_usd_m_final_in_2024_av_usd,
-                    na.rm = TRUE)
-  plot <- horizontal_bar_chart(
-    df %>%
-      mutate(
-        financial_flow_link_strength = factor(
-          financial_flow_link_strength,
-          levels = c("Low", "Medium", "High")
-        )
-      ) %>%
-      group_by(financial_flow_link_strength) %>%
-      summarise(
-        total_usd_m = sum(
-          tranche_amount_per_manager_usd_m_final_in_2024_av_usd,
-          na.rm = TRUE
-        ),
-        .groups = "drop"
-      ) %>%
-      mutate(pct = total_usd_m / sum(total_usd_m), dummy_x = "All flows"),
-    x_value = "dummy_x",
-    y_value = "pct",
-    fill_value = "financial_flow_link_strength",
-    y_value_label = "Proportion of financial flows",
-    fill_value_label = "Strength of link to Amazon",
-    title_label = country_commodity,
-    custom_colours = c(
-      "High" = "grey20",
-      "Medium" = "grey60",
-      "Low" = "grey85"
+#### 4.2. Summary by grouping variables ------------
+
+vars_grouping <- c(
+  "year",
+  "asset_class",
+  "flag_sust_finance",
+  "borrower_issuer_country",
+  "borrower_issuer_region",
+  "manager_true_ultimate_parent_organisation_name",
+  "manager_true_ultimate_parent_country_of_headquarters",
+  "manager_true_ultimate_parent_region_of_headquarters_unsd",
+  "government_ultimate_parent",
+  "manager_true_ultimate_parent_trbc_activity_name",
+  "financial_flow_link_strength",
+  "flow_issuance_location_type",
+  "flow_financed_location_type",
+  "borrower_issuer_trbc_activity_strength_classification",
+  "borrower_issuer_trbc_activity",
+  "use_of_proceeds") # n.b. use of proceeds not consolidated
+
+vars_analytical <- c("tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates",
+                     "tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised")
+
+vars_subgrouping <- c("financial_flow_link_strength")
+
+summarise_totals <- function(df, group_var, subgroup_var = NULL) {
+  group_syms <- syms(c(group_var, subgroup_var))
+  
+  df %>%
+    group_by(!!!group_syms) %>%
+    summarise(
+      total_usd_m = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE),
+      total_usd_m_yr = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised, na.rm = TRUE),
+      .groups = "drop"
+    ) %>%
+    mutate(
+      pct_total = total_usd_m / sum(total_usd_m, na.rm = TRUE),
+      pct_total_yr = total_usd_m_yr / sum(total_usd_m_yr, na.rm = TRUE),
+      rank_total = dense_rank(desc(total_usd_m)),
+      rank_yr = dense_rank(desc(total_usd_m_yr))
     )
-  )
-  print(plot)
-  assign(plot_name, plot, envir = .GlobalEnv)
-} else {
-  print(paste0("No financial flows for ", country_commodity))
-}
 }
 
-#plot_bolivia_soya_beans +
-plot_brazil_cattle_meat +
-  plot_brazil_oil_palm_fruit +
-  plot_brazil_soya_beans +
-  plot_brazil_sugar_cane +
-  plot_colombia_cattle_meat +
-  plot_colombia_coffee_green +
-  plot_ecuador_cocoa_beans +
-  plot_peru_cocoa_beans +
-  plot_peru_coffee_green +
-  patchwork::plot_layout(ncol = 1, guides = "collect")
 
-ggsave("./figures/flows_by_link_strength_rough_plot.pdf")
+flows_all_by_grouping_vars <- flows_all_countries_commodities_sensitivity_df %>%
+  mutate(
+    results = map(flows_filtered, function(df) {
+      map(set_names(vars_grouping), function(var) {
+        summarise_totals(df, group_var = var)
+      })
+    })
+  ) %>%
+  select(boundary_period, defn_phase_out, results)
 
-#### 4.4. geography ------------
+# subgrouping by link strength
+flows_all_by_grouping_vars_by_strength <- flows_all_countries_commodities_sensitivity_df %>%
+  mutate(
+    results = map(flows_filtered, function(df) {
+      map(set_names(vars_grouping), function(var) {
+        summarise_totals(df, group_var = var, subgroup_var = "financial_flow_link_strength")
+      })
+    })
+  ) %>%
+  select(boundary_period, defn_phase_out, results)
+
+
+
+#### 4.4. geographic analysis ------------
 
 eu_countries <- c(
   "Austria",
