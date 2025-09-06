@@ -1,0 +1,81 @@
+producer_country,commodity,total_usd_m,method
+Bolivia,Soya beans,16450.109588599622,sei_trase_simple_no_boundary
+Bolivia,Soya beans,31766.192319906502,sei_trase_simple_1y
+Bolivia,Soya beans,44353.70481150597,sei_trase_simple_2y
+Bolivia,Soya beans,50200.21050702759,sei_trase_simple_3y
+Bolivia,Soya beans,16450.109588599622,sei_trase_w_po_no_boundary
+Bolivia,Soya beans,31766.192319906502,sei_trase_w_po_1y
+Bolivia,Soya beans,44353.70481150597,sei_trase_w_po_2y
+Bolivia,Soya beans,50200.21050702759,sei_trase_w_po_3y
+Brazil,Cattle meat,72178.42476802955,sei_trase_simple_no_boundary
+Brazil,Cattle meat,91044.86826014674,sei_trase_simple_1y
+Brazil,Cattle meat,101617.46514481923,sei_trase_simple_2y
+Brazil,Cattle meat,108786.56627444307,sei_trase_simple_3y
+Brazil,Cattle meat,68068.09459365215,sei_trase_w_po_no_boundary
+Brazil,Cattle meat,86712.18887757664,sei_trase_w_po_1y
+Brazil,Cattle meat,96143.97347700891,sei_trase_w_po_2y
+Brazil,Cattle meat,102150.88707918422,sei_trase_w_po_3y
+Brazil,Oil palm fruit,14414.130735096336,sei_trase_simple_no_boundary
+Brazil,Oil palm fruit,17873.164944176748,sei_trase_simple_1y
+Brazil,Oil palm fruit,22526.852376419756,sei_trase_simple_2y
+Brazil,Oil palm fruit,30343.59176832287,sei_trase_simple_3y
+Brazil,Oil palm fruit,14414.130735096336,sei_trase_w_po_no_boundary
+Brazil,Oil palm fruit,17873.164944176748,sei_trase_w_po_1y
+Brazil,Oil palm fruit,22526.852376419756,sei_trase_w_po_2y
+Brazil,Oil palm fruit,30343.59176832287,sei_trase_w_po_3y
+Brazil,Soya beans,1100237.491589965,sei_trase_simple_no_boundary
+Brazil,Soya beans,1224600.349760024,sei_trase_simple_1y
+Brazil,Soya beans,1303117.898760914,sei_trase_simple_2y
+Brazil,Soya beans,1303117.898760914,sei_trase_simple_3y
+Brazil,Soya beans,1087841.743598457,sei_trase_w_po_no_boundary
+Brazil,Soya beans,1207395.9128074336,sei_trase_w_po_1y
+Brazil,Soya beans,1282497.9998919186,sei_trase_w_po_2y
+Brazil,Soya beans,1282497.9998919186,sei_trase_w_po_3y
+Brazil,Sugar cane,144030.72528542182,sei_trase_simple_no_boundary
+Brazil,Sugar cane,242896.88388958192,sei_trase_simple_1y
+Brazil,Sugar cane,320015.8881053798,sei_trase_simple_2y
+Brazil,Sugar cane,423377.62355069286,sei_trase_simple_3y
+Brazil,Sugar cane,144030.72528542182,sei_trase_w_po_no_boundary
+Brazil,Sugar cane,242896.88388958192,sei_trase_w_po_1y
+Brazil,Sugar cane,320015.8881053798,sei_trase_w_po_2y
+Brazil,Sugar cane,423377.62355069286,sei_trase_w_po_3y
+Colombia,Cattle meat,5862.525579921514,sei_trase_simple_no_boundary
+Colombia,Cattle meat,7446.283359989445,sei_trase_simple_1y
+Colombia,Cattle meat,11911.248874617491,sei_trase_simple_2y
+Colombia,Cattle meat,14089.879851661648,sei_trase_simple_3y
+Colombia,Cattle meat,5519.4780739637845,sei_trase_w_po_no_boundary
+Colombia,Cattle meat,7103.2358540317155,sei_trase_w_po_1y
+Colombia,Cattle meat,11382.225047486405,sei_trase_w_po_2y
+Colombia,Cattle meat,13560.856024530567,sei_trase_w_po_3y
+Colombia,"Coffee, green",109584.70127404707,sei_trase_simple_no_boundary
+Colombia,"Coffee, green",118566.84648563023,sei_trase_simple_1y
+Colombia,"Coffee, green",130858.38678236023,sei_trase_simple_2y
+Colombia,"Coffee, green",145268.7124803659,sei_trase_simple_3y
+Colombia,"Coffee, green",109584.70127404707,sei_trase_w_po_no_boundary
+Colombia,"Coffee, green",118566.84648563023,sei_trase_w_po_1y
+Colombia,"Coffee, green",130858.38678236023,sei_trase_w_po_2y
+Colombia,"Coffee, green",145268.7124803659,sei_trase_w_po_3y
+Ecuador,Cocoa beans,251012.14168099864,sei_trase_simple_no_boundary
+Ecuador,Cocoa beans,326530.4755897491,sei_trase_simple_1y
+Ecuador,Cocoa beans,396203.96567132446,sei_trase_simple_2y
+Ecuador,Cocoa beans,428149.8455581151,sei_trase_simple_3y
+Ecuador,Cocoa beans,251012.14168099864,sei_trase_w_po_no_boundary
+Ecuador,Cocoa beans,326530.4755897491,sei_trase_w_po_1y
+Ecuador,Cocoa beans,396203.96567132446,sei_trase_w_po_2y
+Ecuador,Cocoa beans,428149.8455581151,sei_trase_w_po_3y
+Peru,Cocoa beans,15787.825298756681,sei_trase_simple_no_boundary
+Peru,Cocoa beans,16787.937419190614,sei_trase_simple_1y
+Peru,Cocoa beans,19353.267294419144,sei_trase_simple_2y
+Peru,Cocoa beans,19353.267294419144,sei_trase_simple_3y
+Peru,Cocoa beans,2402.4067180321945,sei_trase_w_po_no_boundary
+Peru,Cocoa beans,2402.4067180321945,sei_trase_w_po_1y
+Peru,Cocoa beans,2723.2290918870085,sei_trase_w_po_2y
+Peru,Cocoa beans,2723.2290918870085,sei_trase_w_po_3y
+Peru,"Coffee, green",143557.3367571564,sei_trase_simple_no_boundary
+Peru,"Coffee, green",161703.02047967666,sei_trase_simple_1y
+Peru,"Coffee, green",188525.06669552228,sei_trase_simple_2y
+Peru,"Coffee, green",196434.59922343426,sei_trase_simple_3y
+Peru,"Coffee, green",139160.8319530413,sei_trase_w_po_no_boundary
+Peru,"Coffee, green",154688.34814491819,sei_trase_w_po_1y
+Peru,"Coffee, green",178668.7087397458,sei_trase_w_po_2y
+Peru,"Coffee, green",186578.24126765633,sei_trase_w_po_3y

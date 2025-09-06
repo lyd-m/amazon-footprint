@@ -180,6 +180,7 @@ for (country_commodity in names(flows)) {
       mutate(flow_financed_location_type = case_when(
         producer_country == manager_true_ultimate_parent_country_of_headquarters ~ "Domestic",
         producer_region == manager_true_ultimate_parent_region_of_headquarters_unsd & producer_country != manager_true_ultimate_parent_country_of_headquarters ~ "Regional",
+        is.na(manager_true_ultimate_parent_country_of_headquarters) ~ "Not disclosed",
         TRUE ~ "International"
       ))
     
@@ -191,7 +192,7 @@ for (country_commodity in names(flows)) {
                 .groups = "drop") %>%
       mutate(pct = percent(amount_usd_m/sum(amount_usd_m), accuracy = 0.01)) %>%
       as_tibble() %>% 
-      arrange(factor(flow_financed_location_type, levels = c("Domestic", "Regional", "International"))) %>%
+      arrange(factor(flow_financed_location_type, levels = c("Domestic", "Regional", "International", "Not disclosed"))) %>%
       mutate(case = paste0(country_commodity))
     
     print(result, n = Inf) 

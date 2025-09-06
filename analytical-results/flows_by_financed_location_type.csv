@@ -1,28 +1,38 @@
 flow_financed_location_type,amount_usd_m,pct,case
-Regional,1034.3946535224807,0.85%,flows_bolivia_soya_beans
-International,120704.517252545,99.15%,flows_bolivia_soya_beans
+Regional,1047.210662082636,0.86%,flows_bolivia_soya_beans
+International,120678.88523542469,99.13%,flows_bolivia_soya_beans
+Not disclosed,12.816008560155163,0.01%,flows_bolivia_soya_beans
 Domestic,26103.46905494048,23.78%,flows_brazil_cattle_meat
-Regional,159.872395617495,0.15%,flows_brazil_cattle_meat
-International,83492.36208550436,76.07%,flows_brazil_cattle_meat
+Regional,1317.0465553992337,1.20%,flows_brazil_cattle_meat
+International,79741.97208310767,72.65%,flows_brazil_cattle_meat
+Not disclosed,2593.2158426150104,2.36%,flows_brazil_cattle_meat
 Domestic,4227.934486070819,11.93%,flows_brazil_oil_palm_fruit
 International,31222.11350858959,88.07%,flows_brazil_oil_palm_fruit
 Domestic,14546.214483311938,1.12%,flows_brazil_soya_beans
-Regional,765.8603036201815,0.06%,flows_brazil_soya_beans
-International,1287805.8239739852,98.82%,flows_brazil_soya_beans
-Domestic,19074.976412737036,2.87%,flows_brazil_sugar_cane
-Regional,3078.6044102884152,0.46%,flows_brazil_sugar_cane
-International,642842.8727062736,96.67%,flows_brazil_sugar_cane
-Regional,5520.6252198756365,33.85%,flows_colombia_cattle_meat
-International,10787.348083982772,66.15%,flows_colombia_cattle_meat
+Regional,790.8314859422395,0.06%,flows_brazil_soya_beans
+International,1249829.131249863,95.91%,flows_brazil_soya_beans
+Not disclosed,37951.72154180285,2.91%,flows_brazil_soya_beans
+Domestic,19095.067289263046,2.87%,flows_brazil_sugar_cane
+Regional,3556.052732993398,0.53%,flows_brazil_sugar_cane
+International,634090.157958784,95.35%,flows_brazil_sugar_cane
+Not disclosed,8255.175548257961,1.24%,flows_brazil_sugar_cane
+Regional,5913.898741443211,36.26%,flows_colombia_cattle_meat
+International,9805.310038286298,60.13%,flows_colombia_cattle_meat
+Not disclosed,588.7645241289018,3.61%,flows_colombia_cattle_meat
 Domestic,63.74298243630373,17.52%,flows_colombia_cocoa_beans
 Regional,31.871491218151863,8.76%,flows_colombia_cocoa_beans
-International,268.13130535933146,73.71%,flows_colombia_cocoa_beans
+International,0,0.00%,flows_colombia_cocoa_beans
+Not disclosed,268.13130535933146,73.71%,flows_colombia_cocoa_beans
 Regional,3117.3371099151664,2.15%,flows_colombia_coffee_green
-International,142151.3753704512,97.85%,flows_colombia_coffee_green
+International,130474.52424376215,89.82%,flows_colombia_coffee_green
+Not disclosed,11676.851126688896,8.04%,flows_colombia_coffee_green
 Regional,852.4858747773102,0.15%,flows_ecuador_cocoa_beans
-International,585751.4036624073,99.85%,flows_ecuador_cocoa_beans
+International,544590.3957901271,92.84%,flows_ecuador_cocoa_beans
+Not disclosed,41161.00787228456,7.02%,flows_ecuador_cocoa_beans
 Domestic,54.429314379818464,0.28%,flows_peru_cocoa_beans
 Regional,504.16722019924833,2.56%,flows_peru_cocoa_beans
-International,19158.416538853864,97.17%,flows_peru_cocoa_beans
+International,18890.285233494527,95.81%,flows_peru_cocoa_beans
+Not disclosed,268.13130535933146,1.36%,flows_peru_cocoa_beans
 Regional,587.846206505776,0.28%,flows_peru_coffee_green
-International,208357.40239640904,99.72%,flows_peru_coffee_green
+International,195141.12187081875,93.39%,flows_peru_coffee_green
+Not disclosed,13216.280525589284,6.33%,flows_peru_coffee_green
