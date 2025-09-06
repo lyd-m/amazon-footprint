@@ -14,6 +14,7 @@ library(RColorBrewer)
 library(scales)
 library(openxlsx)
 library(purrr)
+library(ggrepel)
 
 ### 0. FUNCTIONS --------------------------
 to_file_save_format <- function(str) {
@@ -984,6 +985,23 @@ vars_grouping <- c(
   "borrower_issuer_trbc_activity",
   "use_of_proceeds") # n.b. use of proceeds not consolidated
 
+vars_grouping_for_subgrouping <- vars_grouping <- c(
+  "year",
+  "asset_class",
+  "flag_sust_finance",
+  "borrower_issuer_country",
+  "borrower_issuer_region",
+  "manager_true_ultimate_parent_organisation_name",
+  "manager_true_ultimate_parent_country_of_headquarters",
+  "manager_true_ultimate_parent_region_of_headquarters_unsd",
+  "government_ultimate_parent",
+  "manager_true_ultimate_parent_trbc_activity_name",
+  "flow_issuance_location_type",
+  "flow_financed_location_type",
+  "borrower_issuer_trbc_activity_strength_classification",
+  "borrower_issuer_trbc_activity",
+  "use_of_proceeds")
+
 vars_analytical <- c("tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates",
                      "tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised")
 
@@ -1022,14 +1040,79 @@ flows_all_by_grouping_vars <- flows_all_countries_commodities_sensitivity_df %>%
 flows_all_by_grouping_vars_by_strength <- flows_all_countries_commodities_sensitivity_df %>%
   mutate(
     results = map(flows_filtered, function(df) {
-      map(set_names(vars_grouping), function(var) {
+      map(set_names(vars_grouping_for_subgrouping), function(var) {
         summarise_totals(df, group_var = var, subgroup_var = "financial_flow_link_strength")
       })
     })
   ) %>%
   select(boundary_period, defn_phase_out, results)
 
+##### 4.3.1. visualise changes in top commodity/countries, top countries, managers, regions, depending on the sensitivity analysis
 
+plot_topN_sensitivity <- function(nested_df, group_var, top_n = 20, by_strength = FALSE, scenario_label = TRUE) {
+  
+  # extract the relevant tibble from results
+  df_long <- nested_df %>%
+    transmute(boundary_period, defn_phase_out,
+              data = map(results, ~ .x[[group_var]])) %>%
+    unnest(data)
+  
+  # optionally add a scenario label
+  df_long <- df_long %>%
+    mutate(scenario = if (scenario_label) paste0("bp", boundary_period, "_defn_po_", defn_phase_out) else NA) %>%
+    mutate(
+      !!sym(group_var) := as.character(!!sym(group_var)),                # convert numeric to character
+      !!sym(group_var) := if_else(is.na(!!sym(group_var)), "Unknown", !!sym(group_var))
+    )
+  
+  # top N per scenario
+  df_topN <- df_long %>%
+    group_by(boundary_period, defn_phase_out) %>%
+    slice_max(total_usd_m, n = top_n) %>%
+    ungroup()
+  
+  
+  # Rank change plot
+  rank_plot <- ggplot(df_topN, aes(
+    x = scenario,
+    y = rank_total,
+    group = !!sym(group_var),
+    color = !!sym(group_var)
+  )) +
+    geom_line(size = 1) +
+    geom_point(size = 2) +
+    geom_text_repel(
+      data = df_topN %>%
+        group_by(!!sym(group_var)) %>%
+        filter(scenario == min(scenario)),  
+      aes(label = !!sym(group_var)),
+      nudge_x = 0.2,
+      nudge_y = 0.2,
+      size = 3,
+      show.legend = FALSE
+    ) +
+    scale_y_reverse(breaks = seq(0,10,1),
+                    expand = expansion(mult = c(0.01, 0.05))) +  
+    labs(
+      x = "Scenario",
+      y = "Rank",
+      title = paste0("Rank change of top ", top_n, " ", group_var, " across different boundary periods")
+    ) +
+    theme_minimal() +
+    theme(legend.position = "none")
+  
+  list(rank_plot = rank_plot, data = df_topN)
+}
+
+for (var_ in vars_grouping) {
+  print(
+    plot_topN_sensitivity(nested_df = flows_all_by_grouping_vars %>% filter(!defn_phase_out),
+                        group_var = var_,
+                        top_n = 10,
+                        by_strength = FALSE,
+                        scenario_label = TRUE)
+  )$rank_plot
+}
 
 #### 4.4. geographic analysis ------------
 
