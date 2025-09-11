@@ -166,6 +166,14 @@ write_csv(flows_by_issuance_location_type, "./analytical-results/flows_by_issuan
 
 ### Financed in producer country? ----------------
 # adding classification of where flows are financed from
+exporter_group_govt_owned <- c(
+  "OUTSPAN PERU S.A.C.",
+  "OUTSPAN PERU S.A.C.|OUTSPAN ECUADOR SA",
+  "OUTSPAN PERU S.A.C.|OLAM|OUTSPAN ECUADOR SA",
+  "COFCO",
+  "COFCO|COFCO, NIDERA",
+  "CGG"
+)
 
 flows_by_financed_location_type <- tibble()
 for (country_commodity in names(flows)) {
@@ -173,6 +181,18 @@ for (country_commodity in names(flows)) {
   df <- flows[[country_commodity]]
   if (nrow(df) > 0) { # skip empty data (Brazil coffee, Brazil maize)
     df <- df %>%
+      # impute financed location as issuance location if deal is 'self-arranged'
+      mutate(manager_true_ultimate_parent_country_of_headquarters = if_else(
+        manager_true_ultimate_parent_organisation_name == "Self-Arranged",
+        borrower_issuer_country,
+        manager_true_ultimate_parent_country_of_headquarters
+      )) %>%
+      # impute government ownership when deal is 'self-arranged'
+      mutate(government_ultimate_parent = case_when(
+        (manager_true_ultimate_parent_organisation_name == "Self-Arranged") & !(exporter_group %in% exporter_group_govt_owned) ~ FALSE,
+        (manager_true_ultimate_parent_organisation_name == "Self-Arranged") & (exporter_group %in% exporter_group_govt_owned) ~ TRUE,
+        TRUE ~ government_ultimate_parent
+      )) %>%
       # reclassify financier regions in line with unsd
       left_join(regions_unsd, by = c("manager_true_ultimate_parent_country_of_headquarters" = "country")) %>%
       select(-manager_true_ultimate_parent_region_of_headquarters_unsd) %>%
