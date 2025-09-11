@@ -15,6 +15,7 @@ library(scales)
 library(openxlsx)
 library(purrr)
 library(ggrepel)
+library(ggrastr)
 
 ### 0. FUNCTIONS --------------------------
 to_file_save_format <- function(str) {
@@ -689,7 +690,9 @@ parse_by_production_value <- function(df) {
 
 flows_all_countries_commodities <- all_flows_simple_bind %>%
   parse_by_production_value() %>%
-  mutate(country_commodity = str_c(producer_country, commodity, sep = " - "))
+  # add case for ease
+  mutate(country_commodity = str_c(producer_country, commodity, sep = " - ")) 
+  
 
 # check the calculation is consistent (i.e., deals are actually split)
 check_sums <- (
@@ -760,6 +763,57 @@ write_csv(
   "./analytical-results/exporter_groups_financial_data_availability.csv"
 )
 
+# visualise by commodity
+fin_flows_availability <- companies_all_yrs %>%
+  left_join(exporter_gps_data_availability %>% select(!legal_entity)) %>%
+  group_by(commodity, fin_flows) %>% # for each country-commodity setting (ignore years)
+  summarise(
+    adjusted_deforestation_exposure = sum(adjusted_deforestation_exposure, na.rm = TRUE),
+    # sum across all years for each one
+    count = n_distinct(exporter_group)
+  ) %>%
+  ungroup() %>%
+  group_by(commodity) %>%
+  mutate(
+    prop_adjusted_deforestation_exposure = adjusted_deforestation_exposure /
+      sum(adjusted_deforestation_exposure, na.rm = TRUE),
+    prop_count = count / sum(count)
+  ) %>%
+  mutate(fin_flows = if_else(
+    fin_flows == TRUE,
+    "Attributed",
+    "Unattributed"),
+    fin_flows = factor(fin_flows, levels = c("Unattributed", "Attributed")))
+ 
+# showing share of deforestation in SEI-Trase data provided between 2010-2022
+# numbers for smaller commodities are a bit different so must be using a different deforestation number
+fin_flows_availability %>%
+  ggplot(aes(x = factor(commodity, levels = c("Cattle meat",
+                                              "Soya beans",
+                                              "Maize (corn)",
+                                              "Oil palm fruit",
+                                              "Cocoa beans",
+                                              "Sugar cane",
+                                              "Coffee, green")), y = prop_adjusted_deforestation_exposure, fill = fin_flows)) +
+  geom_col(colour = "grey") +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.line = element_line(colour = "black"),
+        axis.ticks = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 90, colour = "black"),
+        axis.text.y = element_text(colour = "white")) +
+  scale_x_discrete(expand = expansion(0.1,0)) +
+  scale_y_continuous(expand = expansion(0,0),
+                     breaks = seq(0,1,0.2)) +
+  labs(x = "",
+       y = "Share of deforestation (%)",
+       fill = "Financial flows") +
+  scale_fill_manual(values = c("white",
+                               "aquamarine"))
+
+ggsave("./figures/fin_flows_attribution.pdf")
+  
 
 #### 4.2. Setting up sensitivity testing datasets --------------------------
 country_commodity_dict <- tibble()
@@ -1057,7 +1111,9 @@ ggplot(plot_df, aes(x = boundary_period, y = central)) +
     panel.grid.major.x = element_blank()
   )
 
-ggsave("./figures/totals_by_boundary_period.pdf")
+ggsave("./figures/totals_by_boundary_period.pdf",
+       width = 4,
+       height = 3)
 
 #### 4.2. Summary by grouping variables ------------
 
@@ -2091,6 +2147,32 @@ for(name in names(by_country_by_strength)) {
 # Save the workbook
 saveWorkbook(wb, "./analytical-results/by_country_by_strength_sensitivity_df.xlsx", overwrite = TRUE)
 
+## 2018-2022 only
+for (i in names(by_country_by_strength)) {
+  df_by_strength <- by_country_by_strength[[i]] %>%
+    select(manager_true_ultimate_parent_country_of_headquarters, financial_flow_link_strength, total_usd_m) %>%
+    rename(total_usd_m_this_strength = total_usd_m)
+  
+  df <- by_country[[i]] %>%
+    select(manager_true_ultimate_parent_country_of_headquarters, total_usd_m, pct_total, rank_total)
+  
+  df_by_strength <- df_by_strength %>%
+    left_join(df,
+              by = "manager_true_ultimate_parent_country_of_headquarters")
+  
+  by_country_by_strength[[i]] <- df_by_strength
+}
+
+wb <- createWorkbook()
+
+for(name in names(by_country_by_strength)) {
+  addWorksheet(wb, name)
+  writeData(wb, sheet = name, by_country_by_strength[[name]])
+}
+
+# Save the workbook
+saveWorkbook(wb, "./analytical-results/by_country_by_strength_2018-2022-only_sensitivity_df.xlsx", overwrite = TRUE)
+
 #### 4.5. asset classes ------------
 ##### 4.5.1. region->asset class sankey data (plot generated in Graphica) ----------
 by_region_asset <- flows_all_countries_commodities_sensitivity_df$flows_filtered
@@ -2704,16 +2786,188 @@ flows_all_countries_commodities %>% filter(!!brazil_rcs_filter) %>%
   summarise(total = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE))
 
 #### 4.7. Supplementary data -------------
-# yearly flows
+##### Yearly flows -------------
 df <- (flows_all_countries_commodities_sensitivity_df %>% filter(boundary_period==3 & !defn_phase_out))$flows_filtered[[1]]
 
 df %>%
   ggplot(aes(
     x = year,
     y = tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates,
-    alpha = year_relative_to_trase_period
+    fill = factor(asset_class, levels = rev(c("Loan deals", "Bond deals", "Equity deals"))),
+    alpha = -abs(year_relative_to_trase_period)
   )) +
   geom_col() +
-  facet_wrap(~country_commodity, 
-             scales = "free_y",
-             ncol = 1)
+  facet_wrap(
+    ~country_commodity,
+    scales = "free_y",
+    ncol = 1
+  ) +
+  scale_x_continuous(
+    breaks = seq(2008,2024,2)
+  ) +
+  scale_y_continuous(
+    labels = scales::label_comma(),
+    breaks = function(x) {
+      pretty(c(0, max(x, na.rm = TRUE)), n = 2)
+    }
+  ) +
+  labs(
+    fill = "Asset class",
+    alpha = "Boundary period from\ndeforestation data",
+    y = "Financial flows (2024 US$m)",
+    x = ""
+  ) +
+  theme_minimal(base_size = 10) +
+  theme(
+    strip.text = element_text(),
+    legend.position = "bottom",
+    legend.text = element_text(size=8),
+    legend.title = element_text(size=8),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  ) +
+  scale_fill_manual(values = colour_scheme_for_x_variables(3))
+
+df %>%
+  group_by(country_commodity, year, flow_financed_location_type) %>%
+  summarise(total = sum(tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates, na.rm = TRUE), .groups = "drop") %>%
+  ggplot(aes(
+    x = year,
+    y = total,
+    fill = flow_financed_location_type
+  )) +
+  geom_col() +
+  facet_wrap(
+    ~country_commodity,
+    scales = "free_y",
+    ncol = 1
+  ) +
+  scale_x_continuous(
+    breaks = seq(2008,2024,2)
+  ) +
+  scale_y_continuous(
+    labels = scales::label_comma(),
+    breaks = function(x) {
+      pretty(c(0, max(x, na.rm = TRUE)), n = 2)
+    }
+  ) +
+  labs(
+    fill = "Financial institution\nheadquarters",
+    alpha = "Boundary period from\ndeforestation data",
+    y = "Financial flows (2024 US$m)",
+    x = ""
+  ) +
+  theme_minimal(base_size = 11,
+                base_family = "Helvetica") +
+  theme(
+    strip.text = element_text(),
+    legend.position = "bottom",
+    legend.text = element_text(size=8),
+    legend.title = element_text(size=8),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  ) +
+  scale_fill_manual(values = c(
+    "Domestic" = "#7bbcb4",
+    "Regional" = "#f9c9b4",
+    "International" = "#d6d6d6"
+  )) +
+  guides(
+    fill = guide_legend(nrow = 2),
+    alpha = "none"
+  ) 
+
+ggsave("./figures/flows_by_year_faceted.pdf",
+       height = 8,
+       width = 4.5)
+
+##### By financial institution summary -------------
+
+summarise_top_n <- function(data, focus_group, grouping_var, summary_var, n = 5) {
+  data %>%
+      group_by(!!sym(focus_group), !!sym(grouping_var)) %>%
+      summarise(total_amount = sum(!!summary_var, na.rm = TRUE)) %>%
+      mutate(prop_amount = total_amount / sum(total_amount)) %>%
+      group_by(!!sym(focus_group)) %>%
+      arrange(desc(total_amount)) %>%
+      slice_head(n = n) %>%
+      summarise(summary = paste0(!!grouping_var, " (", round(prop_amount * 100, 1), "%)", collapse = ", ")) %>%
+      ungroup()
+}
+
+##### By exporter_group summary -------------
+
+##### Financial flows deforestation intensity -------------
+
+deforestation_by_commodity <- tibble(
+  commodity = c("Soya beans", "Cattle meat", "Oil palm fruit", "Coffee, green", "Cocoa beans", "Sugar cane"),
+  defn_ha = c(6.8*0.06,6.8*0.906,6.8*0.005,6.8*0.011,6.8*0.018,6.8*0.004))
+
+df <- (flows_all_by_grouping_vars[[3]][[9]][["commodity"]]) %>%
+  select(commodity, total_usd_m) %>%
+  left_join(deforestation_by_commodity,
+            by = "commodity") %>%
+  mutate(defn_intensity = defn_ha/total_usd_m)
+
+df_long <- df %>%
+  pivot_longer(cols = c(total_usd_m, defn_intensity),
+               names_to = "metric",
+               values_to = "value") %>%
+  group_by(metric) %>%
+  mutate(value_pct = value / sum(value)) %>%
+  ungroup() %>%
+  mutate(metric_label = recode(metric,
+                               total_usd_m     = "Financial flows (2024 USDm)",
+                               defn_intensity  = "Deforestation intensity (ha/USDm)"),
+         metric_label = factor(metric_label,
+                               levels = c("Financial flows (2024 USDm)", "Deforestation intensity (ha/USDm)")))
+
+ggplot(df_long, aes(x = commodity, y = value_pct, fill = metric_label)) +
+  geom_col(position = position_dodge(width = 0.8), width = 0.7) +
+  scale_fill_manual(values = c("Financial flows (2024 USDm)" = "#81cdc1",
+                               "Deforestation intensity (ha/USDm)" = "#009e54")) +
+  labs(title = "",
+       x = "",
+       y = "Share (%)",
+       fill = NULL) +
+  theme_minimal() +
+  theme(panel.grid.minor = element_blank(),
+        panel.grid.major = element_blank(),
+        axis.line = element_line(colour = "black"),
+        axis.ticks = element_line(colour = "black"),
+        axis.text.x = element_text(angle = 90, colour = "black"),
+        axis.text.y = element_text(colour = "white"),
+        legend.position = "bottom") +
+  scale_x_discrete(expand = expansion(0.1,0)) +
+  scale_y_continuous(expand = expansion(0,0),
+                     breaks = seq(0,1,0.2)) +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+
+ggsave("./figures/defn_intensity.pdf",
+       height = 4,
+       width = 5)
+
+# Wrap commodity names for better display
+df <- df %>%
+  mutate(commodity_wrapped = str_wrap(commodity, width = 9))
+
+# Minimalist bubble plot with more label space
+ggplot(df, aes(x = defn_ha, y = total_usd_m, size = defn_intensity, label = commodity_wrapped)) +
+  geom_point(alpha = 0.6, color = "steelblue") +
+  geom_text(vjust = -0.5, hjust = 0.5, size = 3, lineheight = 0.9) +
+  scale_size_continuous(range = c(3, 15)) +
+  scale_x_log10() +
+  scale_y_log10(labels = scales::comma) +
+  labs(
+    x = "Deforested Area (ha, log scale)",
+    y = "Total USD (million, log scale)",
+    size = "Deforestation Intensity"
+  ) +
+  theme_minimal(base_size = 12) +
+  theme(
+    plot.margin = margin(10, 20, 10, 10),
+    panel.grid.minor = element_blank(),
+    panel.grid.major = element_line(color = "grey90"),
+    legend.position = "bottom"
+  )
+        
