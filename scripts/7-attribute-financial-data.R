@@ -168,10 +168,12 @@ write_csv(flows_by_issuance_location_type, "./analytical-results/flows_by_issuan
 # adding classification of where flows are financed from
 exporter_group_govt_owned <- c(
   "OUTSPAN PERU S.A.C.",
-  "OUTSPAN PERU S.A.C.|OUTSPAN ECUADOR SA",
-  "OUTSPAN PERU S.A.C.|OLAM|OUTSPAN ECUADOR SA",
+  "OUTSPAN PERU S.A.C.",
+  "OUTSPAN ECUADOR SA",
+  "OUTSPAN PERU S.A.C.",
+  "OLAM",
   "COFCO",
-  "COFCO|COFCO, NIDERA",
+  "COFCO, NIDERA",
   "CGG"
 )
 
@@ -465,3 +467,4 @@ for (country_commodity in names(flows)) {
     print("Empty df")
   }
 }
+

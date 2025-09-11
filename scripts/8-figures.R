@@ -2147,32 +2147,6 @@ for(name in names(by_country_by_strength)) {
 # Save the workbook
 saveWorkbook(wb, "./analytical-results/by_country_by_strength_sensitivity_df.xlsx", overwrite = TRUE)
 
-## 2018-2022 only
-for (i in names(by_country_by_strength)) {
-  df_by_strength <- by_country_by_strength[[i]] %>%
-    select(manager_true_ultimate_parent_country_of_headquarters, financial_flow_link_strength, total_usd_m) %>%
-    rename(total_usd_m_this_strength = total_usd_m)
-  
-  df <- by_country[[i]] %>%
-    select(manager_true_ultimate_parent_country_of_headquarters, total_usd_m, pct_total, rank_total)
-  
-  df_by_strength <- df_by_strength %>%
-    left_join(df,
-              by = "manager_true_ultimate_parent_country_of_headquarters")
-  
-  by_country_by_strength[[i]] <- df_by_strength
-}
-
-wb <- createWorkbook()
-
-for(name in names(by_country_by_strength)) {
-  addWorksheet(wb, name)
-  writeData(wb, sheet = name, by_country_by_strength[[name]])
-}
-
-# Save the workbook
-saveWorkbook(wb, "./analytical-results/by_country_by_strength_2018-2022-only_sensitivity_df.xlsx", overwrite = TRUE)
-
 #### 4.5. asset classes ------------
 ##### 4.5.1. region->asset class sankey data (plot generated in Graphica) ----------
 by_region_asset <- flows_all_countries_commodities_sensitivity_df$flows_filtered
@@ -2551,7 +2525,8 @@ names(by_fi_by_strength) <- flows_all_by_grouping_vars_by_strength$sensitivity_i
 # dictionary of govt ownership
 government_owned_flags <- flows_all_countries_commodities %>%
   distinct(manager_true_ultimate_parent_organisation_name,
-           government_ultimate_parent)
+           government_ultimate_parent) %>%
+  filter(!manager_true_ultimate_parent_organisation_name == "Self-Arranged") # can be both govt owned and not
 
 # dictionary of hqs
 manager_hqs <- flows_all_countries_commodities %>%
@@ -2559,7 +2534,8 @@ manager_hqs <- flows_all_countries_commodities %>%
     manager_true_ultimate_parent_organisation_name,
     manager_true_ultimate_parent_country_of_headquarters,
     manager_true_ultimate_parent_region_of_headquarters_unsd
-  )
+  ) %>%
+  filter(!manager_true_ultimate_parent_organisation_name == "Self-Arranged") # can be several countries
 
 # calculating fi trends
 flows_by_manager_by_year <- flows_all_countries_commodities_sensitivity_df %>%
@@ -2664,109 +2640,10 @@ for (i in names(by_fi_by_strength)) { # where i is the sensitivity analysis
     group_by(fi_name_for_plot) %>%
     mutate(pct_this_strength_for_fi = percent(total_usd_m_this_strength / total_usd_m, accuracy = 1))
   
-  # arrange and reorder so that undisclosed advisor goes at the bottom
-  df <- df %>%
-    mutate(
-      fi_name_for_plot = fct_reorder(fi_name_for_plot, total_usd_m,.desc = TRUE),
-      fi_name_for_plot = fct_relevel(fi_name_for_plot, "Undisclosed Advisor", "Other financial institutions", after = Inf)
-    )
-  
   fi_league_tables[[i]] <- df
   
   write_csv(df, paste0("./figures/league_tables/",i,".csv"))
 }
-
-
-
-##### old code for league table ------
-manager_by_country_commodity <- flows_all_countries_commodities %>%
-  filter(modulus(year_relative_to_trase_period) == 0) %>%
-  mutate(country_commodity = str_c(producer_country, commodity, sep = " - ")) %>%
-  group_by(manager_true_ultimate_parent_organisation_name,
-           country_commodity) %>%
-  summarise(
-    total_usd_m_yr_this_country_commodity = sum(
-      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
-      na.rm = TRUE
-    ),
-    .groups = "drop"
-  ) %>%
-  group_by(manager_true_ultimate_parent_organisation_name) %>%
-  mutate(
-    prop_this_country_commodity = percent(
-      total_usd_m_yr_this_country_commodity / sum(total_usd_m_yr_this_country_commodity),
-      accuracy = 1
-    )
-  )
-
-manager_by_strength <- flows_all_countries_commodities %>%
-  filter(modulus(year_relative_to_trase_period) == 0) %>%
-  mutate(country_commodity = str_c(producer_country, commodity, sep = " - ")) %>%
-  group_by(manager_true_ultimate_parent_organisation_name,
-           financial_flow_link_strength) %>%
-  summarise(
-    total_usd_m_yr_this_strength = sum(
-      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
-      na.rm = TRUE
-    ),
-    .groups = "drop"
-  ) %>%
-  group_by(manager_true_ultimate_parent_organisation_name) %>%
-  mutate(prop_this_strength = percent(
-    total_usd_m_yr_this_strength / sum(total_usd_m_yr_this_strength),
-    accuracy = 1
-  ))
-
-league_table_all_data <- flows_all_countries_commodities %>%
-  filter(modulus(year_relative_to_trase_period) == 0) %>%
-  mutate(country_commodity = str_c(producer_country, commodity, sep = " - ")) %>%
-  group_by(
-    manager_true_ultimate_parent_organisation_name,
-    country_commodity,
-    financial_flow_link_strength
-  ) %>%
-  summarise(
-    total_usd_m_yr_this_strength = sum(
-      tranche_amount_per_manager_usd_m_final_in_2024_av_usd_adjusted_for_duplicates_annualised,
-      na.rm = TRUE
-    ),
-    .groups = "drop"
-  ) %>%
-  # join on totals, ranks, hqs, and ownership status
-  left_join(manager_totals,
-            by = c("manager_true_ultimate_parent_organisation_name")) %>%
-  left_join(
-    manager_by_strength %>% select(
-      manager_true_ultimate_parent_organisation_name,
-      financial_flow_link_strength,
-      prop_this_strength
-    ),
-    by = c(
-      "manager_true_ultimate_parent_organisation_name",
-      "financial_flow_link_strength"
-    )
-  ) %>%
-  left_join(
-    manager_by_country_commodity %>% select(
-      manager_true_ultimate_parent_organisation_name,
-      country_commodity,
-      prop_this_country_commodity
-    ),
-    by = c(
-      "manager_true_ultimate_parent_organisation_name",
-      "country_commodity"
-    )
-  ) %>%
-  left_join(government_owned_flag,
-            by = c("manager_true_ultimate_parent_organisation_name")) %>%
-  left_join(manager_hqs,
-            by = c("manager_true_ultimate_parent_organisation_name")) %>%
-  arrange(desc(total_usd_m_yr_overall))
-
-write_csv(
-  league_table_all_data,
-  "./analytical-results/league_table_all_data_bp_0_po_FALSE.csv"
-)
 
 ##### 4.6.4. Comparison with Brazilian Rural Credit Scheme -------------
 brazil_rcs_filter <- expr(year >= 2020 & year <= 2024 &
