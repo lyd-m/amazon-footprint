@@ -135,6 +135,31 @@ info_by_permid_finance = rd.get_data(
     parameters={"Scale": "6"},
 )
 
+# trying parallelising it
+from concurrent.futures import ThreadPoolExecutor, as_completed
+
+def fetch_chunk(chunk):
+    return rd.get_data(
+        universe=chunk,
+        fields=flds_finance_info,
+        parameters={"Scale": "6"},
+    )
+
+# adjust chunk size as needed
+chunk_size = 100  
+chunks = [permids_finance_list[i:i + chunk_size] for i in range(0, len(permids_finance_list), chunk_size)]
+
+results = []
+with ThreadPoolExecutor(max_workers=5) as executor:  # adjust workers
+    futures = [executor.submit(fetch_chunk, chunk) for chunk in chunks]
+    for future in as_completed(futures):
+        results.append(future.result())
+
+# merge results depending on the returned object type
+# for example, if DataFrames:
+import pandas as pd
+info_by_permid_finance = pd.concat(results, ignore_index=True)
+
 # clean column names
 info_by_permid_finance.columns = [
     to_snake_case(col) for col in info_by_permid_finance.columns
@@ -192,8 +217,12 @@ info_by_permid_finance["government_ultimate_parent"] = info_by_permid_finance[
     "government_ultimate_parent"
 ].where(~info_by_permid_finance["organization_ultimate_parent"].isna(), other=pd.NA)
 
+# check for gaps in the country of headquarters
+info_by_permid_finance[info_by_permid_finance["country_of_headquarters"].isna()]
+
+# save
 info_by_permid_finance.to_csv(
-    f"./intermediate-results/financial_institutions_info_by_permid.csv"
+    f"./intermediate-results/{today}financial_institutions_info_by_permid.csv"
 )
 
 # 2. companies
