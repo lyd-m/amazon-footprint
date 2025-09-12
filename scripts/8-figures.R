@@ -1115,7 +1115,7 @@ ggsave("./figures/totals_by_boundary_period.pdf",
        width = 4,
        height = 3)
 
-#### 4.2. Summary by grouping variables ------------
+#### 4.3. Summary by grouping variables ------------
 
 vars_grouping <- c(
   "producer_country",
@@ -1210,7 +1210,51 @@ flows_all_by_grouping_vars_by_strength <- flows_all_countries_commodities_sensit
   select(boundary_period, defn_phase_out, results) %>%
   mutate(sensitivity_id = paste0("bp", boundary_period, "_defn_po_", defn_phase_out))
 
-##### 4.3.1. visualise changes in top commodity/countries, top countries, managers, regions, depending on the sensitivity analysis
+##### 4.3.1. save grouping results -----------
+
+combine_grouping_results <- function(group_var) {
+  base_list <- map(flows_all_by_grouping_vars$results, group_var)
+  names(base_list) <- flows_all_by_grouping_vars$sensitivity_id
+  
+  if (group_var == "financial_flow_link_strength") {
+    return(base_list)
+  }
+  
+  subgroup_list <- map(flows_all_by_grouping_vars_by_strength$results, group_var)
+  names(subgroup_list) <- flows_all_by_grouping_vars_by_strength$sensitivity_id
+  
+  map2(subgroup_list, base_list, function(df_strength, df_base) {
+    df_strength %>%
+      select(!!sym(group_var), financial_flow_link_strength, total_usd_m) %>%
+      rename(total_usd_m_this_strength = total_usd_m) %>%
+      left_join(
+        df_base %>%
+          select(!!sym(group_var), total_usd_m, pct_total, rank_total),
+        by = group_var
+      )
+  })
+}
+
+walk(vars_grouping, function(group_var) {
+  combined_list <- combine_grouping_results(group_var)
+  wb <- createWorkbook()
+  
+  for (sens_id in names(combined_list)) {
+    sheet_name <- substr(sens_id, 1, 25)
+    addWorksheet(wb, sheet_name)
+    writeData(wb, sheet = sheet_name, combined_list[[sens_id]])
+  }
+  
+  saveWorkbook(
+    wb,
+    paste0("./analytical-results/flows_sensitivity_", group_var, ".xlsx"),
+    overwrite = TRUE
+  )
+})
+
+
+
+##### 4.3.2. visualise changes in top commodity/countries, top countries, managers, regions, depending on the sensitivity analysis ---------------
 
 plot_topN_sensitivity <- function(nested_df,
                                   group_var,
